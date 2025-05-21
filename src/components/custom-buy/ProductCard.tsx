@@ -37,11 +37,16 @@ const ProductCard = ({
   
   return (
     <Card className="overflow-hidden">
-      <div className="aspect-square overflow-hidden">
+      <div className="aspect-square overflow-hidden relative bg-gray-100">
         <img 
           src={image} 
           alt={name}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover absolute inset-0"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=2574&auto=format&fit=crop";
+            target.onerror = null; // Prevent infinite loop if fallback also fails
+          }}
         />
       </div>
       <div className="p-4">
