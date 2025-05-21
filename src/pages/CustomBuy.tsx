@@ -215,13 +215,7 @@ const CustomBuy = () => {
                                 <Button 
                                   variant="outline" 
                                   size="icon"
-                                  onClick={() => {
-                                    // Fix: Include image property when adding to cart
-                                    const product = products.find(p => p.id === item.id);
-                                    if (product) {
-                                      addToCart(product);
-                                    }
-                                  }}
+                                  onClick={() => addToCart(product)}
                                 >
                                   <Plus className="h-4 w-4" />
                                 </Button>
@@ -271,10 +265,10 @@ const CustomBuy = () => {
                                   size="icon" 
                                   className="h-7 w-7"
                                   onClick={() => {
-                                    // Fix: Include image property when adding to cart
-                                    const product = products.find(p => p.id === item.id);
-                                    if (product) {
-                                      addToCart(product);
+                                    // Find the full product to add to cart
+                                    const productToAdd = products.find(p => p.id === item.id);
+                                    if (productToAdd) {
+                                      addToCart(productToAdd);
                                     }
                                   }}
                                 >
