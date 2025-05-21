@@ -1,11 +1,10 @@
-
+import { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ShoppingBasket, Plus, Minus } from "lucide-react";
-import { useState } from "react";
 
 // Sample product data
 const products = [
@@ -216,7 +215,13 @@ const CustomBuy = () => {
                                 <Button 
                                   variant="outline" 
                                   size="icon"
-                                  onClick={() => addToCart(product)}
+                                  onClick={() => {
+                                    // Fix: Include image property when adding to cart
+                                    const product = products.find(p => p.id === item.id);
+                                    if (product) {
+                                      addToCart(product);
+                                    }
+                                  }}
                                 >
                                   <Plus className="h-4 w-4" />
                                 </Button>
@@ -265,7 +270,13 @@ const CustomBuy = () => {
                                   variant="outline" 
                                   size="icon" 
                                   className="h-7 w-7"
-                                  onClick={() => addToCart({id: item.id, name: item.name, price: item.price, unit: item.unit, category: ''})}
+                                  onClick={() => {
+                                    // Fix: Include image property when adding to cart
+                                    const product = products.find(p => p.id === item.id);
+                                    if (product) {
+                                      addToCart(product);
+                                    }
+                                  }}
                                 >
                                   <Plus className="h-3 w-3" />
                                 </Button>
