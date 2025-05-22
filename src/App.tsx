@@ -15,9 +15,8 @@ import Orders from "./pages/Orders";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
-
-const App = () => {
+function App() {
+  const queryClient = new QueryClient();
   // Simulating a splash screen
   const [loading, setLoading] = useState(true);
 
@@ -65,6 +64,6 @@ const App = () => {
       </TooltipProvider>
     </QueryClientProvider>
   );
-};
+}
 
 export default App;
