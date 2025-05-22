@@ -62,7 +62,7 @@ const Hero = () => {
           <div className="md:w-1/2 flex justify-end relative">
             <div className="bg-khrate-50 p-4 rounded-3xl overflow-hidden relative">
               <img 
-                src="https://images.unsplash.com/photo-1579113800032-c38bd7635818?q=80&w=2587&auto=format&fit=crop" 
+                src="/lovable-uploads/099910c6-26ab-4295-975c-4d2ff4380ef8.png" 
                 alt="Fresh groceries display" 
                 className="rounded-2xl w-full"
               />
