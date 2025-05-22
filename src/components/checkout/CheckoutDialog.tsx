@@ -9,20 +9,14 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { CalendarCheck, AlertTriangle, Phone } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
-import {
-  Alert,
-  AlertTitle,
-  AlertDescription,
-} from "@/components/ui/alert";
 import ScheduledDelivery from "@/components/checkout/ScheduledDelivery";
 import { useAuth } from "@/contexts/AuthContext";
+import PaymentSection from "./PaymentSection";
+import OrderSummary from "./OrderSummary";
+import GuestUserPrompt from "./GuestUserPrompt";
 
 interface CheckoutDialogProps {
   open: boolean;
@@ -112,24 +106,12 @@ const CheckoutDialog = ({
             {/* Login/Register prompt for guest users */}
             {!isAuthenticated && (
               <div className="mb-4">
-                <Alert variant="default" className="bg-blue-50 border-blue-200">
-                  <AlertTitle className="flex items-center">
-                    Continue as guest or create an account
-                  </AlertTitle>
-                  <AlertDescription>
-                    Create an account to track your orders and get exclusive discounts.
-                  </AlertDescription>
-                  <Button
-                    variant="outline"
-                    className="mt-2 border-blue-300 text-blue-700 hover:bg-blue-100"
-                    onClick={() => {
-                      onOpenChange(false);
-                      openAuthModal();
-                    }}
-                  >
-                    Sign up / Login
-                  </Button>
-                </Alert>
+                <GuestUserPrompt 
+                  onSignInClick={() => {
+                    onOpenChange(false);
+                    openAuthModal();
+                  }} 
+                />
               </div>
             )}
             
@@ -140,91 +122,20 @@ const CheckoutDialog = ({
             
             <Separator />
             
-            {/* MoMo Payment Alert */}
-            <Alert variant="destructive" className="bg-amber-50 border-amber-200 text-amber-800">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Payment Instructions</AlertTitle>
-              <AlertDescription>
-                ⚠️ To complete your order, please pay using the following number: 0795754391.
-              </AlertDescription>
-            </Alert>
+            {/* Payment Section */}
+            <PaymentSection
+              paymentMethod={paymentMethod}
+              onPaymentMethodChange={setPaymentMethod}
+              phoneNumber={phoneNumber}
+              onPhoneNumberChange={setPhoneNumber}
+            />
             
-            {/* Payment Method Section */}
-            <div className="space-y-4">
-              <h3 className="font-semibold">Payment Method</h3>
-              <RadioGroup 
-                value={paymentMethod}
-                onValueChange={setPaymentMethod}
-                className="flex flex-col space-y-1"
-              >
-                <div className="flex items-center space-x-2 border p-3 rounded-md bg-yellow-50 border-yellow-200">
-                  <RadioGroupItem value="mtn" id="mtn" />
-                  <Label htmlFor="mtn" className="flex items-center">
-                    <Phone className="h-5 w-5 text-yellow-500 mr-2" />
-                    <span className="font-medium">Pay with MTN MoMo (0795754391)</span>
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2 border p-3 rounded-md">
-                  <RadioGroupItem value="equity" id="equity" />
-                  <Label htmlFor="equity" className="flex items-center">
-                    <span className="font-medium">Equity Bank</span>
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2 border p-3 rounded-md">
-                  <RadioGroupItem value="bk" id="bk" />
-                  <Label htmlFor="bk" className="flex items-center">
-                    <span className="font-medium">Bank of Kigali</span>
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2 border p-3 rounded-md">
-                  <RadioGroupItem value="im" id="im" />
-                  <Label htmlFor="im" className="flex items-center">
-                    <span className="font-medium">I&M Bank</span>
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
-            
-            {paymentMethod === "mtn" && (
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input 
-                  id="phone" 
-                  placeholder="Your MTN number" 
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  required
-                />
-                
-                <Button 
-                  type="button" 
-                  onClick={() => alert("Pay using MoMo number: 0795754391")}
-                  className="w-full bg-yellow-500 hover:bg-yellow-600 mt-2"
-                >
-                  Pay with MoMo (0795754391)
-                </Button>
-              </div>
-            )}
-            
-            <div className="space-y-2">
-              <div className="flex justify-between font-semibold">
-                <span>Total Amount:</span>
-                <span>{formatPrice(getCartTotal())}</span>
-              </div>
-              
-              {/* Delivery Schedule Summary */}
-              {deliverySchedule.date && (
-                <div className="bg-blue-50 p-3 rounded-md mt-2">
-                  <div className="flex items-center gap-2">
-                    <CalendarCheck className="h-4 w-4 text-khrate-500" />
-                    <span className="text-sm font-medium">Delivery scheduled for:</span>
-                  </div>
-                  <p className="text-sm mt-1 pl-6">
-                    {format(deliverySchedule.date, "PPP")} between {getTimeSlotText(deliverySchedule.timeSlot)}
-                  </p>
-                </div>
-              )}
-            </div>
+            {/* Order Summary */}
+            <OrderSummary
+              total={getCartTotal()}
+              formatPrice={formatPrice}
+              deliverySchedule={deliverySchedule}
+            />
           </div>
           
           <DialogFooter>
