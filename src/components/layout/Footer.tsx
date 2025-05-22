@@ -1,12 +1,13 @@
 
 import { Link } from "react-router-dom";
+import FooterFeedbackSection from "@/components/feedback/FooterFeedbackSection";
 
 const Footer = () => {
   return (
     <footer className="bg-white border-t mt-auto">
       <div className="container mx-auto py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+          <div className="md:col-span-2">
             <Link to="/" className="flex items-center mb-4">
               <img
                 src="/lovable-uploads/206fd2ee-0377-47a0-8083-70118088988f.png"
@@ -17,6 +18,10 @@ const Footer = () => {
             <p className="text-muted-foreground max-w-xs">
               Big Savings in Every Crate. Making grocery shopping affordable and accessible.
             </p>
+            
+            <div className="mt-6">
+              <FooterFeedbackSection />
+            </div>
           </div>
 
           <div>

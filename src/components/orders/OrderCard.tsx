@@ -2,20 +2,23 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, ShoppingBasket } from "lucide-react";
+import { ArrowRight, ShoppingBasket, Star } from "lucide-react";
 import { toast } from "sonner";
 import { Order, statusColors } from "@/types/order";
 
 interface OrderCardProps {
   order: Order;
   onViewDetails: (order: Order) => void;
+  onRateOrder?: (order: Order) => void;
 }
 
-const OrderCard = ({ order, onViewDetails }: OrderCardProps) => {
+const OrderCard = ({ order, onViewDetails, onRateOrder }: OrderCardProps) => {
   const handleOrderAgain = (order: Order) => {
     toast.success("Items added to your cart");
     // In a real app, we would add the items to the cart here
   };
+
+  const canRate = order.status === "delivered" && (!order.rating || !order.rating.submitted);
 
   return (
     <Card key={order.id} className="overflow-hidden">
@@ -40,6 +43,12 @@ const OrderCard = ({ order, onViewDetails }: OrderCardProps) => {
             <div className="text-sm text-muted-foreground">
               <span className="font-medium">Delivery Address:</span> {order.deliveryAddress}
             </div>
+
+            {order.deliverySchedule && (
+              <div className="text-sm text-muted-foreground mt-3">
+                <span className="font-medium">Delivery Schedule:</span> {new Date(order.deliverySchedule.date).toLocaleDateString()} ({order.deliverySchedule.timeSlot})
+              </div>
+            )}
           </div>
           
           <div className="flex flex-col items-end">
@@ -55,6 +64,18 @@ const OrderCard = ({ order, onViewDetails }: OrderCardProps) => {
                 View Details
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
+              
+              {canRate && onRateOrder && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full md:w-auto"
+                  onClick={() => onRateOrder(order)}
+                >
+                  Rate Order
+                  <Star className="ml-2 h-4 w-4" />
+                </Button>
+              )}
               
               <Button 
                 variant="outline" 

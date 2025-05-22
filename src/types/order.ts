@@ -12,6 +12,10 @@ export interface Order {
     date: string;
     timeSlot: string;
   };
+  rating?: {
+    submitted: boolean;
+    date?: string;
+  };
 }
 
 export const statusColors: Record<OrderStatus, string> = {
