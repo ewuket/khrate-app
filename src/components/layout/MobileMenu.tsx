@@ -1,7 +1,8 @@
 
 import React from "react";
-import NavLinks from "./NavLinks";
-import AuthButtons from "./AuthButtons";
+import MobileNavLinks from "./mobile/MobileNavLinks";
+import MobileAuthSection from "./mobile/MobileAuthSection";
+import MobileMenuContainer from "./mobile/MobileMenuContainer";
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -21,26 +22,18 @@ const MobileMenu = ({
   if (!isOpen) return null;
   
   return (
-    <div className="md:hidden border-t">
-      <div className="container mx-auto py-4">
-        <nav className="flex flex-col space-y-4">
-          <NavLinks 
-            links={navLinks} 
-            onClick={onCloseMenu} 
-            className="py-2" 
-          />
-          
-          <AuthButtons 
-            isLoggedIn={isLoggedIn} 
-            onOpenAuthModal={() => {
-              onCloseMenu();
-              onOpenAuthModal();
-            }}
-            layout="mobile"
-          />
-        </nav>
-      </div>
-    </div>
+    <MobileMenuContainer>
+      <MobileNavLinks 
+        links={navLinks} 
+        onCloseMenu={onCloseMenu} 
+      />
+      
+      <MobileAuthSection 
+        isLoggedIn={isLoggedIn} 
+        onOpenAuthModal={onOpenAuthModal} 
+        onCloseMenu={onCloseMenu} 
+      />
+    </MobileMenuContainer>
   );
 };
 
