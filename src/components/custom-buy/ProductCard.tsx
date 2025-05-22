@@ -51,8 +51,8 @@ const ProductCard = ({
       </div>
       <div className="p-4">
         <div className="flex flex-col mb-2">
-          <h3 className="font-medium text-base line-clamp-1" title={name}>{name}</h3>
-          <span className="font-semibold text-orange-500 mt-1">{price.toLocaleString()} RWF/{unit}</span>
+          <h3 className="font-medium text-base line-clamp-2 h-12" title={name}>{name}</h3>
+          <span className="font-semibold text-orange-500 mt-1 text-right">{price.toLocaleString()} RWF/{unit}</span>
         </div>
         
         <div className="mt-4">

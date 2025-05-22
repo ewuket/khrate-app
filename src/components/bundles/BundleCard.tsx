@@ -71,25 +71,27 @@ const BundleCard = ({ bundle, onAddToCart }: BundleCardProps) => {
           </div>
           
           <div className="flex items-center justify-between mt-6">
-            <div className="text-xl font-bold text-orange-500">{bundle.price.toLocaleString()} RWF</div>
-            <div className="flex gap-2">
-              <Button 
-                size="sm" 
-                variant="outline"
-                onClick={() => setPreviewOpen(true)}
-              >
-                <Eye className="mr-2 h-4 w-4" />
-                Preview
-              </Button>
-              <Button 
-                size="sm" 
-                className="bg-orange-500 hover:bg-orange-600"
-                onClick={handleAddToCart}
-              >
-                <ShoppingBasket className="mr-2 h-4 w-4" />
-                Add to Cart
-              </Button>
-            </div>
+            <div className="text-xl font-bold text-orange-500 ml-auto">{bundle.price.toLocaleString()} RWF</div>
+          </div>
+          
+          <div className="flex gap-2 mt-4">
+            <Button 
+              size="sm" 
+              variant="outline"
+              className="flex-1"
+              onClick={() => setPreviewOpen(true)}
+            >
+              <Eye className="mr-2 h-4 w-4" />
+              Preview
+            </Button>
+            <Button 
+              size="sm"
+              className="flex-1 bg-orange-500 hover:bg-orange-600"
+              onClick={handleAddToCart}
+            >
+              <ShoppingBasket className="mr-2 h-4 w-4" />
+              Add to Cart
+            </Button>
           </div>
         </CardContent>
       </Card>
