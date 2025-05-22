@@ -27,20 +27,24 @@ interface BundleCardProps {
 
 const BundleCard = ({ bundle, onAddToCart }: BundleCardProps) => {
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [imageError, setImageError] = useState(false);
   
   const handleAddToCart = () => {
     onAddToCart(bundle);
     toast.success(`${bundle.name} added to cart!`);
   };
   
+  const fallbackImage = "/placeholder.svg";
+  
   return (
     <>
       <Card className="overflow-hidden transition-all duration-300 hover:shadow-md">
         <div className="relative h-48 overflow-hidden">
           <img 
-            src={bundle.image} 
+            src={imageError ? fallbackImage : bundle.image} 
             alt={bundle.name} 
             className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+            onError={() => setImageError(true)}
           />
         </div>
         <CardContent className="p-6">
