@@ -1,151 +1,132 @@
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import CartItem from "./CartItem";
 import { useState } from "react";
-import { toast } from "sonner";
-import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { ShoppingCart, Trash2 } from "lucide-react";
+import CartItem from "./CartItem";
 import CustomBuyCheckoutDialog from "./CustomBuyCheckoutDialog";
 
-interface CartProps {
-  cart: Array<{
-    id: number;
-    name: string;
-    price: number;
-    quantity: number;
-    unit: string;
-  }>;
-  products: Array<{
-    id: number;
-    name: string;
-    price: number;
-    unit: string;
-    image: string;
-    category: string;
-  }>;
+interface CartItem {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  unit: string;
+}
+
+interface CustomBuyCartProps {
+  cart: CartItem[];
+  products: any[];
   onAddToCart: (product: any) => void;
   onRemoveFromCart: (productId: number) => void;
   calculateTotal: () => string;
 }
 
-const CustomBuyCart = ({ 
-  cart, 
-  products, 
-  onAddToCart, 
-  onRemoveFromCart, 
-  calculateTotal 
-}: CartProps) => {
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const { isAuthenticated, user } = useAuth();
-
+const CustomBuyCart = ({
+  cart,
+  products,
+  onAddToCart,
+  onRemoveFromCart,
+  calculateTotal,
+}: CustomBuyCartProps) => {
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  
   const handleCheckout = () => {
     if (cart.length === 0) {
-      toast.error("Your cart is empty");
       return;
     }
-    setCheckoutOpen(true);
+    setIsCheckoutOpen(true);
+  };
+  
+  const handleCheckoutSuccess = () => {
+    console.log("Checkout successful");
   };
   
   const saveOrder = () => {
-    if (cart.length === 0) return;
-    
-    const orderId = `order_${Date.now()}`;
-    const order = {
-      id: orderId,
-      items: cart,
-      total: parseFloat(calculateTotal().replace(/,/g, '')),
-      date: new Date().toISOString(),
-      status: "pending"
-    };
-    
-    // Get user-specific storage key
-    const storageKey = isAuthenticated && user?.id 
-      ? `khrate_orders_${user.id}` 
-      : 'khrate_guest_orders';
-    
-    // Get existing orders or create empty array
-    const existingOrdersStr = localStorage.getItem(storageKey);
-    const existingOrders = existingOrdersStr ? JSON.parse(existingOrdersStr) : [];
-    
-    // Add new order and save
-    const updatedOrders = [order, ...existingOrders];
-    localStorage.setItem(storageKey, JSON.stringify(updatedOrders));
-  };
-  
-  const clearCart = () => {
-    // Create a new empty array for the cart
-    const emptyCart: typeof cart = [];
-    // Replace the current cart with the empty one
-    // We're assuming the parent component has a way to clear the cart
-    // so we'll just call onAddToCart and onRemoveFromCart to simulate this
-    cart.forEach(item => {
-      onRemoveFromCart(item.id);
-    });
+    // Save order functionality would go here in a real implementation
+    console.log("Order saved");
   };
 
   return (
-    <>
-      <Card className="sticky top-24">
-        <div className="p-6">
-          <h2 className="text-xl font-bold mb-4">Your Cart</h2>
+    <div className="bg-white rounded-lg border shadow-sm p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-semibold">Your Cart</h2>
+        <span className="bg-khrate-100 text-khrate-700 text-sm py-1 px-2 rounded-full">
+          {cart.length} {cart.length === 1 ? 'item' : 'items'}
+        </span>
+      </div>
+      
+      {cart.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-8 space-y-3 text-center">
+          <ShoppingCart className="h-12 w-12 text-muted-foreground opacity-20" />
+          <div>
+            <h3 className="font-medium mb-1">Your cart is empty</h3>
+            <p className="text-sm text-muted-foreground">
+              Add items from the product list to get started.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+            {cart.map((item) => (
+              <CartItem
+                key={item.id}
+                item={item}
+                onAddToCart={() => {
+                  const product = products.find(p => p.id === item.id);
+                  if (product) {
+                    onAddToCart(product);
+                  }
+                }}
+                onRemoveFromCart={() => onRemoveFromCart(item.id)}
+              />
+            ))}
+          </div>
           
-          {cart.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Your cart is empty
+          <div className="mt-6 pt-4 border-t border-gray-100">
+            <div className="flex justify-between mb-2">
+              <span className="text-muted-foreground">Subtotal</span>
+              <span className="font-medium">UGX {calculateTotal()}</span>
             </div>
-          ) : (
-            <>
-              <div className="space-y-4 mb-6 max-h-[400px] overflow-y-auto">
-                {cart.map(item => (
-                  <CartItem
-                    key={item.id}
-                    id={item.id}
-                    name={item.name}
-                    price={item.price}
-                    quantity={item.quantity}
-                    unit={item.unit}
-                    onAddToCart={onAddToCart}
-                    onRemoveFromCart={onRemoveFromCart}
-                    products={products}
-                  />
-                ))}
-              </div>
-              
-              <div className="border-t pt-4">
-                <div className="flex justify-between mb-2">
-                  <span>Subtotal:</span>
-                  <span>{calculateTotal()} RWF</span>
-                </div>
-                <div className="flex justify-between mb-4">
-                  <span>Delivery (included):</span>
-                  <span className="text-green-600">Free</span>
-                </div>
-                <div className="flex justify-between font-bold">
-                  <span>Total:</span>
-                  <span className="text-orange-500">{calculateTotal()} RWF</span>
-                </div>
-              </div>
-              
-              <Button className="w-full mt-6 bg-orange-500 hover:bg-orange-600" onClick={handleCheckout}>
+            <div className="flex justify-between mb-4">
+              <span className="text-muted-foreground">Delivery</span>
+              <span className="text-green-600">Free</span>
+            </div>
+            <div className="flex justify-between text-lg font-bold">
+              <span>Total</span>
+              <span>UGX {calculateTotal()}</span>
+            </div>
+            
+            <div className="mt-6 space-y-2">
+              <Button 
+                className="w-full bg-khrate-500 hover:bg-khrate-600"
+                onClick={handleCheckout}
+              >
                 Proceed to Checkout
               </Button>
               
-              <Button variant="outline" className="w-full mt-2">
-                Save as Bundle
+              <Button 
+                variant="outline" 
+                className="w-full flex items-center justify-center"
+                onClick={() => {
+                  // Clear cart functionality
+                  cart.forEach(item => onRemoveFromCart(item.id));
+                }}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Clear Cart
               </Button>
-            </>
-          )}
+            </div>
+          </div>
         </div>
-      </Card>
-
-      <CustomBuyCheckoutDialog
-        open={checkoutOpen}
-        onOpenChange={setCheckoutOpen}
-        cartItems={cart}
-        saveOrder={saveOrder}
-        clearCart={clearCart}
+      )}
+      
+      <CustomBuyCheckoutDialog 
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        onSuccess={handleCheckoutSuccess}
       />
-    </>
+    </div>
   );
 };
 

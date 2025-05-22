@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -24,7 +25,7 @@ const CustomBuyCheckoutDialog: React.FC<CustomBuyCheckoutDialogProps> = ({
   onClose,
   onSuccess
 }) => {
-  const { cart, cartTotal, clearCart } = useCart();
+  const { cart, getCartTotal, clearCart } = useCart();
   const { isAuthenticated, openAuthModal } = useAuth();
   
   const [activeTab, setActiveTab] = useState("delivery");
@@ -93,6 +94,8 @@ const CustomBuyCheckoutDialog: React.FC<CustomBuyCheckoutDialogProps> = ({
   const handleShowInstructions = () => {
     setShowInstructions(true);
   };
+  
+  const cartTotal = getCartTotal();
   
   return (
     <>
