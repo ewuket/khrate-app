@@ -2,16 +2,19 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { User } from "lucide-react";
+import { User, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AuthButtonsProps {
-  isLoggedIn: boolean;
+  isLoggedIn?: boolean;
   onOpenAuthModal: () => void;
   layout?: "desktop" | "mobile";
 }
 
-const AuthButtons = ({ isLoggedIn, onOpenAuthModal, layout = "desktop" }: AuthButtonsProps) => {
-  if (isLoggedIn) {
+const AuthButtons = ({ onOpenAuthModal, layout = "desktop" }: AuthButtonsProps) => {
+  const { isAuthenticated, user, logout } = useAuth();
+
+  if (isAuthenticated && user) {
     return (
       <>
         <Link to="/orders" className="text-gray-700 hover:text-khrate-500">
@@ -23,6 +26,16 @@ const AuthButtons = ({ isLoggedIn, onOpenAuthModal, layout = "desktop" }: AuthBu
         >
           <User className="h-5 w-5" />
         </Link>
+        {layout === "mobile" && (
+          <Button
+            onClick={logout}
+            variant="ghost"
+            className="flex justify-start text-red-500"
+          >
+            <LogOut className="h-5 w-5 mr-2" />
+            <span>Logout</span>
+          </Button>
+        )}
       </>
     );
   }

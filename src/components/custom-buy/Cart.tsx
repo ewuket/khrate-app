@@ -15,6 +15,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { Phone, AlertTriangle } from "lucide-react";
+import {
+  Alert,
+  AlertTitle,
+  AlertDescription,
+} from "@/components/ui/alert";
 
 interface CartProps {
   cart: Array<{
@@ -48,6 +55,7 @@ const Cart = ({
   const [paymentMethod, setPaymentMethod] = useState("mtn");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [processingPayment, setProcessingPayment] = useState(false);
+  const { isAuthenticated, openAuthModal } = useAuth();
 
   const handleCheckout = () => {
     if (cart.length === 0) {
@@ -61,12 +69,50 @@ const Cart = ({
     e.preventDefault();
     setProcessingPayment(true);
     
+    const paymentInstructions = "⚠️ To complete your order, please pay using the following number: 0795754391.";
+    
     // Simulate payment processing
     setTimeout(() => {
       setProcessingPayment(false);
       setCheckoutOpen(false);
-      toast.success("Payment successful! Your order has been placed.");
+      
+      // Show the payment alert
+      alert(paymentInstructions);
+      
+      toast.success("Your order has been placed!", {
+        description: "Check your email for order confirmation."
+      });
+      
+      // Save the order to localStorage
+      saveOrder();
     }, 2000);
+  };
+  
+  const saveOrder = () => {
+    if (cart.length === 0) return;
+    
+    const orderId = `order_${Date.now()}`;
+    const order = {
+      id: orderId,
+      items: cart,
+      total: parseFloat(calculateTotal().replace(/,/g, '')),
+      date: new Date().toISOString(),
+      status: "pending"
+    };
+    
+    // Get user-specific storage key
+    const { isAuthenticated, user } = useAuth();
+    const storageKey = isAuthenticated && user?.id 
+      ? `khrate_orders_${user.id}` 
+      : 'khrate_guest_orders';
+    
+    // Get existing orders or create empty array
+    const existingOrdersStr = localStorage.getItem(storageKey);
+    const existingOrders = existingOrdersStr ? JSON.parse(existingOrdersStr) : [];
+    
+    // Add new order and save
+    const updatedOrders = [order, ...existingOrders];
+    localStorage.setItem(storageKey, JSON.stringify(updatedOrders));
   };
 
   return (
@@ -135,6 +181,39 @@ const Cart = ({
           
           <form onSubmit={handlePayment}>
             <div className="grid gap-4 py-4">
+              {/* Login/Register prompt for guest users */}
+              {!isAuthenticated && (
+                <div className="mb-4">
+                  <Alert variant="default" className="bg-blue-50 border-blue-200">
+                    <AlertTitle className="flex items-center">
+                      Continue as guest or create an account
+                    </AlertTitle>
+                    <AlertDescription>
+                      Create an account to track your orders and get exclusive discounts.
+                    </AlertDescription>
+                    <Button
+                      variant="outline"
+                      className="mt-2 border-blue-300 text-blue-700 hover:bg-blue-100"
+                      onClick={() => {
+                        setCheckoutOpen(false);
+                        openAuthModal();
+                      }}
+                    >
+                      Sign up / Login
+                    </Button>
+                  </Alert>
+                </div>
+              )}
+
+              {/* MoMo Payment Alert */}
+              <Alert variant="destructive" className="bg-amber-50 border-amber-200 text-amber-800">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Payment Instructions</AlertTitle>
+                <AlertDescription>
+                  To complete your order, please pay using the following number: 0795754391
+                </AlertDescription>
+              </Alert>
+              
               <div className="space-y-2">
                 <Label htmlFor="payment-method">Payment Method</Label>
                 <RadioGroup 
@@ -143,10 +222,11 @@ const Cart = ({
                   onValueChange={setPaymentMethod}
                   className="flex flex-col space-y-1"
                 >
-                  <div className="flex items-center space-x-2 border p-3 rounded-md">
+                  <div className="flex items-center space-x-2 border p-3 rounded-md bg-yellow-50 border-yellow-200">
                     <RadioGroupItem value="mtn" id="mtn" />
                     <Label htmlFor="mtn" className="flex items-center">
-                      <span className="font-medium">MTN MoMo</span>
+                      <Phone className="h-5 w-5 text-yellow-500 mr-2" />
+                      <span className="font-medium">Pay with MTN MoMo (0795754391)</span>
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2 border p-3 rounded-md">
@@ -172,7 +252,7 @@ const Cart = ({
               
               {paymentMethod === "mtn" && (
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
+                  <Label htmlFor="phone">Your Phone Number</Label>
                   <Input 
                     id="phone" 
                     placeholder="Your MTN number" 
@@ -180,6 +260,14 @@ const Cart = ({
                     onChange={(e) => setPhoneNumber(e.target.value)}
                     required
                   />
+                  
+                  <Button 
+                    type="button" 
+                    onClick={() => alert("Pay using MoMo number: 0795754391")}
+                    className="w-full bg-yellow-500 hover:bg-yellow-600 mt-2"
+                  >
+                    Pay with MoMo (0795754391)
+                  </Button>
                 </div>
               )}
               
@@ -198,7 +286,7 @@ const Cart = ({
                 disabled={processingPayment}
                 className="bg-orange-500 hover:bg-orange-600"
               >
-                {processingPayment ? "Processing..." : "Pay Now"}
+                {processingPayment ? "Processing..." : "Place Order"}
               </Button>
             </DialogFooter>
           </form>

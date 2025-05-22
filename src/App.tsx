@@ -6,6 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { CartProvider } from "@/contexts/CartContext";
+import { AuthProvider } from "@/contexts/AuthContext";
+import OTPVerificationModal from "@/components/auth/OTPVerificationModal";
 
 // Pages
 import Index from "./pages/Index";
@@ -56,24 +58,27 @@ function App() {
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <CartProvider>
-          <BrowserRouter>
-            <CartSidebar />
-            <ChatAssistant />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/bundles" element={<Bundles />} />
-              <Route path="/custom-buy" element={<CustomBuy />} />
-              <Route path="/group-buy" element={<GroupBuy />} />
-              <Route path="/orders" element={<Orders />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/terms" element={<Terms />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <BrowserRouter>
+              <CartSidebar />
+              <ChatAssistant />
+              <OTPVerificationModal />
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/bundles" element={<Bundles />} />
+                <Route path="/custom-buy" element={<CustomBuy />} />
+                <Route path="/group-buy" element={<GroupBuy />} />
+                <Route path="/orders" element={<Orders />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </CartProvider>
+        </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

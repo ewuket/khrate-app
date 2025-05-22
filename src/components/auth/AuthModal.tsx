@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ interface AuthModalProps {
 }
 
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
+  const { login, signup } = useAuth();
   const [activeTab, setActiveTab] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,12 +36,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setLoading(true);
     
     try {
-      // Simulate login
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success("Login successful!");
-      onClose();
+      await login(email, password);
     } catch (error) {
-      toast.error("Login failed. Please try again.");
+      console.error("Login error:", error);
     } finally {
       setLoading(false);
     }
@@ -50,12 +49,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setLoading(true);
     
     try {
-      // Simulate signup
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success("Account created successfully!");
-      onClose();
+      await signup(email, name, password);
     } catch (error) {
-      toast.error("Signup failed. Please try again.");
+      console.error("Signup error:", error);
     } finally {
       setLoading(false);
     }

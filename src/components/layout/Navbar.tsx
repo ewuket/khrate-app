@@ -8,13 +8,11 @@ import NavLinks from "./NavLinks";
 import CartButton from "./CartButton";
 import AuthButtons from "./AuthButtons";
 import MobileMenu from "./MobileMenu";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  
-  // Simulated auth state
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isAuthModalOpen, openAuthModal, closeAuthModal, isAuthenticated, user } = useAuth();
   
   const navLinks = [
     { title: "Home", path: "/" },
@@ -46,20 +44,23 @@ const Navbar = () => {
             {/* Right-side items (desktop) */}
             <div className="hidden md:flex items-center space-x-4">
               <AuthButtons 
-                isLoggedIn={isLoggedIn}
-                onOpenAuthModal={() => setIsAuthModalOpen(true)}
+                onOpenAuthModal={openAuthModal}
               />
-              <Link to="/profile" className="text-gray-700 hover:text-khrate-500">
-                <User className="h-5 w-5" />
-              </Link>
+              {isAuthenticated && (
+                <Link to="/profile" className="text-gray-700 hover:text-khrate-500">
+                  <User className="h-5 w-5" />
+                </Link>
+              )}
               <CartButton />
             </div>
             
             {/* Mobile menu button */}
             <div className="md:hidden flex items-center gap-2">
-              <Link to="/profile" className="text-gray-700 hover:text-khrate-500 mr-2">
-                <User className="h-5 w-5" />
-              </Link>
+              {isAuthenticated && (
+                <Link to="/profile" className="text-gray-700 hover:text-khrate-500 mr-2">
+                  <User className="h-5 w-5" />
+                </Link>
+              )}
               <CartButton />
               
               <Button 
@@ -78,8 +79,8 @@ const Navbar = () => {
         <MobileMenu 
           isOpen={isMenuOpen}
           navLinks={navLinks}
-          isLoggedIn={isLoggedIn}
-          onOpenAuthModal={() => setIsAuthModalOpen(true)}
+          isLoggedIn={isAuthenticated}
+          onOpenAuthModal={openAuthModal}
           onCloseMenu={() => setIsMenuOpen(false)}
         />
       </header>
@@ -87,7 +88,7 @@ const Navbar = () => {
       {/* Auth Modal */}
       <AuthModal 
         isOpen={isAuthModalOpen} 
-        onClose={() => setIsAuthModalOpen(false)} 
+        onClose={closeAuthModal} 
       />
     </>
   );
