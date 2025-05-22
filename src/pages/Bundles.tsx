@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -12,7 +13,7 @@ const allBundles = [
     name: "Single Bundle",
     description: "Perfect for 1 person, 7-day essentials",
     price: 25000,
-    image: "/lovable-uploads/4730e151-0c90-4bde-a3cf-7eb370e2cac1.png", // Updated with new image
+    image: "/lovable-uploads/4730e151-0c90-4bde-a3cf-7eb370e2cac1.png", // Keeping existing image
     items: ["Rice (1kg)", "Beans (500g)", "Tomatoes (6)", "Onions (4)", "Oil (500ml)", "Salt (250g)", "Eggs (12)"],
     category: "single"
   },
@@ -21,7 +22,7 @@ const allBundles = [
     name: "Medium Bundle",
     description: "Great for 2-3 people, weekly essentials",
     price: 45000,
-    image: "/lovable-uploads/6d22b9d7-17a9-457a-947a-9bb8301a4051.png", // Updated with new image
+    image: "/lovable-uploads/6d22b9d7-17a9-457a-947a-9bb8301a4051.png", // Keeping existing image
     items: ["Rice (2kg)", "Beans (1kg)", "Tomatoes (10)", "Onions (8)", "Oil (1L)", "Salt (500g)", "Eggs (24)", "Bread (2)", "Milk (2L)"],
     category: "medium"
   },
@@ -30,7 +31,7 @@ const allBundles = [
     name: "Large Bundle",
     description: "Family size, complete weekly groceries",
     price: 75000,
-    image: "/lovable-uploads/30fe686e-a6f6-469f-bb69-c889c304c4e7.png", // Kept original image
+    image: "/lovable-uploads/30fe686e-a6f6-469f-bb69-c889c304c4e7.png", // Keeping original image
     items: ["Rice (5kg)", "Beans (2kg)", "Tomatoes (15)", "Onions (10)", "Oil (2L)", "Salt (1kg)", "Eggs (30)", "Bread (4)", "Milk (4L)", "Flour (2kg)", "Sugar (2kg)"],
     category: "large"
   },
@@ -39,7 +40,7 @@ const allBundles = [
     name: "Vegetables Bundle",
     description: "Fresh vegetables for the week",
     price: 19999,
-    image: "/lovable-uploads/4049f27e-26db-4497-9920-9b60326fe5f7.png", // Updated vegetable bundle image
+    image: "/lovable-uploads/4049f27e-26db-4497-9920-9b60326fe5f7.png", // Keeping existing image
     items: ["Tomatoes (10)", "Onions (8)", "Carrots (8)", "Lettuce (2)", "Peppers (6)", "Cucumber (4)"],
     category: "single"
   },
@@ -48,7 +49,7 @@ const allBundles = [
     name: "Breakfast Bundle",
     description: "Start your day right",
     price: 29999,
-    image: "/lovable-uploads/2455b7e0-b0f8-4f2a-aaca-995dcd6da943.png", // Restored original image
+    image: "/lovable-uploads/f54999c2-780a-4e38-9b60-7d31fd0fd9bc.png", // Updated with new breakfast image
     items: ["Bread (2)", "Eggs (24)", "Milk (2L)", "Cereal (500g)", "Jam (300g)", "Butter (250g)", "Coffee (200g)"],
     category: "medium"
   },
@@ -57,7 +58,7 @@ const allBundles = [
     name: "Pantry Essentials",
     description: "Stock your pantry with basics",
     price: 49999,
-    image: "/lovable-uploads/30fe686e-a6f6-469f-bb69-c889c304c4e7.png", // Restored original image
+    image: "/lovable-uploads/64610299-1b2e-480f-ad10-ca5f00ac3808.png", // Updated with new pantry essentials image
     items: ["Rice (3kg)", "Flour (2kg)", "Sugar (2kg)", "Oil (2L)", "Salt (1kg)", "Pasta (3 packs)", "Beans (2kg)", "Lentils (1kg)", "Spices (assorted)"],
     category: "large"
   },
