@@ -41,7 +41,8 @@ const ProductCard = ({
         <img 
           src={image} 
           alt={name}
-          className="w-full h-full object-cover absolute inset-0"
+          className="w-full h-full object-cover absolute inset-0 transition-opacity duration-300"
+          loading="lazy"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=2574&auto=format&fit=crop";

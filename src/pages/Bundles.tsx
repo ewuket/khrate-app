@@ -22,7 +22,7 @@ const allBundles = [
     name: "Medium Bundle",
     description: "Great for 2-3 people, weekly essentials",
     price: 45000,
-    image: "https://images.unsplash.com/photo-1573246123716-6b1782bfc499?q=80&w=2460&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1604719312566-8912e9c8f07a?q=80&w=2460&auto=format&fit=crop",
     items: ["Rice (2kg)", "Beans (1kg)", "Tomatoes (10)", "Onions (8)", "Oil (1L)", "Salt (500g)", "Eggs (24)", "Bread (2)", "Milk (2L)"],
     category: "medium"
   },
@@ -31,7 +31,7 @@ const allBundles = [
     name: "Large Bundle",
     description: "Family size, complete weekly groceries",
     price: 75000,
-    image: "https://images.unsplash.com/photo-1579113800032-c38bd7635818?q=80&w=2587&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1608686207856-001b95cf60ca?q=80&w=2587&auto=format&fit=crop",
     items: ["Rice (5kg)", "Beans (2kg)", "Tomatoes (15)", "Onions (10)", "Oil (2L)", "Salt (1kg)", "Eggs (30)", "Bread (4)", "Milk (4L)", "Flour (2kg)", "Sugar (2kg)"],
     category: "large"
   },
@@ -49,7 +49,7 @@ const allBundles = [
     name: "Breakfast Bundle",
     description: "Start your day right",
     price: 29999,
-    image: "https://images.unsplash.com/photo-1525351484163-7529414344d8?q=80&w=2680&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1584499235916-3c948e53052f?q=80&w=2680&auto=format&fit=crop",
     items: ["Bread (2)", "Eggs (24)", "Milk (2L)", "Cereal (500g)", "Jam (300g)", "Butter (250g)", "Coffee (200g)"],
     category: "medium"
   },
@@ -58,7 +58,7 @@ const allBundles = [
     name: "Pantry Essentials",
     description: "Stock your pantry with basics",
     price: 49999,
-    image: "https://images.unsplash.com/photo-1628102491629-778571d893a3?q=80&w=2080&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1579113800032-c38bd7635818?q=80&w=2080&auto=format&fit=crop",
     items: ["Rice (3kg)", "Flour (2kg)", "Sugar (2kg)", "Oil (2L)", "Salt (1kg)", "Pasta (3 packs)", "Beans (2kg)", "Lentils (1kg)", "Spices (assorted)"],
     category: "large"
   }
