@@ -27,6 +27,7 @@ const Orders = () => {
   // Load user-specific orders from localStorage
   useEffect(() => {
     if (isAuthenticated && user) {
+      // Use the user's unique ID to fetch their orders
       const storageKey = `khrate_orders_${user.id}`;
       const storedOrders = localStorage.getItem(storageKey);
       
@@ -36,7 +37,12 @@ const Orders = () => {
           setOrders(parsedOrders);
         } catch (error) {
           console.error("Failed to parse orders", error);
+          // Initialize empty orders if parsing fails
+          setOrders([]);
         }
+      } else {
+        // Initialize with an empty array if no orders found
+        setOrders([]);
       }
     } else {
       // For guest users, try to load guest orders
@@ -48,7 +54,10 @@ const Orders = () => {
           setOrders(parsedOrders);
         } catch (error) {
           console.error("Failed to parse guest orders", error);
+          setOrders([]);
         }
+      } else {
+        setOrders([]);
       }
     }
   }, [isAuthenticated, user]);
@@ -68,6 +77,20 @@ const Orders = () => {
   };
 
   const handleRatingSubmit = (ratedOrder: Order) => {
+    if (!user && !isAuthenticated) {
+      // Handle guest user order rating
+      const updatedOrders = orders.map(order => 
+        order.id === ratedOrder.id 
+          ? { ...order, rating: { submitted: true, date: new Date().toISOString() } }
+          : order
+      );
+      
+      setOrders(updatedOrders);
+      localStorage.setItem('khrate_guest_orders', JSON.stringify(updatedOrders));
+      return;
+    }
+    
+    // Handle logged-in user order rating
     const updatedOrders = orders.map(order => 
       order.id === ratedOrder.id 
         ? { ...order, rating: { submitted: true, date: new Date().toISOString() } }
@@ -76,11 +99,9 @@ const Orders = () => {
     
     setOrders(updatedOrders);
     
-    // Save updated orders to localStorage
+    // Save updated orders to localStorage using the user's unique ID
     if (isAuthenticated && user) {
       localStorage.setItem(`khrate_orders_${user.id}`, JSON.stringify(updatedOrders));
-    } else {
-      localStorage.setItem('khrate_guest_orders', JSON.stringify(updatedOrders));
     }
   };
 

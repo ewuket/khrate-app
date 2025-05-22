@@ -8,6 +8,8 @@ interface User {
   email: string;
   name?: string;
   verified: boolean;
+  profileImage?: string;
+  createdAt: string;
 }
 
 interface AuthContextType {
@@ -28,6 +30,7 @@ interface AuthContextType {
   isOTPModalOpen: boolean;
   openOTPModal: () => void;
   closeOTPModal: () => void;
+  updateUserProfile: (updates: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,6 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isOTPModalOpen, setIsOTPModalOpen] = useState(false);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+  const [pendingUserData, setPendingUserData] = useState<Partial<User> | null>(null);
   const [otpSent, setOtpSent] = useState(false);
   const [isVerifyingOTP, setIsVerifyingOTP] = useState(false);
 
@@ -69,9 +73,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const openOTPModal = () => setIsOTPModalOpen(true);
   const closeOTPModal = () => setIsOTPModalOpen(false);
 
+  // Update user profile
+  const updateUserProfile = (updates: Partial<User>) => {
+    if (!user) return;
+    
+    const updatedUser = { ...user, ...updates };
+    saveUser(updatedUser);
+    
+    toast.success("Profile updated successfully");
+  };
+
   // Simulate login
   const login = async (email: string, password: string) => {
-    // In a real app, this would call an API endpoint
     try {
       // Check if user exists in localStorage (simulating a database check)
       const userAccount = localStorage.getItem(`khrate_account_${email}`);
@@ -90,6 +103,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Set the pending email for OTP verification
       setPendingEmail(email);
+      setPendingUserData({
+        email: email,
+        name: account.name,
+        createdAt: account.createdAt,
+      });
       setOtpSent(false);
       
       // Close auth modal and open OTP modal
@@ -104,7 +122,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Simulate signup
+  // User registration
   const signup = async (email: string, name: string, password: string) => {
     try {
       // Check if user already exists
@@ -124,10 +142,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       
       localStorage.setItem(`khrate_account_${email}`, JSON.stringify(newAccount));
-      toast.success("Account created successfully");
       
-      // Set the pending email for OTP verification
+      // Set the pending email and user data for OTP verification
       setPendingEmail(email);
+      setPendingUserData({
+        email: email,
+        name: name,
+        createdAt: newAccount.createdAt,
+      });
       setOtpSent(false);
       
       // Close auth modal and open OTP modal
@@ -136,6 +158,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Send OTP for verification
       await sendOTP(email);
+      
+      toast.success("Account created! Please verify your email");
     } catch (error) {
       console.error("Signup error:", error);
       toast.error("Signup failed. Please try again.");
@@ -147,7 +171,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     toast.success("Logged out successfully");
   };
 
-  // Simulate sending OTP
+  // Send OTP
   const sendOTP = async (email: string): Promise<void> => {
     try {
       // Generate a random 6-digit OTP
@@ -165,7 +189,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setOtpSent(true);
       setPendingEmail(email);
       
-      // SIMULATE email sending
+      // SIMULATE email sending - in a real app, this would send an actual email
       toast.success(`OTP sent to ${email}`, { 
         description: `[For demo only] Your OTP is: ${otp}` 
       });
@@ -177,7 +201,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Verify OTP
   const verifyOTP = async (otp: string): Promise<boolean> => {
-    if (!pendingEmail) return false;
+    if (!pendingEmail || !pendingUserData) return false;
     
     setIsVerifyingOTP(true);
     
@@ -207,30 +231,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return false;
       }
       
-      // OTP is valid, create a user session
-      const userId = `user_${Date.now().toString(36)}`;
+      // OTP is valid, create a user session with a unique ID
+      const userId = `user_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 9)}`;
+      
       const newUser: User = {
         id: userId,
         email: pendingEmail,
-        verified: true
+        name: pendingUserData.name,
+        verified: true,
+        createdAt: pendingUserData.createdAt || new Date().toISOString(),
       };
-      
-      // Try to get the user's name if they have an account
-      try {
-        const userAccount = localStorage.getItem(`khrate_account_${pendingEmail}`);
-        if (userAccount) {
-          const { name } = JSON.parse(userAccount);
-          if (name) newUser.name = name;
-        }
-      } catch (error) {
-        console.error("Error getting user details:", error);
-      }
       
       // Save the user session
       saveUser(newUser);
       
       // Clear OTP data
       localStorage.removeItem(`khrate_otp_${pendingEmail}`);
+      setPendingEmail(null);
+      setPendingUserData(null);
       
       toast.success("Email verified successfully");
       closeOTPModal();
@@ -263,7 +281,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         verifyOTP,
         isOTPModalOpen,
         openOTPModal,
-        closeOTPModal
+        closeOTPModal,
+        updateUserProfile
       }}
     >
       {children}

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface UseCheckoutFormProps {
   onOpenChange: (open: boolean) => void;
@@ -14,6 +15,7 @@ export const useCheckoutForm = ({
   saveOrder,
   clearCart,
 }: UseCheckoutFormProps) => {
+  const { isAuthenticated, user } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState("mtn");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [processingPayment, setProcessingPayment] = useState(false);
@@ -48,8 +50,8 @@ export const useCheckoutForm = ({
       setProcessingPayment(false);
       onOpenChange(false);
       
-      // Show the MoMo payment toast notification instead of an alert
-      toast("Payment Required", {
+      // Show the MoMo payment toast notification
+      toast("Payment Instructions", {
         description: "To complete your order, please pay using the following number: 0795754391.",
         duration: 10000,
         action: {
@@ -70,6 +72,24 @@ export const useCheckoutForm = ({
         description: `Scheduled for delivery on ${deliveryDateText} between ${deliveryTimeText}.`,
         duration: 5000,
       });
+
+      // Provide account creation prompt for guest users
+      if (!isAuthenticated) {
+        setTimeout(() => {
+          toast("Create an Account", {
+            description: "Create an account to track your orders and get exclusive discounts.",
+            duration: 8000,
+            action: {
+              label: "Sign Up",
+              onClick: () => {
+                // This would trigger the auth modal in a real app
+                console.log("User clicked sign up from toast");
+                // This is handled by the onClick of the action
+              }
+            }
+          });
+        }, 1000);
+      }
     }, 2000);
   };
 

@@ -1,16 +1,23 @@
 
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger, 
+  SelectValue
+} from "@/components/ui/select";
+import { infoCircled } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
-import { Phone } from "lucide-react";
 
 interface PaymentMethodSelectorProps {
   selectedMethod: string;
   onMethodChange: (method: string) => void;
   phoneNumber: string;
   onPhoneNumberChange: (phoneNumber: string) => void;
-  onShowPaymentInstructions?: () => void;
+  onShowPaymentInstructions: () => void;
 }
 
 const PaymentMethodSelector = ({
@@ -20,60 +27,65 @@ const PaymentMethodSelector = ({
   onPhoneNumberChange,
   onShowPaymentInstructions,
 }: PaymentMethodSelectorProps) => {
+  
   return (
-    <div className="space-y-2">
-      <Label htmlFor="payment-method">Payment Method</Label>
-      <RadioGroup 
-        id="payment-method" 
-        value={selectedMethod}
-        onValueChange={onMethodChange}
-        className="flex flex-col space-y-1"
-      >
-        <div className="flex items-center space-x-2 border p-3 rounded-md bg-yellow-50 border-yellow-200">
-          <RadioGroupItem value="mtn" id="mtn" />
-          <Label htmlFor="mtn" className="flex items-center">
-            <Phone className="h-5 w-5 text-yellow-500 mr-2" />
-            <span className="font-medium">Pay with MTN MoMo (0795754391)</span>
-          </Label>
-        </div>
-        <div className="flex items-center space-x-2 border p-3 rounded-md">
-          <RadioGroupItem value="equity" id="equity" />
-          <Label htmlFor="equity" className="flex items-center">
-            <span className="font-medium">Equity Bank</span>
-          </Label>
-        </div>
-        <div className="flex items-center space-x-2 border p-3 rounded-md">
-          <RadioGroupItem value="bk" id="bk" />
-          <Label htmlFor="bk" className="flex items-center">
-            <span className="font-medium">Bank of Kigali</span>
-          </Label>
-        </div>
-        <div className="flex items-center space-x-2 border p-3 rounded-md">
-          <RadioGroupItem value="im" id="im" />
-          <Label htmlFor="im" className="flex items-center">
-            <span className="font-medium">I&M Bank</span>
-          </Label>
-        </div>
-      </RadioGroup>
+    <div className="space-y-4">
+      <div>
+        <Label htmlFor="payment-method">Payment Method</Label>
+        <Select value={selectedMethod} onValueChange={onMethodChange}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select a payment method" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="mtn">MTN Mobile Money</SelectItem>
+            <SelectItem value="airtel">Airtel Money</SelectItem>
+            <SelectItem value="card">Credit/Debit Card</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
       
-      {selectedMethod === "mtn" && (
+      {(selectedMethod === "mtn" || selectedMethod === "airtel") && (
         <div className="space-y-2">
-          <Label htmlFor="phone">Your Phone Number</Label>
+          <div className="flex justify-between">
+            <Label htmlFor="phone-number">Phone Number</Label>
+            <Button 
+              variant="link" 
+              size="sm" 
+              className="h-auto p-0 text-xs"
+              onClick={onShowPaymentInstructions}
+            >
+              {infoCircled} Payment Instructions
+            </Button>
+          </div>
           <Input 
-            id="phone" 
-            placeholder="Your MTN number" 
+            id="phone-number"
+            placeholder="0700 000 000"
             value={phoneNumber}
             onChange={(e) => onPhoneNumberChange(e.target.value)}
-            required
           />
+          <div className="text-sm text-muted-foreground bg-amber-50 border border-amber-200 rounded p-2 mt-1">
+            For demo purposes, please send payment to: <span className="font-medium">0795754391</span>
+          </div>
+        </div>
+      )}
+      
+      {selectedMethod === "card" && (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="card-number">Card Number</Label>
+            <Input id="card-number" placeholder="1234 5678 9012 3456" />
+          </div>
           
-          <Button 
-            type="button" 
-            onClick={onShowPaymentInstructions}
-            className="w-full bg-yellow-500 hover:bg-yellow-600 mt-2"
-          >
-            Pay with MoMo (0795754391)
-          </Button>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="expiry">Expiry Date</Label>
+              <Input id="expiry" placeholder="MM/YY" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cvc">CVC</Label>
+              <Input id="cvc" placeholder="123" />
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -1,22 +1,25 @@
 
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { toast } from "sonner";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileTabs from "@/components/profile/ProfileTabs";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Profile = () => {
+  const { user, isAuthenticated, updateUserProfile, openAuthModal } = useAuth();
+  const navigate = useNavigate();
+  
   const [activeTab, setActiveTab] = useState("personal");
   const [profileData, setProfileData] = useState({
-    name: "Alex Johnson",
-    phone: "+233 55 123 4567",
-    email: "alex@example.com"
+    name: "",
+    phone: "",
+    email: ""
   });
-  const [profileImage, setProfileImage] = useState<string | null>(() => {
-    // Try to load from localStorage on initial render
-    return localStorage.getItem('profileImage');
-  });
+  
+  const [profileImage, setProfileImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Sample saved addresses
@@ -51,6 +54,34 @@ const Profile = () => {
     }
   ];
 
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      toast.error("Please log in to view your profile");
+      navigate("/");
+      setTimeout(() => {
+        openAuthModal();
+      }, 500);
+    }
+  }, [isAuthenticated, navigate, openAuthModal]);
+
+  // Load user data
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        name: user.name || "",
+        phone: "",
+        email: user.email || ""
+      });
+      
+      // Load profile image if it exists for this user
+      const savedProfileImage = user.profileImage || localStorage.getItem(`profileImage_${user.id}`);
+      if (savedProfileImage) {
+        setProfileImage(savedProfileImage);
+      }
+    }
+  }, [user]);
+
   const handleProfileImageClick = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
@@ -59,10 +90,17 @@ const Profile = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (file && user) {
       const reader = new FileReader();
       reader.onload = () => {
-        setProfileImage(reader.result as string);
+        const imageData = reader.result as string;
+        setProfileImage(imageData);
+        
+        // Save to localStorage with user ID
+        localStorage.setItem(`profileImage_${user.id}`, imageData);
+        
+        // Update user profile
+        updateUserProfile({ profileImage: imageData });
       };
       reader.readAsDataURL(file);
     }
@@ -77,16 +115,19 @@ const Profile = () => {
   };
   
   const handleSaveChanges = () => {
-    // Save profile data
-    // In a real app, you would save the data to a backend here
+    if (!user) return;
     
-    // Save profile image to localStorage
-    if (profileImage) {
-      localStorage.setItem('profileImage', profileImage);
-    }
+    // Update user profile
+    updateUserProfile({
+      name: profileData.name
+    });
     
     toast.success("Profile updated successfully!");
   };
+
+  if (!isAuthenticated || !user) {
+    return null; // Don't render anything while redirecting
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
