@@ -3,7 +3,7 @@ import { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ProductList from "@/components/custom-buy/ProductList";
-import Cart from "@/components/custom-buy/Cart";
+import CustomBuyCart from "@/components/custom-buy/CustomBuyCart";
 import products from "@/components/custom-buy/productsData";
 import { toast } from "sonner";
 
@@ -93,7 +93,7 @@ const CustomBuy = () => {
               
               {/* Cart Section */}
               <div className="lg:w-1/3">
-                <Cart 
+                <CustomBuyCart 
                   cart={cart}
                   products={products}
                   onAddToCart={addToCart}
