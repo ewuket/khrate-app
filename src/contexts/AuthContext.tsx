@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -148,7 +147,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Simulate sending OTP
-  const sendOTP = async (email: string) => {
+  const sendOTP = async (email: string): Promise<void> => {
     try {
       // Generate a random 6-digit OTP
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -169,17 +168,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast.success(`OTP sent to ${email}`, { 
         description: `[For demo only] Your OTP is: ${otp}` 
       });
-      
-      return true;
     } catch (error) {
       console.error("Error sending OTP:", error);
       toast.error("Failed to send OTP. Please try again.");
-      return false;
     }
   };
 
   // Verify OTP
-  const verifyOTP = async (otp: string) => {
+  const verifyOTP = async (otp: string): Promise<boolean> => {
     if (!pendingEmail) return false;
     
     setIsVerifyingOTP(true);

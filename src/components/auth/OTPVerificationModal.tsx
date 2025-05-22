@@ -52,11 +52,9 @@ const OTPVerificationModal: React.FC = () => {
 
   const handleResendOTP = async () => {
     if (pendingEmail && canResend) {
-      const success = await sendOTP(pendingEmail);
-      if (success) {
-        setCountdown(60);
-        setCanResend(false);
-      }
+      await sendOTP(pendingEmail);
+      setCountdown(60);
+      setCanResend(false);
     }
   };
 
