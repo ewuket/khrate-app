@@ -19,7 +19,8 @@ const Navbar = () => {
     { title: "Home", path: "/" },
     { title: "Bundles", path: "/bundles" },
     { title: "Custom Buy", path: "/custom-buy" },
-    { title: "Group Buy", path: "/group-buy" }
+    { title: "Group Buy", path: "/group-buy" },
+    { title: "My Orders", path: "/orders" }
   ];
   
   return (
@@ -30,7 +31,7 @@ const Navbar = () => {
             {/* Logo */}
             <Link to="/" className="flex items-center">
               <img 
-                src="/lovable-uploads/6394ed03-1023-4873-bb46-921839e56f26.png" 
+                src="/lovable-uploads/206fd2ee-0377-47a0-8083-70118088988f.png" 
                 alt="KHRATE Logo" 
                 className="h-10 w-auto" 
               />

@@ -16,6 +16,7 @@ import Orders from "./pages/Orders";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import CartSidebar from "./components/cart/CartSidebar";
+import ChatAssistant from "./components/chat/ChatAssistant";
 
 function App() {
   const queryClient = new QueryClient();
@@ -35,7 +36,7 @@ function App() {
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="flex flex-col items-center animate-fade-in">
           <img 
-            src="/lovable-uploads/6394ed03-1023-4873-bb46-921839e56f26.png" 
+            src="/lovable-uploads/206fd2ee-0377-47a0-8083-70118088988f.png" 
             alt="KHRATE Logo" 
             className="h-32 w-auto"
           />
@@ -55,6 +56,7 @@ function App() {
         <CartProvider>
           <BrowserRouter>
             <CartSidebar />
+            <ChatAssistant />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/bundles" element={<Bundles />} />

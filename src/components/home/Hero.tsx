@@ -29,9 +29,8 @@ const Hero = () => {
               </Button>
               
               <Button 
-                variant="outline" 
                 asChild
-                className="border-2 border-khrate-500 text-khrate-500 hover:bg-khrate-50 rounded-full px-8 py-6 text-base font-medium"
+                className="bg-khrate-500 hover:bg-khrate-600 text-white rounded-full px-8 py-6 text-base font-medium"
               >
                 <Link to="/custom-buy">
                   Custom Buy
@@ -39,9 +38,8 @@ const Hero = () => {
               </Button>
               
               <Button
-                variant="outline"
                 asChild
-                className="border-2 border-khrate-500 text-khrate-500 hover:bg-khrate-50 rounded-full px-8 py-6 text-base font-medium"
+                className="bg-khrate-500 hover:bg-khrate-600 text-white rounded-full px-8 py-6 text-base font-medium"
               >
                 <Link to="/group-buy">
                   <Users className="mr-2 h-5 w-5" />
