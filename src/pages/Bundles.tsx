@@ -61,6 +61,34 @@ const allBundles = [
     image: "/lovable-uploads/30fe686e-a6f6-469f-bb69-c889c304c4e7.png",
     items: ["Rice (3kg)", "Flour (2kg)", "Sugar (2kg)", "Oil (2L)", "Salt (1kg)", "Pasta (3 packs)", "Beans (2kg)", "Lentils (1kg)", "Spices (assorted)"],
     category: "large"
+  },
+  // New fruit bundles
+  {
+    id: 7,
+    name: "Small Fruit Bundle",
+    description: "Fresh seasonal fruits for 1-2 people",
+    price: 15000,
+    image: "/lovable-uploads/d0db3cc3-a1fc-43b8-b251-a4efba68113a.png",
+    items: ["Oranges (4)", "Apples (4)", "Bananas (6)", "Grapes (1 bunch)", "Strawberries (500g)"],
+    category: "fruit"
+  },
+  {
+    id: 8,
+    name: "Medium Fruit Bundle",
+    description: "Variety pack for a small family",
+    price: 28000,
+    image: "/lovable-uploads/d0db3cc3-a1fc-43b8-b251-a4efba68113a.png",
+    items: ["Oranges (6)", "Apples (6)", "Bananas (8)", "Grapes (2 bunches)", "Strawberries (750g)", "Pineapple (1)", "Mango (2)"],
+    category: "fruit"
+  },
+  {
+    id: 9,
+    name: "Large Fruit Bundle",
+    description: "Complete fruit assortment for families",
+    price: 42000,
+    image: "/lovable-uploads/d0db3cc3-a1fc-43b8-b251-a4efba68113a.png",
+    items: ["Oranges (10)", "Apples (10)", "Bananas (12)", "Grapes (3 bunches)", "Strawberries (1kg)", "Pineapple (2)", "Mango (4)", "Blueberries (250g)", "Raspberries (250g)"],
+    category: "fruit"
   }
 ];
 
@@ -111,6 +139,9 @@ const Bundles = () => {
                   </TabsTrigger>
                   <TabsTrigger value="large" className="data-[state=active]:text-khrate-500 data-[state=active]:border-khrate-500 rounded-none border-b-2 border-transparent data-[state=active]:bg-transparent">
                     Large
+                  </TabsTrigger>
+                  <TabsTrigger value="fruit" className="data-[state=active]:text-khrate-500 data-[state=active]:border-khrate-500 rounded-none border-b-2 border-transparent data-[state=active]:bg-transparent">
+                    Fruit
                   </TabsTrigger>
                 </TabsList>
               </div>

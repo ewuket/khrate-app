@@ -23,12 +23,12 @@ const bundles = [
     items: ["Rice (2kg)", "Beans (1kg)", "Tomatoes (10)", "Onions (8)", "Oil (1L)", "Salt (500g)", "Eggs (24)", "Bread (2)", "Milk (2L)"]
   },
   {
-    id: 3,
-    name: "Large Bundle",
-    description: "Family size, complete weekly groceries",
-    price: 75000,
-    image: "/lovable-uploads/30fe686e-a6f6-469f-bb69-c889c304c4e7.png",
-    items: ["Rice (5kg)", "Beans (2kg)", "Tomatoes (15)", "Onions (10)", "Oil (2L)", "Salt (1kg)", "Eggs (30)", "Bread (4)", "Milk (4L)", "Flour (2kg)", "Sugar (2kg)"]
+    id: 7,
+    name: "Small Fruit Bundle",
+    description: "Fresh seasonal fruits for 1-2 people",
+    price: 15000,
+    image: "/lovable-uploads/d0db3cc3-a1fc-43b8-b251-a4efba68113a.png",
+    items: ["Oranges (4)", "Apples (4)", "Bananas (6)", "Grapes (1 bunch)", "Strawberries (500g)"]
   }
 ];
 
