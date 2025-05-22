@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -7,10 +7,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, MapPin, Clock, ShoppingBasket, LogOut } from "lucide-react";
+import { User, MapPin, Clock, ShoppingBasket, LogOut, Upload } from "lucide-react";
+import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState("personal");
+  const [profileData, setProfileData] = useState({
+    name: "Alex Johnson",
+    phone: "+233 55 123 4567",
+    email: "alex@example.com"
+  });
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Sample saved addresses
   const savedAddresses = [
@@ -43,7 +52,37 @@ const Profile = () => {
       lastOrdered: "2025-05-01"
     }
   ];
+
+  const handleProfileImageClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setProfileImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setProfileData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
   
+  const handleSaveChanges = () => {
+    toast.success("Profile updated successfully!");
+    // In a real app, you would save the data to a backend here
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -52,14 +91,30 @@ const Profile = () => {
         <section className="bg-gradient-to-r from-khrate-500 to-khrate-600 py-12 text-white">
           <div className="container mx-auto">
             <div className="flex items-center gap-4">
-              <div className="bg-white rounded-full p-1">
-                <div className="bg-khrate-100 rounded-full h-16 w-16 flex items-center justify-center">
-                  <User className="h-8 w-8 text-khrate-500" />
+              <div 
+                className="relative cursor-pointer"
+                onClick={handleProfileImageClick}
+              >
+                <Avatar className="h-20 w-20 border-2 border-white">
+                  <AvatarImage src={profileImage || undefined} />
+                  <AvatarFallback className="bg-khrate-100">
+                    <User className="h-10 w-10 text-khrate-500" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow-md">
+                  <Upload className="h-4 w-4 text-khrate-500" />
                 </div>
+                <input 
+                  type="file" 
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  className="hidden"
+                  accept="image/*"
+                />
               </div>
               <div>
                 <h1 className="text-3xl md:text-4xl font-bold">My Profile</h1>
-                <p className="mt-1">Welcome back, Alex</p>
+                <p className="mt-1">Welcome back, {profileData.name.split(" ")[0]}</p>
               </div>
             </div>
           </div>
@@ -88,20 +143,35 @@ const Profile = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label htmlFor="name">Full Name</Label>
-                        <Input id="name" defaultValue="Alex Johnson" />
+                        <Input 
+                          id="name" 
+                          value={profileData.name}
+                          onChange={handleInputChange}
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="phone">Phone Number</Label>
-                        <Input id="phone" defaultValue="+233 55 123 4567" />
+                        <Input 
+                          id="phone" 
+                          value={profileData.phone}
+                          onChange={handleInputChange}
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="email">Email (Optional)</Label>
-                        <Input id="email" defaultValue="alex@example.com" />
+                        <Input 
+                          id="email" 
+                          value={profileData.email}
+                          onChange={handleInputChange}
+                        />
                       </div>
                     </div>
                     
                     <div className="flex justify-end mt-4">
-                      <Button className="bg-khrate-500 hover:bg-khrate-600">
+                      <Button 
+                        className="bg-khrate-500 hover:bg-khrate-600"
+                        onClick={handleSaveChanges}
+                      >
                         Save Changes
                       </Button>
                     </div>
