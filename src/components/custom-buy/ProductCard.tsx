@@ -52,7 +52,7 @@ const ProductCard = ({
       <div className="p-4">
         <div className="flex justify-between items-start mb-2">
           <h3 className="font-medium">{name}</h3>
-          <span className="font-semibold">${price}/{unit}</span>
+          <span className="font-semibold">{price.toLocaleString()} RWF/{unit}</span>
         </div>
         
         <div className="mt-4">

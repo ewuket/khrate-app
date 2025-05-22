@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -24,10 +25,12 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     if (otpSent) {
       // Verify OTP logic would go here
       console.log("Verifying OTP", otp);
+      toast.success("Login successful!");
       onClose();
     } else {
       // Send OTP logic would go here
       console.log("Sending OTP to", phone);
+      toast.success("OTP sent to your phone");
       setOtpSent(true);
     }
   };
@@ -36,12 +39,14 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     e.preventDefault();
     // Signup logic would go here
     console.log("Sign up with", phone);
+    toast.success("Account created successfully!");
     onClose();
   };
 
   const handleGuestMode = () => {
     // Guest mode logic would go here
     console.log("Continue as guest");
+    toast.success("Continuing as guest");
     onClose();
   };
 

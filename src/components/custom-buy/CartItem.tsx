@@ -35,7 +35,7 @@ const CartItem = ({
       <div>
         <p className="font-medium">{name}</p>
         <p className="text-sm text-muted-foreground">
-          ${price} x {quantity} {unit}(s)
+          {price.toLocaleString()} RWF x {quantity} {unit}(s)
         </p>
       </div>
       <div className="flex items-center space-x-2">

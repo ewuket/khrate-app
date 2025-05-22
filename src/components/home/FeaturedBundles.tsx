@@ -9,24 +9,24 @@ const bundles = [
     id: 1,
     name: "Single Bundle",
     description: "Perfect for 1 person, 7-day essentials",
-    price: 25.99,
-    image: "https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?q=80&w=2574&auto=format&fit=crop",
+    price: 25000,
+    image: "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1974&auto=format&fit=crop",
     items: ["Rice", "Beans", "Tomatoes", "Onions", "Oil", "Salt", "Eggs"]
   },
   {
     id: 2,
     name: "Medium Bundle",
     description: "Great for 2-3 people, weekly essentials",
-    price: 45.99,
-    image: "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1974&auto=format&fit=crop",
+    price: 45000,
+    image: "https://images.unsplash.com/photo-1579113800032-c38bd7635818?q=80&w=1000&auto=format&fit=crop",
     items: ["Rice", "Beans", "Tomatoes", "Onions", "Oil", "Salt", "Eggs", "Bread", "Milk"]
   },
   {
     id: 3,
     name: "Large Bundle",
     description: "Family size, complete weekly groceries",
-    price: 75.99,
-    image: "https://images.unsplash.com/photo-1506617420156-8e4536971650?q=80&w=2574&auto=format&fit=crop",
+    price: 75000,
+    image: "https://images.unsplash.com/photo-1590779033100-9f60a05a013d?q=80&w=1000&auto=format&fit=crop",
     items: ["Rice", "Beans", "Tomatoes", "Onions", "Oil", "Salt", "Eggs", "Bread", "Milk", "Flour", "Sugar"]
   }
 ];

@@ -5,6 +5,7 @@ import Footer from "@/components/layout/Footer";
 import ProductList from "@/components/custom-buy/ProductList";
 import Cart from "@/components/custom-buy/Cart";
 import products from "@/components/custom-buy/productsData";
+import { toast } from "sonner";
 
 interface CartItem {
   id: number;
@@ -34,6 +35,7 @@ const CustomBuy = () => {
         unit: product.unit
       }]);
     }
+    toast.success(`${product.name} added to cart`);
   };
   
   const removeFromCart = (productId: number) => {
@@ -46,11 +48,15 @@ const CustomBuy = () => {
       ));
     } else {
       setCart(cart.filter(item => item.id !== productId));
+      const product = products.find(p => p.id === productId);
+      if (product) {
+        toast.info(`${product.name} removed from cart`);
+      }
     }
   };
   
   const calculateTotal = () => {
-    return cart.reduce((total, item) => total + (item.price * item.quantity), 0).toFixed(2);
+    return cart.reduce((total, item) => total + (item.price * item.quantity), 0).toLocaleString();
   };
   
   const getItemQuantity = (productId: number) => {

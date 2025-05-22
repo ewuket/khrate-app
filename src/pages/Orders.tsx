@@ -6,7 +6,9 @@ import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, ArrowRight, ShoppingBasket } from "lucide-react";
+import { Package, ArrowRight, ShoppingBasket, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 // Sample orders data
 const orders = [
@@ -15,32 +17,32 @@ const orders = [
     date: "2025-05-15",
     status: "delivered",
     items: ["Rice", "Beans", "Tomatoes", "Onions", "Oil"],
-    total: 35.99,
-    deliveryAddress: "123 University Hostel, Campus Road"
+    total: 35000,
+    deliveryAddress: "123 University Hostel, KN 5 Ave, Kigali, Rwanda"
   },
   {
     id: "ORD-002",
     date: "2025-05-10",
     status: "delivered",
     items: ["Eggs", "Milk", "Bread", "Sugar", "Tea"],
-    total: 22.50,
-    deliveryAddress: "123 University Hostel, Campus Road"
+    total: 22500,
+    deliveryAddress: "123 University Hostel, KN 5 Ave, Kigali, Rwanda"
   },
   {
     id: "ORD-003",
     date: "2025-05-18",
     status: "processing",
     items: ["Rice", "Beans", "Salt", "Oil", "Onions", "Tomatoes"],
-    total: 42.75,
-    deliveryAddress: "123 University Hostel, Campus Road"
+    total: 42750,
+    deliveryAddress: "123 University Hostel, KN 5 Ave, Kigali, Rwanda"
   },
   {
     id: "ORD-004",
     date: "2025-05-20",
     status: "pending",
     items: ["Flour", "Sugar", "Eggs", "Milk", "Baking Powder"],
-    total: 28.99,
-    deliveryAddress: "123 University Hostel, Campus Road"
+    total: 28990,
+    deliveryAddress: "123 University Hostel, KN 5 Ave, Kigali, Rwanda"
   }
 ];
 
@@ -52,10 +54,22 @@ const statusColors: Record<string, string> = {
 
 const Orders = () => {
   const [filter, setFilter] = useState("all");
+  const [selectedOrder, setSelectedOrder] = useState<typeof orders[0] | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   
   const filteredOrders = filter === "all" 
     ? orders 
     : orders.filter(order => order.status === filter);
+
+  const handleViewDetails = (order: typeof orders[0]) => {
+    setSelectedOrder(order);
+    setDetailsOpen(true);
+  };
+
+  const handleOrderAgain = (order: typeof orders[0]) => {
+    toast.success("Items added to your cart");
+    // In a real app, we would add the items to the cart here
+  };
   
   return (
     <div className="flex flex-col min-h-screen">
@@ -130,13 +144,14 @@ const Orders = () => {
                         </div>
                         
                         <div className="flex flex-col items-end">
-                          <div className="text-xl font-bold mb-4">${order.total.toFixed(2)}</div>
+                          <div className="text-xl font-bold mb-4">{order.total.toLocaleString()} RWF</div>
                           
                           <div className="space-y-2">
                             <Button 
                               variant="outline" 
                               size="sm" 
                               className="w-full md:w-auto"
+                              onClick={() => handleViewDetails(order)}
                             >
                               View Details
                               <ArrowRight className="ml-2 h-4 w-4" />
@@ -146,6 +161,7 @@ const Orders = () => {
                               variant="outline" 
                               size="sm" 
                               className="w-full md:w-auto"
+                              onClick={() => handleOrderAgain(order)}
                             >
                               Order Again
                               <ShoppingBasket className="ml-2 h-4 w-4" />
@@ -161,6 +177,74 @@ const Orders = () => {
           </div>
         </section>
       </main>
+      
+      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              Order Details
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setDetailsOpen(false)}
+                className="h-6 w-6 rounded-full"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedOrder && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium">{selectedOrder.id}</h3>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[selectedOrder.status]}`}>
+                  {selectedOrder.status.charAt(0).toUpperCase() + selectedOrder.status.slice(1)}
+                </span>
+              </div>
+              
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  Ordered on {new Date(selectedOrder.date).toLocaleDateString()}
+                </p>
+              </div>
+              
+              <div className="border-t border-b py-3">
+                <h4 className="font-medium mb-2">Items</h4>
+                <ul className="space-y-1">
+                  {selectedOrder.items.map((item, index) => (
+                    <li key={index} className="text-sm flex justify-between">
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              
+              <div>
+                <p className="text-sm"><span className="font-medium">Delivery Address:</span> {selectedOrder.deliveryAddress}</p>
+              </div>
+              
+              <div className="flex justify-between items-center font-bold">
+                <span>Total Amount:</span>
+                <span>{selectedOrder.total.toLocaleString()} RWF</span>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button 
+              className="bg-khrate-500 hover:bg-khrate-600 w-full"
+              onClick={() => {
+                if (selectedOrder) handleOrderAgain(selectedOrder);
+                setDetailsOpen(false);
+              }}
+            >
+              Order Again
+              <ShoppingBasket className="ml-2 h-4 w-4" />
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       <Footer />
     </div>

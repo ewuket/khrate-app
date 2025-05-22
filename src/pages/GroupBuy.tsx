@@ -6,10 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { Users, MapPin, Clock } from "lucide-react";
+import { Users, MapPin, Clock, Plus } from "lucide-react";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 // Sample groups data
-const groups = [
+const initialGroups = [
   {
     id: 1,
     name: "Campus Hostel Group",
@@ -64,10 +68,57 @@ const groups = [
 
 const GroupBuy = () => {
   const [groupType, setGroupType] = useState("all");
+  const [groups, setGroups] = useState(initialGroups);
+  const [createGroupOpen, setCreateGroupOpen] = useState(false);
+  const [newGroup, setNewGroup] = useState({
+    name: "",
+    location: "",
+    maxMembers: 5,
+    type: "open",
+    discount: "15%"
+  });
   
   const filteredGroups = groupType === "all" 
     ? groups 
     : groups.filter(group => group.type === groupType);
+    
+  const handleJoinGroup = (groupId: number) => {
+    setGroups(groups.map(group => 
+      group.id === groupId ? 
+      { ...group, members: group.members + 1 } : 
+      group
+    ));
+    
+    toast.success("You've joined the group successfully!");
+  };
+  
+  const handleCreateGroup = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const newGroupEntry = {
+      id: groups.length + 1,
+      name: newGroup.name,
+      location: newGroup.location,
+      members: 1, // Creator is the first member
+      maxMembers: Number(newGroup.maxMembers),
+      discount: newGroup.discount,
+      timeLeft: "2 days",
+      type: newGroup.type as "local" | "open"
+    };
+    
+    setGroups([...groups, newGroupEntry]);
+    setCreateGroupOpen(false);
+    toast.success("Your group has been created!");
+    
+    // Reset form
+    setNewGroup({
+      name: "",
+      location: "",
+      maxMembers: 5,
+      type: "open",
+      discount: "15%"
+    });
+  };
   
   return (
     <div className="flex flex-col min-h-screen">
@@ -111,7 +162,13 @@ const GroupBuy = () => {
                 </div>
               </div>
               <div className="mt-6 flex justify-center">
-                <Button className="bg-khrate-500 hover:bg-khrate-600">Create New Group</Button>
+                <Button 
+                  className="bg-khrate-500 hover:bg-khrate-600"
+                  onClick={() => setCreateGroupOpen(true)}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create New Group
+                </Button>
               </div>
             </div>
             
@@ -170,6 +227,11 @@ const GroupBuy = () => {
                       <Button 
                         className="w-full bg-khrate-500 hover:bg-khrate-600"
                         disabled={group.members === group.maxMembers || group.timeLeft === "Completed"}
+                        onClick={() => {
+                          if (group.members < group.maxMembers && group.timeLeft !== "Completed") {
+                            handleJoinGroup(group.id);
+                          }
+                        }}
                       >
                         {group.members === group.maxMembers || group.timeLeft === "Completed" ? "Group Full" : "Join Group"}
                       </Button>
@@ -181,6 +243,88 @@ const GroupBuy = () => {
           </div>
         </section>
       </main>
+      
+      <Dialog open={createGroupOpen} onOpenChange={setCreateGroupOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Create a New Group</DialogTitle>
+            <DialogDescription>
+              Set up your group details to get started
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleCreateGroup}>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Group Name</Label>
+                <Input 
+                  id="name" 
+                  value={newGroup.name} 
+                  onChange={(e) => setNewGroup({ ...newGroup, name: e.target.value })} 
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="location">Location</Label>
+                <Input 
+                  id="location" 
+                  value={newGroup.location} 
+                  onChange={(e) => setNewGroup({ ...newGroup, location: e.target.value })} 
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="maxMembers">Maximum Members</Label>
+                <Input 
+                  id="maxMembers" 
+                  type="number" 
+                  min={2}
+                  max={20}
+                  value={newGroup.maxMembers} 
+                  onChange={(e) => setNewGroup({ ...newGroup, maxMembers: Number(e.target.value) })} 
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Group Type</Label>
+                <div className="flex space-x-4">
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="groupType"
+                      value="open"
+                      checked={newGroup.type === "open"}
+                      onChange={() => setNewGroup({ ...newGroup, type: "open" })}
+                      className="rounded text-khrate-500"
+                    />
+                    <span>Open Group</span>
+                  </label>
+                  
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="groupType"
+                      value="local"
+                      checked={newGroup.type === "local"}
+                      onChange={() => setNewGroup({ ...newGroup, type: "local" })}
+                      className="rounded text-khrate-500"
+                    />
+                    <span>Local Group</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setCreateGroupOpen(false)}>Cancel</Button>
+              <Button type="submit" className="bg-khrate-500 hover:bg-khrate-600">Create Group</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
       
       <Footer />
     </div>
