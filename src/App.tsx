@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { CartProvider } from "@/contexts/CartContext";
 
 // Pages
 import Index from "./pages/Index";
@@ -14,6 +15,7 @@ import GroupBuy from "./pages/GroupBuy";
 import Orders from "./pages/Orders";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import CartSidebar from "./components/cart/CartSidebar";
 
 function App() {
   const queryClient = new QueryClient();
@@ -50,17 +52,20 @@ function App() {
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/bundles" element={<Bundles />} />
-            <Route path="/custom-buy" element={<CustomBuy />} />
-            <Route path="/group-buy" element={<GroupBuy />} />
-            <Route path="/orders" element={<Orders />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <CartProvider>
+          <BrowserRouter>
+            <CartSidebar />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/bundles" element={<Bundles />} />
+              <Route path="/custom-buy" element={<CustomBuy />} />
+              <Route path="/group-buy" element={<GroupBuy />} />
+              <Route path="/orders" element={<Orders />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </CartProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

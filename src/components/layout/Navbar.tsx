@@ -1,13 +1,16 @@
 
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, ShoppingCart, User } from "lucide-react";
 import AuthModal from "@/components/auth/AuthModal";
+import { useCart } from "@/contexts/CartContext";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const { cart, openCart } = useCart();
+  const location = useLocation();
   
   // Simulated auth state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -27,7 +30,7 @@ const Navbar = () => {
             {/* Logo */}
             <Link to="/" className="flex items-center">
               <img 
-                src="/lovable-uploads/87618cc5-dec8-4826-9426-51ad24b6362a.png" 
+                src="/lovable-uploads/6394ed03-1023-4873-bb46-921839e56f26.png" 
                 alt="KHRATE Logo" 
                 className="h-10 w-auto" 
               />
@@ -39,7 +42,9 @@ const Navbar = () => {
                 <Link 
                   key={link.path} 
                   to={link.path}
-                  className="text-gray-700 hover:text-khrate-500 transition-colors"
+                  className={`text-gray-700 hover:text-khrate-500 transition-colors ${
+                    location.pathname === link.path ? "text-khrate-500 font-medium" : ""
+                  }`}
                 >
                   {link.title}
                 </Link>
@@ -79,13 +84,37 @@ const Navbar = () => {
                   </Button>
                 </>
               )}
-              <Link to="/custom-buy" className="text-gray-700 hover:text-khrate-500">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="relative text-gray-700 hover:text-khrate-500"
+                onClick={openCart}
+              >
                 <ShoppingCart className="h-5 w-5" />
-              </Link>
+                {cart.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-khrate-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {cart.length}
+                  </span>
+                )}
+              </Button>
             </div>
             
             {/* Mobile menu button */}
-            <div className="md:hidden">
+            <div className="md:hidden flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="relative text-gray-700 hover:text-khrate-500"
+                onClick={openCart}
+              >
+                <ShoppingCart className="h-5 w-5" />
+                {cart.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-khrate-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {cart.length}
+                  </span>
+                )}
+              </Button>
+              
               <Button 
                 variant="ghost" 
                 size="icon"
@@ -107,7 +136,9 @@ const Navbar = () => {
                   <Link 
                     key={link.path} 
                     to={link.path}
-                    className="text-gray-700 hover:text-khrate-500 transition-colors py-2"
+                    className={`text-gray-700 hover:text-khrate-500 transition-colors py-2 ${
+                      location.pathname === link.path ? "text-khrate-500 font-medium" : ""
+                    }`}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {link.title}
