@@ -84,7 +84,7 @@ const Orders = () => {
     }
   };
 
-  // For authenticated users who need to log in
+  // For non-authenticated users who need to log in
   if (!isAuthenticated) {
     return (
       <div className="flex flex-col min-h-screen">

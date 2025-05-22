@@ -26,10 +26,10 @@ const OTPVerificationModal: React.FC = () => {
   } = useAuth();
 
   const [otp, setOtp] = useState("");
-  const [countdown, setCountdown] = useState(60);
+  const [countdown, setCountdown] = useState(300); // 5 minutes in seconds
   const [canResend, setCanResend] = useState(false);
 
-  // Handle countdown for OTP resend
+  // Handle countdown for OTP resend and expiry
   useEffect(() => {
     if (!otpSent || countdown <= 0) {
       setCanResend(true);
@@ -53,7 +53,7 @@ const OTPVerificationModal: React.FC = () => {
   const handleResendOTP = async () => {
     if (pendingEmail && canResend) {
       await sendOTP(pendingEmail);
-      setCountdown(60);
+      setCountdown(300);
       setCanResend(false);
     }
   };
@@ -67,6 +67,13 @@ const OTPVerificationModal: React.FC = () => {
     } else {
       toast.error("Please enter a valid 6-digit OTP");
     }
+  };
+
+  // Format time as mm:ss
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? '0' + secs : secs}`;
   };
 
   return (
@@ -119,7 +126,7 @@ const OTPVerificationModal: React.FC = () => {
               </Button>
             ) : (
               <span className="text-muted-foreground">
-                Resend code in {countdown} seconds
+                Code expires in {formatTime(countdown)}
               </span>
             )}
           </div>

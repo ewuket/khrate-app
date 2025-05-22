@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { X, ShoppingBasket } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Order, statusColors } from "@/types/order";
+import { Order, statusColors, timeSlots } from "@/types/order";
 
 interface OrderDetailsDialogProps {
   open: boolean;
@@ -66,6 +66,15 @@ const OrderDetailsDialog = ({ open, onOpenChange, order }: OrderDetailsDialogPro
           <div>
             <p className="text-sm"><span className="font-medium">Delivery Address:</span> {order.deliveryAddress}</p>
           </div>
+          
+          {order.deliverySchedule && (
+            <div>
+              <p className="text-sm">
+                <span className="font-medium">Delivery Schedule:</span> {new Date(order.deliverySchedule.date).toLocaleDateString()}{' '}
+                {timeSlots[order.deliverySchedule.timeSlot] || order.deliverySchedule.timeSlot}
+              </p>
+            </div>
+          )}
           
           <div className="flex justify-between items-center font-bold">
             <span>Total Amount:</span>

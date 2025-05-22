@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -158,7 +159,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Store OTP in localStorage (simulating a database)
       localStorage.setItem(`khrate_otp_${email}`, JSON.stringify({
         otp,
-        expiresAt: new Date(Date.now() + 15 * 60000).toISOString() // 15 minutes expiry
+        expiresAt: new Date(Date.now() + 5 * 60000).toISOString() // 5 minutes expiry
       }));
       
       setOtpSent(true);
