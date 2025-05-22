@@ -50,15 +50,15 @@ const ProductCard = ({
         />
       </div>
       <div className="p-4">
-        <div className="flex justify-between items-start mb-2">
-          <h3 className="font-medium">{name}</h3>
-          <span className="font-semibold">{price.toLocaleString()} RWF/{unit}</span>
+        <div className="flex flex-col mb-2">
+          <h3 className="font-medium text-base line-clamp-1" title={name}>{name}</h3>
+          <span className="font-semibold text-orange-500 mt-1">{price.toLocaleString()} RWF/{unit}</span>
         </div>
         
         <div className="mt-4">
           {quantity === 0 ? (
             <Button 
-              className="w-full bg-khrate-500 hover:bg-khrate-600"
+              className="w-full bg-orange-500 hover:bg-orange-600"
               onClick={() => onAddToCart(product)}
             >
               <ShoppingBasket className="mr-2 h-4 w-4" />

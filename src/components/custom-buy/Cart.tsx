@@ -108,11 +108,11 @@ const Cart = ({
                 </div>
                 <div className="flex justify-between font-bold">
                   <span>Total:</span>
-                  <span>{calculateTotal()} RWF</span>
+                  <span className="text-orange-500">{calculateTotal()} RWF</span>
                 </div>
               </div>
               
-              <Button className="w-full mt-6 bg-khrate-500 hover:bg-khrate-600" onClick={handleCheckout}>
+              <Button className="w-full mt-6 bg-orange-500 hover:bg-orange-600" onClick={handleCheckout}>
                 Proceed to Checkout
               </Button>
               
@@ -186,7 +186,7 @@ const Cart = ({
               <div className="space-y-2">
                 <div className="flex justify-between font-semibold">
                   <span>Total Amount:</span>
-                  <span>{calculateTotal()} RWF</span>
+                  <span className="text-orange-500">{calculateTotal()} RWF</span>
                 </div>
               </div>
             </div>
@@ -196,7 +196,7 @@ const Cart = ({
               <Button 
                 type="submit" 
                 disabled={processingPayment}
-                className="bg-khrate-500 hover:bg-khrate-600"
+                className="bg-orange-500 hover:bg-orange-600"
               >
                 {processingPayment ? "Processing..." : "Pay Now"}
               </Button>

@@ -70,8 +70,8 @@ const BundleCard = ({ bundle, onAddToCart }: BundleCardProps) => {
             </div>
           </div>
           
-          <div className="flex items-center justify-between">
-            <div className="text-xl font-bold text-khrate-500">{bundle.price.toLocaleString()} RWF</div>
+          <div className="flex items-center justify-between mt-6">
+            <div className="text-xl font-bold text-orange-500">{bundle.price.toLocaleString()} RWF</div>
             <div className="flex gap-2">
               <Button 
                 size="sm" 
@@ -83,7 +83,7 @@ const BundleCard = ({ bundle, onAddToCart }: BundleCardProps) => {
               </Button>
               <Button 
                 size="sm" 
-                className="bg-khrate-500 hover:bg-khrate-600"
+                className="bg-orange-500 hover:bg-orange-600"
                 onClick={handleAddToCart}
               >
                 <ShoppingBasket className="mr-2 h-4 w-4" />

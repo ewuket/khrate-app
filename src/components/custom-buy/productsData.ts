@@ -95,7 +95,7 @@ const products = [
     name: "Inyange Milk",
     price: 1100,
     unit: "liter",
-    image: "https://images.unsplash.com/photo-1563636619-e9143da7973b?q=80&w=1000&auto=format&fit=crop",
+    image: "/lovable-uploads/b2a772dc-4abb-463a-88e9-370f4fdd2684.png",
     category: "perishable"
   },
   {
@@ -111,7 +111,7 @@ const products = [
     name: "Inyange Yogurt",
     price: 900,
     unit: "container",
-    image: "https://images.unsplash.com/photo-1570197788417-0e82375c9371?q=80&w=1000&auto=format&fit=crop",
+    image: "/lovable-uploads/616885e4-604b-4999-8a22-90a738d3c1e0.png",
     category: "perishable"
   },
   {
@@ -225,7 +225,7 @@ const products = [
     name: "Cereal",
     price: 1800,
     unit: "box",
-    image: "https://images.unsplash.com/photo-1626257726556-42048da20a1a?q=80&w=1000&auto=format&fit=crop",
+    image: "/lovable-uploads/20e340ed-b7ad-456e-81f6-98ca7f202ef7.png",
     category: "non-perishable"
   },
   {
@@ -233,7 +233,7 @@ const products = [
     name: "Honey",
     price: 2500,
     unit: "jar",
-    image: "https://images.unsplash.com/photo-1598060585654-ce91bec18c9e?q=80&w=1000&auto=format&fit=crop",
+    image: "/lovable-uploads/20e340ed-b7ad-456e-81f6-98ca7f202ef7.png",
     category: "non-perishable"
   },
   {
@@ -241,7 +241,7 @@ const products = [
     name: "Peanut Butter",
     price: 1700,
     unit: "jar",
-    image: "https://images.unsplash.com/photo-1590305173453-2df69b218222?q=80&w=1000&auto=format&fit=crop",
+    image: "/lovable-uploads/20e340ed-b7ad-456e-81f6-98ca7f202ef7.png",
     category: "non-perishable"
   },
   {
@@ -249,7 +249,7 @@ const products = [
     name: "Lentils",
     price: 1300,
     unit: "kg",
-    image: "https://images.unsplash.com/photo-1622390574121-271406437ec8?q=80&w=1000&auto=format&fit=crop",
+    image: "/lovable-uploads/20e340ed-b7ad-456e-81f6-98ca7f202ef7.png",
     category: "non-perishable"
   },
   {
@@ -275,7 +275,7 @@ const products = [
     name: "Toilet Paper",
     price: 1200,
     unit: "pack",
-    image: "https://images.unsplash.com/photo-1583251633264-283c859805b7?q=80&w=1000&auto=format&fit=crop",
+    image: "/lovable-uploads/20e340ed-b7ad-456e-81f6-98ca7f202ef7.png",
     category: "household"
   },
   {

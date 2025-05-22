@@ -33,8 +33,8 @@ const CartItem = ({
   return (
     <div className="flex justify-between items-center">
       <div>
-        <p className="font-medium">{name}</p>
-        <p className="text-sm text-muted-foreground">
+        <p className="font-medium line-clamp-1" title={name}>{name}</p>
+        <p className="text-sm text-orange-500 font-semibold">
           {price.toLocaleString()} RWF x {quantity} {unit}(s)
         </p>
       </div>
