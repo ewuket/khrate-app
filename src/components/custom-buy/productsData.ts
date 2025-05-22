@@ -14,7 +14,7 @@ const products = [
     name: "Beans",
     price: 1.99,
     unit: "kg",
-    image: "https://images.unsplash.com/photo-1593855856339-8322a8143996?q=80&w=1000&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1515543904379-3d757afe72e4?q=80&w=1000&auto=format&fit=crop",
     category: "non-perishable"
   },
   {
@@ -22,7 +22,7 @@ const products = [
     name: "Tomatoes",
     price: 1.49,
     unit: "kg",
-    image: "https://images.unsplash.com/photo-1561136594-7f68413baa99?q=80&w=1000&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1606588260160-0c2707ea5b27?q=80&w=1000&auto=format&fit=crop",
     category: "perishable"
   },
   {
@@ -30,7 +30,7 @@ const products = [
     name: "Onions",
     price: 0.99,
     unit: "kg",
-    image: "https://images.unsplash.com/photo-1620574387735-3624d75e5972?q=80&w=1000&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1518977956812-cd3dbadaaf31?q=80&w=1000&auto=format&fit=crop",
     category: "perishable"
   },
   {
@@ -38,7 +38,7 @@ const products = [
     name: "Cooking Oil",
     price: 5.99,
     unit: "litre",
-    image: "https://images.unsplash.com/photo-1620705464770-c1e4a61882c7?q=80&w=1000&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?q=80&w=1000&auto=format&fit=crop",
     category: "non-perishable"
   },
   {
@@ -46,7 +46,7 @@ const products = [
     name: "Salt",
     price: 0.75,
     unit: "kg",
-    image: "https://images.unsplash.com/photo-1616316788344-eda641d86199?q=80&w=1000&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1582191074171-c896e0f41e8a?q=80&w=1000&auto=format&fit=crop",
     category: "household"
   },
   {
@@ -54,7 +54,7 @@ const products = [
     name: "Soap",
     price: 1.25,
     unit: "piece",
-    image: "https://images.unsplash.com/photo-1607006555447-60394120caaa?q=80&w=1000&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1584305574647-0cc949a2bb9f?q=80&w=1000&auto=format&fit=crop",
     category: "household"
   },
   {
@@ -62,7 +62,7 @@ const products = [
     name: "Cabbage",
     price: 1.29,
     unit: "piece",
-    image: "https://images.unsplash.com/photo-1603049404411-13c2ca81a316?q=80&w=1000&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1551889779-b7e038112b7e?q=80&w=1000&auto=format&fit=crop",
     category: "perishable"
   }
 ];
