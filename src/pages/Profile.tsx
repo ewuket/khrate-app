@@ -1,5 +1,5 @@
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { toast } from "sonner";
@@ -13,7 +13,10 @@ const Profile = () => {
     phone: "+233 55 123 4567",
     email: "alex@example.com"
   });
-  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [profileImage, setProfileImage] = useState<string | null>(() => {
+    // Try to load from localStorage on initial render
+    return localStorage.getItem('profileImage');
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Sample saved addresses
@@ -74,8 +77,15 @@ const Profile = () => {
   };
   
   const handleSaveChanges = () => {
-    toast.success("Profile updated successfully!");
+    // Save profile data
     // In a real app, you would save the data to a backend here
+    
+    // Save profile image to localStorage
+    if (profileImage) {
+      localStorage.setItem('profileImage', profileImage);
+    }
+    
+    toast.success("Profile updated successfully!");
   };
 
   return (

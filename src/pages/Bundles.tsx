@@ -13,7 +13,7 @@ const allBundles = [
     name: "Single Bundle",
     description: "Perfect for 1 person, 7-day essentials",
     price: 25000,
-    image: "https://images.unsplash.com/photo-1543168256-418811576931?q=80&w=2070&auto=format&fit=crop",
+    image: "/lovable-uploads/464ca869-8797-4eb8-9526-98af04334e84.png",
     items: ["Rice (1kg)", "Beans (500g)", "Tomatoes (6)", "Onions (4)", "Oil (500ml)", "Salt (250g)", "Eggs (12)"],
     category: "single"
   },
@@ -22,7 +22,7 @@ const allBundles = [
     name: "Medium Bundle",
     description: "Great for 2-3 people, weekly essentials",
     price: 45000,
-    image: "https://images.unsplash.com/photo-1604719312566-8912e9c8f07a?q=80&w=2460&auto=format&fit=crop",
+    image: "/lovable-uploads/2455b7e0-b0f8-4f2a-aaca-995dcd6da943.png",
     items: ["Rice (2kg)", "Beans (1kg)", "Tomatoes (10)", "Onions (8)", "Oil (1L)", "Salt (500g)", "Eggs (24)", "Bread (2)", "Milk (2L)"],
     category: "medium"
   },
@@ -31,7 +31,7 @@ const allBundles = [
     name: "Large Bundle",
     description: "Family size, complete weekly groceries",
     price: 75000,
-    image: "https://images.unsplash.com/photo-1608686207856-001b95cf60ca?q=80&w=2587&auto=format&fit=crop",
+    image: "/lovable-uploads/30fe686e-a6f6-469f-bb69-c889c304c4e7.png",
     items: ["Rice (5kg)", "Beans (2kg)", "Tomatoes (15)", "Onions (10)", "Oil (2L)", "Salt (1kg)", "Eggs (30)", "Bread (4)", "Milk (4L)", "Flour (2kg)", "Sugar (2kg)"],
     category: "large"
   },
@@ -40,7 +40,7 @@ const allBundles = [
     name: "Vegetables Bundle",
     description: "Fresh vegetables for the week",
     price: 19999,
-    image: "https://images.unsplash.com/photo-1590779033100-9f60a05a013d?q=80&w=2574&auto=format&fit=crop",
+    image: "/lovable-uploads/464ca869-8797-4eb8-9526-98af04334e84.png",
     items: ["Tomatoes (10)", "Onions (8)", "Carrots (8)", "Lettuce (2)", "Peppers (6)", "Cucumber (4)"],
     category: "single"
   },
@@ -49,7 +49,7 @@ const allBundles = [
     name: "Breakfast Bundle",
     description: "Start your day right",
     price: 29999,
-    image: "https://images.unsplash.com/photo-1584499235916-3c948e53052f?q=80&w=2680&auto=format&fit=crop",
+    image: "/lovable-uploads/2455b7e0-b0f8-4f2a-aaca-995dcd6da943.png",
     items: ["Bread (2)", "Eggs (24)", "Milk (2L)", "Cereal (500g)", "Jam (300g)", "Butter (250g)", "Coffee (200g)"],
     category: "medium"
   },
@@ -58,7 +58,7 @@ const allBundles = [
     name: "Pantry Essentials",
     description: "Stock your pantry with basics",
     price: 49999,
-    image: "https://images.unsplash.com/photo-1579113800032-c38bd7635818?q=80&w=2080&auto=format&fit=crop",
+    image: "/lovable-uploads/30fe686e-a6f6-469f-bb69-c889c304c4e7.png",
     items: ["Rice (3kg)", "Flour (2kg)", "Sugar (2kg)", "Oil (2L)", "Salt (1kg)", "Pasta (3 packs)", "Beans (2kg)", "Lentils (1kg)", "Spices (assorted)"],
     category: "large"
   }

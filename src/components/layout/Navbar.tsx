@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User } from "lucide-react";
 import AuthModal from "@/components/auth/AuthModal";
 import NavLinks from "./NavLinks";
 import CartButton from "./CartButton";
@@ -49,11 +49,17 @@ const Navbar = () => {
                 isLoggedIn={isLoggedIn}
                 onOpenAuthModal={() => setIsAuthModalOpen(true)}
               />
+              <Link to="/profile" className="text-gray-700 hover:text-khrate-500">
+                <User className="h-5 w-5" />
+              </Link>
               <CartButton />
             </div>
             
             {/* Mobile menu button */}
             <div className="md:hidden flex items-center gap-2">
+              <Link to="/profile" className="text-gray-700 hover:text-khrate-500 mr-2">
+                <User className="h-5 w-5" />
+              </Link>
               <CartButton />
               
               <Button 
