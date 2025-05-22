@@ -217,7 +217,7 @@ const products = [
     name: "Gorela Coffee",
     price: 2200,
     unit: "bag",
-    image: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?q=80&w=1000&auto=format&fit=crop",
+    image: "/lovable-uploads/7bd74977-70dd-4c12-8ccd-42b15a0320c1.png",
     category: "non-perishable"
   },
   {
@@ -249,7 +249,7 @@ const products = [
     name: "Lentils",
     price: 1300,
     unit: "kg",
-    image: "https://images.unsplash.com/photo-1611575619899-91f97eb3057f?q=80&w=1000&auto=format&fit=crop",
+    image: "/lovable-uploads/99149a9c-234b-46ab-bd67-67d22129abb2.png",
     category: "non-perishable"
   },
   {
@@ -275,7 +275,7 @@ const products = [
     name: "Toilet Paper",
     price: 1200,
     unit: "pack",
-    image: "https://images.unsplash.com/photo-1583251633146-d0c6c036187d?q=80&w=1000&auto=format&fit=crop",
+    image: "/lovable-uploads/32e88e9a-d13e-4797-bc20-1ea08858de5e.png",
     category: "household"
   },
   {
