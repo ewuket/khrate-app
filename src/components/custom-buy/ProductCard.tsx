@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ShoppingBasket, Plus, Minus } from "lucide-react";
+import { useState } from "react";
 
 interface ProductCardProps {
   id: number;
@@ -34,20 +35,18 @@ const ProductCard = ({
   onRemoveFromCart
 }: ProductCardProps) => {
   const product = { id, name, price, unit, image, category };
+  const [imageError, setImageError] = useState(false);
+  const fallbackImage = "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=2574&auto=format&fit=crop";
   
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden transition-all duration-300 hover:shadow-md">
       <div className="aspect-square overflow-hidden relative bg-gray-100">
         <img 
-          src={image} 
+          src={imageError ? fallbackImage : image} 
           alt={name}
           className="w-full h-full object-cover absolute inset-0 transition-opacity duration-300"
           loading="lazy"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.src = "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=2574&auto=format&fit=crop";
-            target.onerror = null; // Prevent infinite loop if fallback also fails
-          }}
+          onError={() => setImageError(true)}
         />
       </div>
       <div className="p-4">

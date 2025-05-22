@@ -23,7 +23,7 @@ const products = [
     name: "Cabbage",
     price: 600,
     unit: "piece",
-    image: "https://images.unsplash.com/photo-1584896630868-2983e008918f?q=80&w=1000&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1551887196-72e32bfc7bf3?q=80&w=1000&auto=format&fit=crop",
     category: "perishable"
   },
   {
@@ -95,7 +95,7 @@ const products = [
     name: "Inyange Milk",
     price: 1100,
     unit: "liter",
-    image: "https://inyange.rw/wp-content/uploads/2020/09/Inyange-Long-Life-Milk.png",
+    image: "https://images.unsplash.com/photo-1563636619-e9143da7973b?q=80&w=1000&auto=format&fit=crop",
     category: "perishable"
   },
   {
@@ -111,7 +111,7 @@ const products = [
     name: "Inyange Yogurt",
     price: 900,
     unit: "container",
-    image: "https://inyange.rw/wp-content/uploads/2020/09/Inyange-Flavored-Drinking-Yoghurt.png",
+    image: "https://images.unsplash.com/photo-1570197788417-0e82375c9371?q=80&w=1000&auto=format&fit=crop",
     category: "perishable"
   },
   {
@@ -119,7 +119,7 @@ const products = [
     name: "Fresh Fish",
     price: 3500,
     unit: "kg",
-    image: "https://images.unsplash.com/photo-1505692952048-9d0af-7ffb9?q=80&w=1000&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?q=80&w=1000&auto=format&fit=crop",
     category: "perishable"
   },
   {
@@ -127,7 +127,7 @@ const products = [
     name: "Chicken",
     price: 3000,
     unit: "kg",
-    image: "https://images.unsplash.com/photo-1620574387735-3624d75e5972?q=80&w=1000&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1587593810167-a84920ea0781?q=80&w=1000&auto=format&fit=crop",
     category: "perishable"
   },
   
@@ -145,7 +145,7 @@ const products = [
     name: "Beans",
     price: 1400,
     unit: "kg",
-    image: "https://images.unsplash.com/photo-1551489810-9d0a7d51f2a7?q=80&w=1000&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1564894809611-1742fc40ed80?q=80&w=1000&auto=format&fit=crop",
     category: "non-perishable"
   },
   {
@@ -153,7 +153,7 @@ const products = [
     name: "Cooking Oil",
     price: 2500,
     unit: "litre",
-    image: "https://images.unsplash.com/photo-1632783169610-b1309b670e77?q=80&w=1000&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1631895488345-4bf5a5819783?q=80&w=1000&auto=format&fit=crop",
     category: "non-perishable"
   },
   {
@@ -161,7 +161,7 @@ const products = [
     name: "Salt",
     price: 400,
     unit: "kg",
-    image: "https://images.unsplash.com/photo-1518110925495-5fe2fda0442a?q=80&w=1000&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1535301532365-e99399e361fb?q=80&w=1000&auto=format&fit=crop",
     category: "non-perishable"
   },
   {
@@ -169,7 +169,7 @@ const products = [
     name: "Sugar",
     price: 1300,
     unit: "kg",
-    image: "https://images.unsplash.com/photo-1622484212850-eb596d769edc?q=80&w=1000&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1581441363689-1f3c3c274226?q=80&w=1000&auto=format&fit=crop",
     category: "non-perishable"
   },
   {
@@ -177,7 +177,7 @@ const products = [
     name: "Cassava Flour",
     price: 1200,
     unit: "kg",
-    image: "https://images.unsplash.com/photo-1627656686267-9fbe04756ff0?q=80&w=1000&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1603046812682-8099916309a3?q=80&w=1000&auto=format&fit=crop",
     category: "non-perishable"
   },
   {
@@ -201,7 +201,7 @@ const products = [
     name: "Canned Beans",
     price: 750,
     unit: "can",
-    image: "https://images.unsplash.com/photo-1594312180721-3b5217cfc65f?q=80&w=1000&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1596097025038-6d04e151b288?q=80&w=1000&auto=format&fit=crop",
     category: "non-perishable"
   },
   {
@@ -217,7 +217,7 @@ const products = [
     name: "Gorela Coffee",
     price: 2200,
     unit: "bag",
-    image: "https://images.unsplash.com/photo-1559526324-593bc073d938?q=80&w=1000&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?q=80&w=1000&auto=format&fit=crop",
     category: "non-perishable"
   },
   {
@@ -225,7 +225,7 @@ const products = [
     name: "Cereal",
     price: 1800,
     unit: "box",
-    image: "https://images.unsplash.com/photo-1521483451569-e33803c593dd?q=80&w=1000&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1626257726556-42048da20a1a?q=80&w=1000&auto=format&fit=crop",
     category: "non-perishable"
   },
   {
@@ -233,7 +233,7 @@ const products = [
     name: "Honey",
     price: 2500,
     unit: "jar",
-    image: "https://images.unsplash.com/photo-1587049633312-d628ae40d5ea?q=80&w=1000&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1598060585654-ce91bec18c9e?q=80&w=1000&auto=format&fit=crop",
     category: "non-perishable"
   },
   {
@@ -241,7 +241,7 @@ const products = [
     name: "Peanut Butter",
     price: 1700,
     unit: "jar",
-    image: "https://images.unsplash.com/photo-1593095948071-474c5cc2989d?q=80&w=1000&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1590305173453-2df69b218222?q=80&w=1000&auto=format&fit=crop",
     category: "non-perishable"
   },
   {
@@ -249,7 +249,7 @@ const products = [
     name: "Lentils",
     price: 1300,
     unit: "kg",
-    image: "https://images.unsplash.com/photo-1611575619751-dae331bcd6fc?q=80&w=1000&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1622390574121-271406437ec8?q=80&w=1000&auto=format&fit=crop",
     category: "non-perishable"
   },
   {
@@ -275,7 +275,7 @@ const products = [
     name: "Toilet Paper",
     price: 1200,
     unit: "pack",
-    image: "https://images.unsplash.com/photo-1626371353494-ed9ed481293c?q=80&w=1000&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1583251633264-283c859805b7?q=80&w=1000&auto=format&fit=crop",
     category: "household"
   },
   {

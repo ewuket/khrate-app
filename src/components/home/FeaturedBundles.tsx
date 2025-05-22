@@ -11,7 +11,7 @@ const bundles = [
     name: "Single Bundle",
     description: "Perfect for 1 person, 7-day essentials",
     price: 25000,
-    image: "https://images.unsplash.com/photo-1543168256-418811576931?q=80&w=2070&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1000&auto=format&fit=crop",
     items: ["Rice (1kg)", "Beans (500g)", "Tomatoes (6)", "Onions (4)", "Oil (500ml)", "Salt (250g)", "Eggs (12)"]
   },
   {
@@ -19,7 +19,7 @@ const bundles = [
     name: "Medium Bundle",
     description: "Great for 2-3 people, weekly essentials",
     price: 45000,
-    image: "https://images.unsplash.com/photo-1604719312566-8912e9c8f07a?q=80&w=2460&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1506617564039-2f3b650b7010?q=80&w=1000&auto=format&fit=crop",
     items: ["Rice (2kg)", "Beans (1kg)", "Tomatoes (10)", "Onions (8)", "Oil (1L)", "Salt (500g)", "Eggs (24)", "Bread (2)", "Milk (2L)"]
   },
   {
@@ -27,7 +27,7 @@ const bundles = [
     name: "Large Bundle",
     description: "Family size, complete weekly groceries",
     price: 75000,
-    image: "https://images.unsplash.com/photo-1608686207856-001b95cf60ca?q=80&w=2587&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1579113800032-c38bd7635818?q=80&w=1000&auto=format&fit=crop",
     items: ["Rice (5kg)", "Beans (2kg)", "Tomatoes (15)", "Onions (10)", "Oil (2L)", "Salt (1kg)", "Eggs (30)", "Bread (4)", "Milk (4L)", "Flour (2kg)", "Sugar (2kg)"]
   }
 ];
