@@ -277,14 +277,6 @@ const products = [
     unit: "pack",
     image: "/lovable-uploads/32e88e9a-d13e-4797-bc20-1ea08858de5e.png",
     category: "household"
-  },
-  {
-    id: 35,
-    name: "Cleaning Spray",
-    price: 1500,
-    unit: "bottle",
-    image: "https://images.unsplash.com/photo-1585421514284-efb74c2b69ba?q=80&w=1000&auto=format&fit=crop",
-    category: "household"
   }
 ];
 
