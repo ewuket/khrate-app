@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { 
   Dialog,
   DialogContent,
@@ -9,14 +8,13 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
-import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import ScheduledDelivery from "@/components/checkout/ScheduledDelivery";
 import { useAuth } from "@/contexts/AuthContext";
 import PaymentSection from "./PaymentSection";
 import OrderSummary from "./OrderSummary";
 import GuestUserPrompt from "./GuestUserPrompt";
+import { useCheckoutForm } from "@/hooks/useCheckoutForm";
 
 interface CheckoutDialogProps {
   open: boolean;
@@ -39,57 +37,20 @@ const CheckoutDialog = ({
 }: CheckoutDialogProps) => {
   const { isAuthenticated, openAuthModal } = useAuth();
   
-  const [paymentMethod, setPaymentMethod] = useState("mtn");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [processingPayment, setProcessingPayment] = useState(false);
-  const [deliverySchedule, setDeliverySchedule] = useState<{
-    date: Date | undefined;
-    timeSlot: string;
-  }>({ date: undefined, timeSlot: "afternoon" });
-  
-  const handlePayment = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validate delivery date
-    if (!deliverySchedule.date) {
-      toast.error("Please select a delivery date");
-      return;
-    }
-    
-    setProcessingPayment(true);
-    
-    // Simulate payment processing
-    setTimeout(() => {
-      setProcessingPayment(false);
-      onOpenChange(false);
-      
-      // Show the MoMo payment alert
-      alert("⚠️ To complete your order, please pay using the following number: 0795754391.");
-      
-      // Save the order before clearing the cart
-      saveOrder();
-      clearCart();
-      
-      // Send confirmation with delivery details
-      const deliveryTimeText = getTimeSlotText(deliverySchedule.timeSlot);
-      const deliveryDateText = deliverySchedule.date ? format(deliverySchedule.date, "PPP") : "";
-      
-      toast.success("Your order has been placed!", {
-        description: `Scheduled for delivery on ${deliveryDateText} between ${deliveryTimeText}.`,
-        duration: 5000,
-      });
-    }, 2000);
-  };
-  
-  const getTimeSlotText = (slot: string) => {
-    switch(slot) {
-      case "morning": return "8AM–11AM";
-      case "midday": return "11AM–2PM";
-      case "afternoon": return "2PM–5PM";
-      case "evening": return "5PM–8PM";
-      default: return "2PM–5PM";
-    }
-  };
+  const {
+    paymentMethod,
+    setPaymentMethod,
+    phoneNumber,
+    setPhoneNumber,
+    processingPayment,
+    deliverySchedule,
+    setDeliverySchedule,
+    handlePayment
+  } = useCheckoutForm({
+    onOpenChange,
+    saveOrder,
+    clearCart
+  });
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
