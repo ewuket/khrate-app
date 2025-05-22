@@ -4,29 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Avatar } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageCircle, Send, X, PhoneCall, Mail } from "lucide-react";
+import { MessageCircle, X } from "lucide-react";
 import { toast } from "sonner";
-
-// Types for messages
-interface Message {
-  id: string;
-  text: string;
-  sender: 'user' | 'bot' | 'system';
-  timestamp: Date;
-}
-
-// Initial greeting message
-const initialMessage: Message = {
-  id: '1',
-  text: "Hello! I'm BOB, your KHRATE assistant. How can I help you today? I can assist with shopping, bundles, checkout, and more.",
-  sender: 'bot',
-  timestamp: new Date(),
-};
+import { Message, initialMessage } from "@/types/chat";
+import ChatMessage from "./ChatMessage";
+import ChatInput from "./ChatInput";
+import SupportTab from "./SupportTab";
+import TypingIndicator from "./TypingIndicator";
 
 const ChatAssistant = () => {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([initialMessage]);
-  const [input, setInput] = useState('');
   const [language, setLanguage] = useState<'en' | 'rw'>('en');
   const [isTyping, setIsTyping] = useState(false);
 
@@ -39,9 +27,7 @@ const ChatAssistant = () => {
   }, [messages]);
 
   // Handle sending a new message
-  const handleSendMessage = () => {
-    if (!input.trim()) return;
-    
+  const handleSendMessage = (input: string) => {
     // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -51,7 +37,6 @@ const ChatAssistant = () => {
     };
     
     setMessages(prev => [...prev, userMessage]);
-    setInput('');
     
     // Simulate bot typing
     setIsTyping(true);
@@ -98,13 +83,6 @@ const ChatAssistant = () => {
       setIsTyping(false);
       setMessages(prev => [...prev, botMessage]);
     }, 1000);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
   };
 
   const toggleLanguage = () => {
@@ -180,131 +158,22 @@ const ChatAssistant = () => {
                 className="flex-1 overflow-y-auto mb-4 space-y-4"
               >
                 {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${
-                      message.sender === 'user' ? 'justify-end' : 'justify-start'
-                    }`}
-                  >
-                    {message.sender === 'bot' && (
-                      <Avatar className="h-8 w-8 mr-2 mt-1 bg-khrate-50 border">
-                        <img src="/lovable-uploads/206fd2ee-0377-47a0-8083-70118088988f.png" alt="BOB" />
-                      </Avatar>
-                    )}
-                    
-                    <div
-                      className={`px-4 py-2 rounded-lg max-w-[85%] ${
-                        message.sender === 'user'
-                          ? 'bg-khrate-500 text-white rounded-tr-none'
-                          : message.sender === 'system'
-                          ? 'bg-gray-100 text-gray-500 text-center text-sm py-1 max-w-full mx-auto'
-                          : 'bg-gray-100 text-gray-800 rounded-tl-none'
-                      }`}
-                    >
-                      {message.text}
-                    </div>
-                  </div>
+                  <ChatMessage key={message.id} message={message} />
                 ))}
                 
-                {isTyping && (
-                  <div className="flex justify-start">
-                    <Avatar className="h-8 w-8 mr-2 mt-1 bg-khrate-50 border">
-                      <img src="/lovable-uploads/206fd2ee-0377-47a0-8083-70118088988f.png" alt="BOB" />
-                    </Avatar>
-                    <div className="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg rounded-tl-none">
-                      <span className="flex gap-1">
-                        <span className="animate-pulse">.</span>
-                        <span className="animate-pulse delay-150">.</span>
-                        <span className="animate-pulse delay-300">.</span>
-                      </span>
-                    </div>
-                  </div>
-                )}
+                {isTyping && <TypingIndicator />}
               </div>
               
               {/* Input Area */}
-              <div className="mt-auto border-t pt-4">
-                <div className="flex items-center">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={toggleLanguage}
-                    className="mr-2"
-                  >
-                    {language === 'en' ? 'EN' : 'RW'}
-                  </Button>
-                  
-                  <div className="flex-1 flex border rounded-md overflow-hidden">
-                    <textarea 
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      placeholder={language === 'en' ? "Type your message..." : "Andika ubutumwa bwawe..."}
-                      className="flex-1 py-2 px-3 outline-none resize-none"
-                      rows={1}
-                    />
-                    <Button 
-                      type="submit"
-                      onClick={handleSendMessage}
-                      className="rounded-none bg-khrate-500 hover:bg-khrate-600"
-                    >
-                      <Send className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
+              <ChatInput 
+                onSendMessage={handleSendMessage}
+                toggleLanguage={toggleLanguage}
+                language={language}
+              />
             </TabsContent>
             
-            <TabsContent value="support" className="p-4 space-y-6">
-              <div>
-                <h3 className="font-medium text-lg mb-2">Email Support</h3>
-                <div className="space-y-2">
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                    onClick={() => handleContactSupport('email', 'bamlak.mulugeta@khrate.com')}
-                  >
-                    <Mail className="mr-2 h-4 w-4" />
-                    bamlak.mulugeta@khrate.com
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                    onClick={() => handleContactSupport('email', 'robert.katabarwa@khrate.com')}
-                  >
-                    <Mail className="mr-2 h-4 w-4" />
-                    robert.katabarwa@khrate.com
-                  </Button>
-                </div>
-              </div>
-              
-              <div>
-                <h3 className="font-medium text-lg mb-2">Phone Support</h3>
-                <div className="space-y-2">
-                  <Button
-                    variant="outline" 
-                    className="w-full justify-start"
-                    onClick={() => handleContactSupport('phone', '0795754391')}
-                  >
-                    <PhoneCall className="mr-2 h-4 w-4" />
-                    0795754391
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                    onClick={() => handleContactSupport('phone', '0789843707')}
-                  >
-                    <PhoneCall className="mr-2 h-4 w-4" />
-                    0789843707
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="pt-4 text-sm text-muted-foreground">
-                <p>Our support team is available Monday to Saturday from 8:00 AM to 6:00 PM.</p>
-              </div>
+            <TabsContent value="support">
+              <SupportTab handleContactSupport={handleContactSupport} />
             </TabsContent>
           </Tabs>
         </SheetContent>
