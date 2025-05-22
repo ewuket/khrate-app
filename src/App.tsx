@@ -15,6 +15,9 @@ import GroupBuy from "./pages/GroupBuy";
 import Orders from "./pages/Orders";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Terms from "./pages/Terms";
 import CartSidebar from "./components/cart/CartSidebar";
 import ChatAssistant from "./components/chat/ChatAssistant";
 
@@ -64,6 +67,9 @@ function App() {
               <Route path="/group-buy" element={<GroupBuy />} />
               <Route path="/orders" element={<Orders />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/terms" element={<Terms />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
