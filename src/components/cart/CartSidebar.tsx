@@ -76,6 +76,7 @@ const CartSidebar = () => {
             </SheetTitle>
             <Button variant="ghost" size="icon" onClick={closeCart}>
               <X className="h-5 w-5" />
+              <span className="sr-only">Close</span>
             </Button>
           </SheetHeader>
           

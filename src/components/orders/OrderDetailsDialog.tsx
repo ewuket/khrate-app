@@ -33,6 +33,7 @@ const OrderDetailsDialog = ({ open, onOpenChange, order }: OrderDetailsDialogPro
               className="h-6 w-6 rounded-full"
             >
               <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
             </Button>
           </DialogTitle>
         </DialogHeader>
