@@ -10,6 +10,7 @@ interface PaymentMethodSelectorProps {
   onMethodChange: (method: string) => void;
   phoneNumber: string;
   onPhoneNumberChange: (phoneNumber: string) => void;
+  onShowPaymentInstructions?: () => void;
 }
 
 const PaymentMethodSelector = ({
@@ -17,6 +18,7 @@ const PaymentMethodSelector = ({
   onMethodChange,
   phoneNumber,
   onPhoneNumberChange,
+  onShowPaymentInstructions,
 }: PaymentMethodSelectorProps) => {
   return (
     <div className="space-y-2">
@@ -67,7 +69,7 @@ const PaymentMethodSelector = ({
           
           <Button 
             type="button" 
-            onClick={() => alert("Pay using MoMo number: 0795754391")}
+            onClick={onShowPaymentInstructions}
             className="w-full bg-yellow-500 hover:bg-yellow-600 mt-2"
           >
             Pay with MoMo (0795754391)

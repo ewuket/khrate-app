@@ -1,8 +1,9 @@
 
 import { useState } from "react";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { toast } from "sonner";
 import { AlertTriangle } from "lucide-react";
 import PaymentMethodSelector from "@/components/custom-buy/PaymentMethodSelector";
+import { Button } from "@/components/ui/button";
 
 interface PaymentSectionProps {
   paymentMethod: string;
@@ -17,23 +18,23 @@ const PaymentSection = ({
   phoneNumber,
   onPhoneNumberChange,
 }: PaymentSectionProps) => {
+  const handleShowPaymentInstructions = () => {
+    toast("Payment Instructions", {
+      description: "To complete your order, please pay using the following number: 0795754391.",
+      duration: 8000,
+      icon: <AlertTriangle className="h-4 w-4 text-amber-500" />,
+    });
+  };
+
   return (
     <div className="space-y-4">
-      {/* MoMo Payment Alert */}
-      <Alert variant="destructive" className="bg-amber-50 border-amber-200 text-amber-800">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Payment Instructions</AlertTitle>
-        <AlertDescription>
-          ⚠️ To complete your order, please pay using the following number: 0795754391.
-        </AlertDescription>
-      </Alert>
-      
       {/* Payment Method Section */}
       <PaymentMethodSelector
         selectedMethod={paymentMethod}
         onMethodChange={onPaymentMethodChange}
         phoneNumber={phoneNumber}
         onPhoneNumberChange={onPhoneNumberChange}
+        onShowPaymentInstructions={handleShowPaymentInstructions}
       />
     </div>
   );

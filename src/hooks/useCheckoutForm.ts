@@ -48,8 +48,15 @@ export const useCheckoutForm = ({
       setProcessingPayment(false);
       onOpenChange(false);
       
-      // Show the MoMo payment alert
-      alert("⚠️ To complete your order, please pay using the following number: 0795754391.");
+      // Show the MoMo payment toast notification instead of an alert
+      toast("Payment Required", {
+        description: "To complete your order, please pay using the following number: 0795754391.",
+        duration: 10000,
+        action: {
+          label: "Got it",
+          onClick: () => console.log("Payment notice acknowledged"),
+        },
+      });
       
       // Save the order before clearing the cart
       saveOrder();
