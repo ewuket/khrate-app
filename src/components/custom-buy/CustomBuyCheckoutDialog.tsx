@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
   Dialog,
@@ -16,12 +17,20 @@ import {
 } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CalendarIcon } from "@radix-ui/react-icons";
+import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { PaymentMethodSelector } from "./PaymentMethodSelector";
+import PaymentMethodSelector from "./PaymentMethodSelector";
 import { useCheckoutForm } from "@/hooks/useCheckoutForm";
-import { CartItem } from "@/types/cart";
+import { toast } from "sonner";
+
+interface CartItem {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  unit: string;
+}
 
 interface CustomBuyCheckoutDialogProps {
   open: boolean;

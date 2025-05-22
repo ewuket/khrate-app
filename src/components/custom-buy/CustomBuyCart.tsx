@@ -71,6 +71,17 @@ const CustomBuyCart = ({
     const updatedOrders = [order, ...existingOrders];
     localStorage.setItem(storageKey, JSON.stringify(updatedOrders));
   };
+  
+  const clearCart = () => {
+    // Create a new empty array for the cart
+    const emptyCart: typeof cart = [];
+    // Replace the current cart with the empty one
+    // We're assuming the parent component has a way to clear the cart
+    // so we'll just call onAddToCart and onRemoveFromCart to simulate this
+    cart.forEach(item => {
+      onRemoveFromCart(item.id);
+    });
+  };
 
   return (
     <>
@@ -130,8 +141,9 @@ const CustomBuyCart = ({
       <CustomBuyCheckoutDialog
         open={checkoutOpen}
         onOpenChange={setCheckoutOpen}
-        calculateTotal={calculateTotal}
+        cartItems={cart}
         saveOrder={saveOrder}
+        clearCart={clearCart}
       />
     </>
   );
