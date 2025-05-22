@@ -59,15 +59,21 @@ const InputOTPSlot = React.forwardRef<HTMLInputElement, InputOTPSlotProps>(
 )
 InputOTPSlot.displayName = "InputOTPSlot"
 
-interface InputOTPGroupProps
-  extends React.InputHTMLAttributes<HTMLInputElement>,
-    VariantProps<typeof inputOTPVariants> {
+// Fix the onChange type issue by using a different interface that doesn't extend HTMLInputElement
+interface InputOTPGroupProps extends VariantProps<typeof inputOTPVariants> {
   value?: string
   onChange?: (value: string) => void
   maxLength?: number
   containerClassName?: string
   groupClassName?: string
   slotClassName?: string
+  className?: string
+  disabled?: boolean
+  autoFocus?: boolean
+  name?: string
+  id?: string
+  autoComplete?: string
+  placeholder?: string
 }
 
 const InputOTPGroup = React.forwardRef<HTMLInputElement, InputOTPGroupProps>(
@@ -207,7 +213,7 @@ const InputOTPGroup = React.forwardRef<HTMLInputElement, InputOTPGroupProps>(
                 onPaste={index === 0 ? handlePaste : undefined}
                 inputMode="text"
                 autoComplete="one-time-code"
-                {...props}
+                disabled={props.disabled}
               />
             )
           })}
