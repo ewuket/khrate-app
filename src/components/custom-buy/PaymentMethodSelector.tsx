@@ -9,7 +9,7 @@ import {
   SelectTrigger, 
   SelectValue
 } from "@/components/ui/select";
-import { infoCircled } from "@/lib/icons";
+import { InfoCircledIcon } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 
 interface PaymentMethodSelectorProps {
@@ -54,7 +54,7 @@ const PaymentMethodSelector = ({
               className="h-auto p-0 text-xs"
               onClick={onShowPaymentInstructions}
             >
-              {infoCircled} Payment Instructions
+              <InfoCircledIcon className="h-4 w-4 mr-1" /> Payment Instructions
             </Button>
           </div>
           <Input 
