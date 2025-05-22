@@ -1,56 +1,69 @@
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { ShoppingBasket, Package, Users } from "lucide-react";
 
 const Hero = () => {
-  const [loaded, setLoaded] = useState(false);
-  
-  useEffect(() => {
-    setLoaded(true);
-  }, []);
-
   return (
-    <section className="pt-8 pb-16 md:pt-12 md:pb-24 overflow-hidden">
+    <section className="relative bg-gradient-to-r from-khrate-500 to-khrate-600 py-24 text-white">
       <div className="container mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-          <div className={`space-y-6 ${loaded ? 'animate-fade-in' : 'opacity-0'}`}>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight">
-              Big Savings in <span className="text-khrate-500">Every Crate</span>
+        <div className="flex flex-col md:flex-row items-center">
+          <div className="md:w-1/2 mb-8 md:mb-0">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4">
+              Big Savings in Every Crate
             </h1>
-            <p className="text-xl text-muted-foreground">
-              The affordable grocery delivery platform that brings fresh produce and essentials to your doorstep.
+            <p className="text-lg md:text-xl mb-8 max-w-lg">
+              KHRATE brings affordable groceries to your doorstep. Shop pre-curated bundles or build your own custom order.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <Button className="btn-khrate" asChild>
-                <Link to="/bundles">Shop Bundles</Link>
+            <div className="flex flex-wrap gap-4">
+              <Button 
+                size="lg" 
+                className="bg-white text-khrate-600 hover:bg-gray-100"
+                asChild
+              >
+                <Link to="/bundles">
+                  <ShoppingBasket className="mr-2 h-5 w-5" />
+                  Shop Bundles
+                </Link>
               </Button>
-              <Button className="btn-outline" asChild>
-                <Link to="/custom-buy">Custom Buy</Link>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="bg-transparent text-white border-white hover:bg-white/20"
+                asChild
+              >
+                <Link to="/custom-buy">
+                  <Package className="mr-2 h-5 w-5" />
+                  Custom Buy
+                </Link>
+              </Button>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="bg-transparent text-white border-white hover:bg-white/20"
+                asChild
+              >
+                <Link to="/group-buy">
+                  <Users className="mr-2 h-5 w-5" />
+                  Group Buy
+                </Link>
               </Button>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Zero delivery fees • Group discounts • Fresh quality
-            </p>
           </div>
-          
-          <div className={`relative ${loaded ? 'animate-fade-in' : 'opacity-0'}`}>
-            <div className="relative aspect-square md:aspect-[4/3] bg-gradient-to-br from-khrate-100 to-khrate-200 rounded-3xl p-6 flex items-center justify-center">
+          <div className="md:w-1/2 flex justify-center">
+            <div className="bg-white p-4 rounded-lg shadow-xl transform -rotate-2">
               <img 
-                src="https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1974&auto=format&fit=crop" 
-                alt="Fresh groceries" 
-                className="rounded-2xl object-cover w-full h-full"
+                src="/lovable-uploads/6394ed03-1023-4873-bb46-921839e56f26.png" 
+                alt="KHRATE grocery delivery" 
+                className="max-w-xs md:max-w-sm"
               />
-              <div className="absolute -bottom-4 -right-4 bg-white rounded-2xl shadow-lg p-4 w-32 md:w-40">
-                <div className="font-bold text-khrate-500">Save up to</div>
-                <div className="text-3xl md:text-4xl font-bold">30%</div>
-                <div className="text-sm text-muted-foreground">with group buy</div>
-              </div>
             </div>
-            <div className="absolute -z-10 bottom-0 right-0 w-72 h-72 bg-khrate-100 rounded-full blur-3xl opacity-60"></div>
           </div>
         </div>
       </div>
+      {/* Decorative elements */}
+      <div className="hidden md:block absolute right-0 bottom-0 w-1/3 h-1/3 bg-white/10 -z-10 rounded-tl-full"></div>
+      <div className="hidden md:block absolute left-0 top-0 w-1/4 h-1/4 bg-white/10 -z-10 rounded-br-full"></div>
     </section>
   );
 };

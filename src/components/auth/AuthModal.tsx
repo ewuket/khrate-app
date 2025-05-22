@@ -1,9 +1,15 @@
 
-import { useState } from "react";
+import React, { useState } from "react";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
@@ -12,145 +18,164 @@ interface AuthModalProps {
   onClose: () => void;
 }
 
-const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
-  const [tab, setTab] = useState<"login" | "signup">("login");
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
-
-  if (!isOpen) return null;
+const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
+  const [activeTab, setActiveTab] = useState("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
   
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (otpSent) {
-      // Verify OTP logic would go here
-      console.log("Verifying OTP", otp);
+    setLoading(true);
+    
+    try {
+      // Simulate login
+      await new Promise(resolve => setTimeout(resolve, 1000));
       toast.success("Login successful!");
       onClose();
-    } else {
-      // Send OTP logic would go here
-      console.log("Sending OTP to", phone);
-      toast.success("OTP sent to your phone");
-      setOtpSent(true);
+    } catch (error) {
+      toast.error("Login failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
-
-  const handleSignup = (e: React.FormEvent) => {
+  
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Signup logic would go here
-    console.log("Sign up with", phone);
-    toast.success("Account created successfully!");
-    onClose();
+    setLoading(true);
+    
+    try {
+      // Simulate signup
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success("Account created successfully!");
+      onClose();
+    } catch (error) {
+      toast.error("Signup failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
-
-  const handleGuestMode = () => {
-    // Guest mode logic would go here
-    console.log("Continue as guest");
+  
+  const handleGuestCheckout = () => {
     toast.success("Continuing as guest");
     onClose();
   };
-
+  
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl max-w-md w-full relative animate-fade-in">
-        <button 
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-        >
-          &times;
-        </button>
-
-        <Tabs value={tab} onValueChange={(v) => setTab(v as "login" | "signup")} className="w-full">
-          <TabsList className="grid grid-cols-2 mb-4">
-            <TabsTrigger value="login">Log In</TabsTrigger>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Welcome to KHRATE</DialogTitle>
+          <DialogDescription>
+            Sign in to your account or create a new one to get started.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="login">Login</TabsTrigger>
             <TabsTrigger value="signup">Sign Up</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="login">
-            <Card>
-              <CardHeader>
-                <CardTitle>Welcome Back!</CardTitle>
-                <CardDescription>
-                  {otpSent 
-                    ? "Enter the OTP sent to your phone" 
-                    : "Enter your phone number to login"
-                  }
-                </CardDescription>
-              </CardHeader>
-              <form onSubmit={handleLogin}>
-                <CardContent className="space-y-4">
-                  {!otpSent ? (
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        placeholder="Enter your phone number"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        required
-                      />
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <Label htmlFor="otp">One-Time Password</Label>
-                      <Input
-                        id="otp"
-                        type="text"
-                        placeholder="Enter OTP"
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value)}
-                        required
-                      />
-                    </div>
-                  )}
-                </CardContent>
-                <CardFooter className="flex flex-col">
-                  <Button type="submit" className="w-full btn-khrate">
-                    {otpSent ? "Verify OTP" : "Send OTP"}
-                  </Button>
-                  <Button type="button" variant="ghost" onClick={handleGuestMode} className="mt-2">
-                    Continue as Guest
-                  </Button>
-                </CardFooter>
-              </form>
-            </Card>
+          <TabsContent value="login" className="space-y-4 py-4">
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="login-email">Email</Label>
+                <Input 
+                  id="login-email" 
+                  type="email" 
+                  placeholder="your@email.com" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="login-password">Password</Label>
+                <Input 
+                  id="login-password" 
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)} 
+                  required
+                />
+              </div>
+              <Button 
+                type="submit" 
+                className="w-full bg-khrate-500 hover:bg-khrate-600"
+                disabled={loading}
+              >
+                {loading ? "Signing in..." : "Sign In"}
+              </Button>
+              
+              <div className="text-center mt-4">
+                <Button 
+                  variant="link" 
+                  size="sm" 
+                  className="text-muted-foreground hover:text-khrate-600"
+                >
+                  Forgot password?
+                </Button>
+              </div>
+            </form>
           </TabsContent>
           
-          <TabsContent value="signup">
-            <Card>
-              <CardHeader>
-                <CardTitle>Create Account</CardTitle>
-                <CardDescription>
-                  Sign up to start saving on groceries today
-                </CardDescription>
-              </CardHeader>
-              <form onSubmit={handleSignup}>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-phone">Phone Number</Label>
-                    <Input
-                      id="signup-phone"
-                      type="tel"
-                      placeholder="Enter your phone number"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      required
-                    />
-                  </div>
-                </CardContent>
-                <CardFooter className="flex flex-col">
-                  <Button type="submit" className="w-full btn-khrate">Create Account</Button>
-                  <Button type="button" variant="ghost" onClick={handleGuestMode} className="mt-2">
-                    Continue as Guest
-                  </Button>
-                </CardFooter>
-              </form>
-            </Card>
+          <TabsContent value="signup" className="space-y-4 py-4">
+            <form onSubmit={handleSignup} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="signup-name">Full Name</Label>
+                <Input 
+                  id="signup-name" 
+                  placeholder="John Doe"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)} 
+                  required 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signup-email">Email</Label>
+                <Input 
+                  id="signup-email" 
+                  type="email" 
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)} 
+                  required 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signup-password">Password</Label>
+                <Input 
+                  id="signup-password" 
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}  
+                  required
+                />
+              </div>
+              <Button 
+                type="submit" 
+                className="w-full bg-khrate-500 hover:bg-khrate-600"
+                disabled={loading}
+              >
+                {loading ? "Creating Account..." : "Create Account"}
+              </Button>
+            </form>
           </TabsContent>
         </Tabs>
-      </div>
-    </div>
+        
+        <div className="mt-4 pt-4 border-t">
+          <Button 
+            variant="outline" 
+            className="w-full"
+            onClick={handleGuestCheckout}
+          >
+            Continue as Guest
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
