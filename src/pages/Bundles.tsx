@@ -85,7 +85,7 @@ const allBundles = [
     id: 9,
     name: "Large Fruit Bundle",
     description: "Complete fruit assortment for families",
-    price: 2900,
+    price: 29000,
     image: "/lovable-uploads/09c44f3e-b941-47e8-b1c7-86fee2bd1286.png", // Updated large fruit bundle image
     items: ["Oranges (10)", "Apples (10)", "Bananas (12)", "Grapes (3 bunches)", "Strawberries (1kg)", "Pineapple (2)", "Mango (4)", "Blueberries (250g)", "Raspberries (250g)"],
     category: "fruit"
