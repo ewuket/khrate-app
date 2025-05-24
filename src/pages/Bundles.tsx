@@ -57,7 +57,7 @@ const allBundles = [
     id: 6,
     name: "Pantry Essentials",
     description: "Stock your pantry with basics",
-    price: 29999,
+    price: 39999,
     image: "/lovable-uploads/64610299-1b2e-480f-ad10-ca5f00ac3808.png", // Updated with new pantry essentials image
     items: ["Rice (10kg)", "Wheat Flour (5kg)", "Sugar (2kg)", "Oil (3L)", "Salt (100g)", "Pasta (3 packs)", "Beans (3kg)", "Lentils (2kg)", "Spices (assorted)"],
     category: "large"
