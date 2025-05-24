@@ -2,17 +2,18 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, User } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import AuthModal from "@/components/auth/AuthModal";
 import NavLinks from "./NavLinks";
 import CartButton from "./CartButton";
 import AuthButtons from "./AuthButtons";
 import MobileMenu from "./MobileMenu";
+import ProfileDropdown from "./ProfileDropdown";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { isAuthModalOpen, openAuthModal, closeAuthModal, isAuthenticated, user } = useAuth();
+  const { isAuthModalOpen, openAuthModal, closeAuthModal, isAuthenticated } = useAuth();
   
   const navLinks = [
     { title: "Home", path: "/" },
@@ -43,24 +44,17 @@ const Navbar = () => {
             
             {/* Right-side items (desktop) */}
             <div className="hidden md:flex items-center space-x-4">
-              <AuthButtons 
-                onOpenAuthModal={openAuthModal}
-              />
-              {isAuthenticated && (
-                <Link to="/profile" className="text-gray-700 hover:text-khrate-500">
-                  <User className="h-5 w-5" />
-                </Link>
+              {!isAuthenticated ? (
+                <AuthButtons onOpenAuthModal={openAuthModal} />
+              ) : (
+                <ProfileDropdown />
               )}
               <CartButton />
             </div>
             
             {/* Mobile menu button */}
             <div className="md:hidden flex items-center gap-2">
-              {isAuthenticated && (
-                <Link to="/profile" className="text-gray-700 hover:text-khrate-500 mr-2">
-                  <User className="h-5 w-5" />
-                </Link>
-              )}
+              {isAuthenticated && <ProfileDropdown />}
               <CartButton />
               
               <Button 

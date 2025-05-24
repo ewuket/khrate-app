@@ -1,42 +1,27 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { User, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface AuthButtonsProps {
-  isLoggedIn?: boolean;
   onOpenAuthModal: () => void;
   layout?: "desktop" | "mobile";
 }
 
 const AuthButtons = ({ onOpenAuthModal, layout = "desktop" }: AuthButtonsProps) => {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
 
-  if (isAuthenticated && user) {
+  if (isAuthenticated && layout === "mobile") {
     return (
-      <>
-        <Link to="/orders" className="text-gray-700 hover:text-khrate-500">
-          <span className="font-medium">My Orders</span>
-        </Link>
-        <Link 
-          to="/profile" 
-          className="text-gray-700 hover:text-khrate-500"
-        >
-          <User className="h-5 w-5" />
-        </Link>
-        {layout === "mobile" && (
-          <Button
-            onClick={logout}
-            variant="ghost"
-            className="flex justify-start text-red-500"
-          >
-            <LogOut className="h-5 w-5 mr-2" />
-            <span>Logout</span>
-          </Button>
-        )}
-      </>
+      <Button
+        onClick={logout}
+        variant="ghost"
+        className="flex justify-start text-red-500"
+      >
+        <LogOut className="h-5 w-5 mr-2" />
+        <span>Logout</span>
+      </Button>
     );
   }
   
