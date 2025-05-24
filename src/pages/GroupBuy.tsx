@@ -66,8 +66,8 @@ const initialGroups = [
   },
   {
     id: 4,
-    name: "Riverside Apartments",
-    location: "Riverside, Block C",
+    name: "Norrseken around Apartments",
+    location: "Norrseken, Main Enterance",
     members: 2,
     maxMembers: 6,
     discount: "15%",
