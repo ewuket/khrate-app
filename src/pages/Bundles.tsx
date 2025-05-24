@@ -12,9 +12,9 @@ const allBundles = [
     id: 1,
     name: "Single Bundle",
     description: "Perfect for 1 person, 7-day essentials",
-    price: 25000,
+    price: 32700,
     image: "/lovable-uploads/4730e151-0c90-4bde-a3cf-7eb370e2cac1.png", // Keeping existing image
-    items: ["Rice (5kg)", "Beans (500g)", "Tomatoes (6)", "Onions (4)", "Oil (500ml)", "Salt (250g)", "Eggs (12)"],
+    items: ["Rice (10kg)", "Beans (2kg)", "Tomatoes (1kg)", "Onions (2kg)", "Green Paper (1kg)", "peas (1kg)", "Oil (1L)", "Sugar (1kg)", "Salt (100g)", "Eggs (10)"],
     category: "single"
   },
   {
