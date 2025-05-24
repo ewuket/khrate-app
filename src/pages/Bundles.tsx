@@ -21,9 +21,9 @@ const allBundles = [
     id: 2,
     name: "Medium Bundle",
     description: "Great for 2-3 people, weekly essentials",
-    price: 45000,
+    price: 69240,
     image: "/lovable-uploads/6d22b9d7-17a9-457a-947a-9bb8301a4051.png", // Keeping existing image
-    items: ["Rice (10kg)", "Beans (1kg)", "Tomatoes (10)", "Onions (8)", "Oil (1L)", "Salt (500g)", "Eggs (24)", "Bread (2)", "Milk (2L)"],
+    items: ["Rice (15kg)", "Beans (5kg)", "Tomatoes (3kg)", "Onions (3kg)", "Green Paper (3kg)", "Oil (3L)", "Salt (100g)", "Eggs (12)", "Slice Bread (1pack)", "Milk (2L)"],
     category: "medium"
   },
   {
