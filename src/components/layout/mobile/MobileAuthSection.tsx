@@ -15,7 +15,6 @@ const MobileAuthSection = ({
 }: MobileAuthSectionProps) => {
   return (
     <AuthButtons 
-      isLoggedIn={isLoggedIn} 
       onOpenAuthModal={() => {
         onCloseMenu();
         onOpenAuthModal();
