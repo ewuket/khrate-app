@@ -13,7 +13,11 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { isAuthModalOpen, openAuthModal, closeAuthModal, isAuthenticated } = useAuth();
+  const { isAuthModalOpen, openAuthModal, closeAuthModal, isAuthenticated, user } = useAuth();
+  
+  // Debug logging
+  console.log("Navbar - isAuthenticated:", isAuthenticated);
+  console.log("Navbar - user:", user);
   
   const navLinks = [
     { title: "Home", path: "/" },
@@ -47,7 +51,10 @@ const Navbar = () => {
               {!isAuthenticated ? (
                 <AuthButtons onOpenAuthModal={openAuthModal} />
               ) : (
-                <ProfileDropdown />
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600">Welcome, {user?.name || user?.email}</span>
+                  <ProfileDropdown />
+                </div>
               )}
               <CartButton />
             </div>

@@ -17,7 +17,12 @@ import { useAuth } from "@/contexts/AuthContext";
 const ProfileDropdown = () => {
   const { user, logout } = useAuth();
 
-  if (!user) return null;
+  console.log("ProfileDropdown - user:", user);
+
+  if (!user) {
+    console.log("ProfileDropdown - No user, returning null");
+    return null;
+  }
 
   const getInitials = (name?: string, email?: string) => {
     if (name) {
@@ -32,6 +37,8 @@ const ProfileDropdown = () => {
   const displayName = user.name || user.email;
   const initials = getInitials(user.name, user.email);
 
+  console.log("ProfileDropdown - Rendering with displayName:", displayName, "initials:", initials);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -44,7 +51,7 @@ const ProfileDropdown = () => {
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-64" align="end" forceMount>
+      <DropdownMenuContent className="w-64 bg-white" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">
