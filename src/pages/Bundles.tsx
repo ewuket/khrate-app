@@ -67,7 +67,7 @@ const allBundles = [
     id: 7,
     name: "Small Fruit Bundle",
     description: "Fresh seasonal fruits for 1-2 people",
-    price: 15000,
+    price: 8500,
     image: "/lovable-uploads/0225ce03-0269-4b10-b603-3c14cf3e55ca.png", // Updated small fruit bundle image
     items: ["Oranges (4)", "Apples (4)", "Bananas (6)", "Grapes (1 bunch)", "Strawberries (500g)"],
     category: "fruit"
@@ -76,7 +76,7 @@ const allBundles = [
     id: 8,
     name: "Medium Fruit Bundle",
     description: "Variety pack for a small family",
-    price: 28000,
+    price: 16000,
     image: "/lovable-uploads/44536f37-66fe-4604-a318-5afc62c7fcdf.png", // Updated medium fruit bundle image
     items: ["Oranges (6)", "Apples (6)", "Bananas (8)", "Grapes (2 bunches)", "Strawberries (750g)", "Pineapple (1)", "Mango (2)"],
     category: "fruit"
