@@ -23,16 +23,16 @@ const allBundles = [
     description: "Great for 2-3 people, weekly essentials",
     price: 69240,
     image: "/lovable-uploads/6d22b9d7-17a9-457a-947a-9bb8301a4051.png", // Keeping existing image
-    items: ["Rice (15kg)", "Beans (5kg)", "Tomatoes (3kg)", "Onions (3kg)", "Green Paper (3kg)", "Oil (3L)", "Salt (100g)", "Eggs (12)", "Slice Bread (1pack)", "Milk (2L)"],
+    items: ["Rice (15kg)", "Beans (5kg)", "Tomatoes (3kg)", "Onions (3kg)", "Green Paper (3kg)", "Oil (3L)", "Sugar (3kg)", "Salt (150g)", "Eggs (12)", "Slice Bread (1pack)", "Milk (2L)"],
     category: "medium"
   },
   {
     id: 3,
     name: "Large Bundle",
     description: "Family size, complete weekly groceries",
-    price: 75000,
+    price: 119000,
     image: "/lovable-uploads/30fe686e-a6f6-469f-bb69-c889c304c4e7.png", // Keeping original image
-    items: ["Rice (25kg)", "Beans (2kg)", "Tomatoes (15)", "Onions (10)", "Oil (2L)", "Salt (1kg)", "Eggs (30)", "Bread (4)", "Milk (4L)", "Flour (2kg)", "Sugar (2kg)"],
+    items: ["Rice (25kg)", "Beans (10kg)", "Tomatoes (5kg)", "Onions (5kg)", "Oil (5L)", "Salt (250g)", "Eggs (24 pieces)", "Slice Bread (3pack)", "Milk (4L)", "Cassava Flour (5kg)", "Sugar (5kg)"],
     category: "large"
   },
   {
