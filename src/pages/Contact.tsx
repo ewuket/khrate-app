@@ -6,13 +6,13 @@ import { Card, CardContent } from "@/components/ui/card";
 
 const Contact = () => {
   const contactEmails = [
-    "bamlak.mulugeta@khrate.com",
-    "robert.katabarwa@khrate.com"
+    "robert.katabarwa@khrate.com",
+    "bamlak.mulugeta@khrate.com"
   ];
   
   const contactPhones = [
-    "0795754391",
-    "0789843707"
+    "0789843707",
+    "0795754391"
   ];
   
   return (
