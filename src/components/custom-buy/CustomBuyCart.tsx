@@ -86,7 +86,7 @@ const CustomBuyCart = ({
           <div className="mt-6 pt-4 border-t border-gray-100">
             <div className="flex justify-between mb-2">
               <span className="text-muted-foreground">Subtotal</span>
-              <span className="font-medium">UGX {calculateTotal()}</span>
+              <span className="font-medium">RWF {calculateTotal()}</span>
             </div>
             <div className="flex justify-between mb-4">
               <span className="text-muted-foreground">Delivery</span>
@@ -94,7 +94,7 @@ const CustomBuyCart = ({
             </div>
             <div className="flex justify-between text-lg font-bold">
               <span>Total</span>
-              <span>UGX {calculateTotal()}</span>
+              <span>RWF {calculateTotal()}</span>
             </div>
             
             <div className="mt-6 space-y-2">
