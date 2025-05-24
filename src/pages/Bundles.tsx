@@ -32,7 +32,7 @@ const allBundles = [
     description: "Family size, complete weekly groceries",
     price: 119000,
     image: "/lovable-uploads/30fe686e-a6f6-469f-bb69-c889c304c4e7.png", // Keeping original image
-    items: ["Rice (25kg)", "Beans (10kg)", "Tomatoes (5kg)", "Onions (5kg)", "Oil (5L)", "Salt (250g)", "Eggs (24 pieces)", "Slice Bread (3pack)", "Milk (4L)", "Cassava Flour (5kg)", "Sugar (5kg)"],
+    items: ["Rice (25kg)", "Beans (10kg)", "Tomatoes (5kg)", "Onions (5kg)", "Oil (5L)", "Salt (250g)", "Eggs (24pieces)", "Slice Bread (3pack)", "Milk (4L)", "Cassava Flour (5kg)", "Sugar (5kg)"],
     category: "large"
   },
   {
@@ -41,7 +41,7 @@ const allBundles = [
     description: "Fresh vegetables for the week",
     price: 19999,
     image: "/lovable-uploads/4049f27e-26db-4497-9920-9b60326fe5f7.png", // Keeping existing image
-    items: ["Tomatoes (10)", "Onions (8)", "Carrots (8)", "Lettuce (2)", "Peppers (6)", "Cucumber (4)"],
+    items: ["Tomatoes (1kg)", "Onions (1kg)", "Carrots (3pieces)", "Lettuce (2)", "Peppers (4pieces)", "Cucumber (2pieces)"],
     category: "single"
   },
   {
