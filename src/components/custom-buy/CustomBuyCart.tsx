@@ -71,14 +71,14 @@ const CustomBuyCart = ({
             {cart.map((item) => (
               <CartItem
                 key={item.id}
-                item={item}
-                onAddToCart={() => {
-                  const product = products.find(p => p.id === item.id);
-                  if (product) {
-                    onAddToCart(product);
-                  }
-                }}
-                onRemoveFromCart={() => onRemoveFromCart(item.id)}
+                id={item.id}
+                name={item.name}
+                price={item.price}
+                quantity={item.quantity}
+                unit={item.unit}
+                onAddToCart={onAddToCart}
+                onRemoveFromCart={onRemoveFromCart}
+                products={products}
               />
             ))}
           </div>
