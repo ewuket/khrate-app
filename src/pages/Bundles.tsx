@@ -59,7 +59,7 @@ const allBundles = [
     description: "Stock your pantry with basics",
     price: 49999,
     image: "/lovable-uploads/64610299-1b2e-480f-ad10-ca5f00ac3808.png", // Updated with new pantry essentials image
-    items: ["Rice (3kg)", "Flour (2kg)", "Sugar (2kg)", "Oil (2L)", "Salt (1kg)", "Pasta (3 packs)", "Beans (2kg)", "Lentils (1kg)", "Spices (assorted)"],
+    items: ["Rice (3kg)", "Wheat Flour (2kg)", "Sugar (2kg)", "Oil (2L)", "Salt (1kg)", "Pasta (3 packs)", "Beans (2kg)", "Lentils (1kg)", "Spices (assorted)"],
     category: "large"
   },
   // Fruit bundles with updated images
