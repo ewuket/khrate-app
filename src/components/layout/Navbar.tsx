@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User } from "lucide-react";
 import AuthModal from "@/components/auth/AuthModal";
 import NavLinks from "./NavLinks";
 import CartButton from "./CartButton";
@@ -48,20 +48,39 @@ const Navbar = () => {
             
             {/* Right-side items (desktop) */}
             <div className="hidden md:flex items-center space-x-4">
-              {!isAuthenticated ? (
-                <AuthButtons onOpenAuthModal={openAuthModal} />
+              {!isAuthenticated && <AuthButtons onOpenAuthModal={openAuthModal} />}
+              
+              {/* Profile Icon - Always visible */}
+              {isAuthenticated ? (
+                <ProfileDropdown />
               ) : (
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-600">Welcome, {user?.name || user?.email}</span>
-                  <ProfileDropdown />
-                </div>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={openAuthModal}
+                  className="text-gray-700 hover:text-khrate-500"
+                >
+                  <User className="h-5 w-5" />
+                </Button>
               )}
+              
               <CartButton />
             </div>
             
             {/* Mobile menu button */}
             <div className="md:hidden flex items-center gap-2">
-              {isAuthenticated && <ProfileDropdown />}
+              {isAuthenticated ? (
+                <ProfileDropdown />
+              ) : (
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={openAuthModal}
+                  className="text-gray-700 hover:text-khrate-500"
+                >
+                  <User className="h-5 w-5" />
+                </Button>
+              )}
               <CartButton />
               
               <Button 
