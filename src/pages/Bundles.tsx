@@ -48,18 +48,18 @@ const allBundles = [
     id: 5,
     name: "Breakfast Bundle",
     description: "Start your day right",
-    price: 29999,
+    price: 19999,
     image: "/lovable-uploads/f54999c2-780a-4e38-9b60-7d31fd0fd9bc.png", // Updated with new breakfast image
-    items: ["Bread (2)", "Eggs (24)", "Milk (2L)", "Cereal (500g)", "Jam (300g)", "Butter (250g)", "Coffee (200g)"],
+    items: ["Slice Bread (2pack)", "Eggs (24)", "Milk (5L)", "Breakfast Cereal (1kg)", "Jam (300g)", "Butter (500g)", "Coffee (250g)"],
     category: "medium"
   },
   {
     id: 6,
     name: "Pantry Essentials",
     description: "Stock your pantry with basics",
-    price: 49999,
+    price: 29999,
     image: "/lovable-uploads/64610299-1b2e-480f-ad10-ca5f00ac3808.png", // Updated with new pantry essentials image
-    items: ["Rice (3kg)", "Wheat Flour (2kg)", "Sugar (2kg)", "Oil (2L)", "Salt (1kg)", "Pasta (3 packs)", "Beans (2kg)", "Lentils (1kg)", "Spices (assorted)"],
+    items: ["Rice (10kg)", "Wheat Flour (5kg)", "Sugar (2kg)", "Oil (3L)", "Salt (100g)", "Pasta (3 packs)", "Beans (3kg)", "Lentils (2kg)", "Spices (assorted)"],
     category: "large"
   },
   // Fruit bundles with updated images
