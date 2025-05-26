@@ -39,12 +39,19 @@ jobs:
           NODE_ENV: production
           CI: false
       
-      - name: List build output
+      - name: Optimize build output
         run: |
-          echo "Build completed, checking dist folder:"
-          ls -la dist/ || echo "No dist folder found"
-          echo "Checking for build folder:"
-          ls -la build/ || echo "No build folder found"
+          echo "Optimizing build output..."
+          cd dist
+          # Remove source maps to reduce file count
+          find . -name "*.map" -type f -delete
+          # Remove unnecessary files
+          find . -name "*.d.ts" -type f -delete
+          find . -name "*.tsbuildinfo" -type f -delete
+          # Count files before optimization
+          echo "Files in dist after optimization:"
+          find . -type f | wc -l
+          ls -la
       
       - name: Build And Deploy
         id: builddeploy
