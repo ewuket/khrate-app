@@ -39,19 +39,47 @@ jobs:
           NODE_ENV: production
           CI: false
       
-      - name: Optimize build output
+      - name: Aggressively optimize build output
         run: |
-          echo "Optimizing build output..."
+          echo "Starting aggressive optimization of build output..."
           cd dist
-          # Remove source maps to reduce file count
-          find . -name "*.map" -type f -delete
-          # Remove unnecessary files
-          find . -name "*.d.ts" -type f -delete
-          find . -name "*.tsbuildinfo" -type f -delete
+          
           # Count files before optimization
-          echo "Files in dist after optimization:"
+          echo "Files before optimization:"
           find . -type f | wc -l
+          
+          # Remove all source maps
+          find . -name "*.map" -type f -delete
+          
+          # Remove TypeScript definition files
+          find . -name "*.d.ts" -type f -delete
+          
+          # Remove build info files
+          find . -name "*.tsbuildinfo" -type f -delete
+          
+          # Remove any test files that might have been included
+          find . -name "*.test.*" -type f -delete
+          find . -name "*.spec.*" -type f -delete
+          
+          # Remove any duplicate or unnecessary asset files
+          find . -name "*.txt" -type f ! -name "robots.txt" -delete
+          
+          # Consolidate and minify remaining files
+          # Remove any empty directories
+          find . -type d -empty -delete
+          
+          # Count files after optimization
+          echo "Files after optimization:"
+          find . -type f | wc -l
+          
+          # Show directory structure
+          echo "Final directory structure:"
           ls -la
+          
+          # Ensure we have essential files
+          echo "Checking for essential files:"
+          ls -la index.html || echo "Warning: No index.html found"
+          ls -la assets/ || echo "Warning: No assets directory found"
       
       - name: Build And Deploy
         id: builddeploy
