@@ -1,34 +1,33 @@
-
 import { Button } from "@/components/ui/button";
 import BundleCard from "@/components/bundles/BundleCard";
 import { Link } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 
-// Sample data for bundles
+// Sample data for bundles - updated prices to match Bundles page
 const bundles = [
   {
     id: 1,
     name: "Single Bundle",
     description: "Perfect for 1 person, 7-day essentials",
-    price: 25000,
+    price: 32700, // Updated to match Bundles page
     image: "/lovable-uploads/4730e151-0c90-4bde-a3cf-7eb370e2cac1.png", // Keeping existing image
-    items: ["Rice (1kg)", "Beans (500g)", "Tomatoes (6)", "Onions (4)", "Oil (500ml)", "Salt (250g)", "Eggs (12)"]
+    items: ["Rice (10kg)", "Beans (2kg)", "Tomatoes (1kg)", "Onions (2kg)", "Green Paper (1kg)", "peas (1kg)", "Oil (1L)", "Sugar (1kg)", "Salt (100g)", "Eggs (10)"]
   },
   {
     id: 2,
     name: "Medium Bundle",
     description: "Great for 2-3 people, weekly essentials",
-    price: 45000,
+    price: 69240, // Updated to match Bundles page
     image: "/lovable-uploads/6d22b9d7-17a9-457a-947a-9bb8301a4051.png", // Keeping existing image
-    items: ["Rice (2kg)", "Beans (1kg)", "Tomatoes (10)", "Onions (8)", "Oil (1L)", "Salt (500g)", "Eggs (24)", "Bread (2)", "Milk (2L)"]
+    items: ["Rice (15kg)", "Beans (5kg)", "Tomatoes (3kg)", "Onions (3kg)", "Green Paper (3kg)", "Oil (3L)", "Sugar (3kg)", "Salt (150g)", "Eggs (12)", "Slice Bread (1pack)", "Milk (2L)"]
   },
   {
     id: 3,
     name: "Large Bundle",
     description: "Family size, complete weekly groceries",
-    price: 75000,
+    price: 119000, // Updated to match Bundles page
     image: "/lovable-uploads/30fe686e-a6f6-469f-bb69-c889c304c4e7.png", // Keeping original image
-    items: ["Rice (5kg)", "Beans (2kg)", "Tomatoes (15)", "Onions (10)", "Oil (2L)", "Salt (1kg)", "Eggs (30)", "Bread (4)", "Milk (4L)", "Flour (2kg)", "Sugar (2kg)"]
+    items: ["Rice (25kg)", "Beans (10kg)", "Tomatoes (5kg)", "Onions (5kg)", "Oil (5L)", "Salt (250g)", "Eggs (24pieces)", "Slice Bread (3pack)", "Milk (4L)", "Cassava Flour (5kg)", "Sugar (5kg)"]
   }
 ];
 
