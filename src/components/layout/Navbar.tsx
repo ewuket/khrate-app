@@ -1,115 +1,140 @@
-
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, User } from "lucide-react";
-import AuthModal from "@/components/auth/AuthModal";
-import NavLinks from "./NavLinks";
-import CartButton from "./CartButton";
-import AuthButtons from "./AuthButtons";
-import MobileMenu from "./MobileMenu";
-import ProfileDropdown from "./ProfileDropdown";
+import { ModeToggle } from "@/components/layout/ModeToggle";
 import { useAuth } from "@/contexts/AuthContext";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { LogOut, User, ShoppingCart, Menu } from "lucide-react";
+import CartButton from "@/components/layout/CartButton";
 
-const Navbar = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { isAuthModalOpen, openAuthModal, closeAuthModal, isAuthenticated, user } = useAuth();
-  
-  // Debug logging
-  console.log("Navbar - isAuthenticated:", isAuthenticated);
-  console.log("Navbar - user:", user);
-  
-  const navLinks = [
-    { title: "Home", path: "/" },
-    { title: "Bundles", path: "/bundles" },
-    { title: "Custom Buy", path: "/custom-buy" },
-    { title: "Group Buy", path: "/group-buy" },
-    { title: "My Orders", path: "/orders" }
+const NavLinks = () => {
+  const location = useLocation();
+
+  const links = [
+    { to: "/", label: "Home" },
+    { to: "/bundles", label: "Bundles" },
+    { to: "/custom-buy", label: "Custom Buy" },
+    { to: "/group-buy", label: "Group Buy" },
+    { to: "/about", label: "About" },
+    { to: "/contact", label: "Contact" },
   ];
-  
+
   return (
     <>
-      <header className="bg-white border-b sticky top-0 z-30">
-        <div className="container mx-auto">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link to="/" className="flex items-center">
-              <img 
-                src="/lovable-uploads/206fd2ee-0377-47a0-8083-70118088988f.png" 
-                alt="KHRATE Logo" 
-                className="h-10 w-auto" 
-              />
+      {links.map((link) => (
+        <NavLink
+          key={link.to}
+          to={link.to}
+          className={`px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 ${
+            location.pathname === link.to
+              ? "bg-gray-100 dark:bg-gray-800 font-semibold"
+              : ""
+          }`}
+        >
+          {link.label}
+        </NavLink>
+      ))}
+    </>
+  );
+};
+
+const Navbar = () => {
+  const { isAuthenticated, user, signOut, openAuthModal } = useAuth();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
+  return (
+    <>
+      <nav className="bg-white shadow-md border-b border-gray-200 sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center">
+            <Link to="/" className="flex items-center text-xl font-semibold">
+              <img src="/logo.svg" alt="Khrate Logo" className="mr-2 h-6" />
+              Khrate
             </Link>
-            
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex space-x-8">
-              <NavLinks links={navLinks} />
-            </nav>
-            
-            {/* Right-side items (desktop) */}
-            <div className="hidden md:flex items-center space-x-4">
-              {!isAuthenticated && <AuthButtons onOpenAuthModal={openAuthModal} />}
-              
-              {/* Profile Icon - Always visible */}
-              {isAuthenticated ? (
-                <ProfileDropdown />
-              ) : (
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={openAuthModal}
-                  className="text-gray-700 hover:text-khrate-500"
-                >
-                  <User className="h-5 w-5" />
-                </Button>
-              )}
-              
-              <CartButton />
-            </div>
-            
-            {/* Mobile menu button */}
-            <div className="md:hidden flex items-center gap-2">
-              {isAuthenticated ? (
-                <ProfileDropdown />
-              ) : (
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={openAuthModal}
-                  className="text-gray-700 hover:text-khrate-500"
-                >
-                  <User className="h-5 w-5" />
-                </Button>
-              )}
-              <CartButton />
-              
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="text-gray-700"
-              >
-                {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </div>
+
+          <div className="hidden md:flex items-center space-x-6">
+            <NavLinks />
+          </div>
+
+          <div className="flex items-center space-x-4">
+            <ModeToggle />
+            <CartButton />
+
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-8 w-8 p-0">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user?.user_metadata?.avatar_url} />
+                      <AvatarFallback>
+                        {user?.email?.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/orders">
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      <span>Orders</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log Out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button variant="outline" size="sm" onClick={openAuthModal}>
+                Sign In
               </Button>
-            </div>
+            )}
+
+            {/* Mobile menu button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              onClick={toggleMobileMenu}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
           </div>
         </div>
-        
-        {/* Mobile Menu */}
-        <MobileMenu 
-          isOpen={isMenuOpen}
-          navLinks={navLinks}
-          isLoggedIn={isAuthenticated}
-          onOpenAuthModal={openAuthModal}
-          onCloseMenu={() => setIsMenuOpen(false)}
-        />
-      </header>
+      </nav>
       
-      {/* Auth Modal */}
-      <AuthModal 
-        isOpen={isAuthModalOpen} 
-        onClose={closeAuthModal} 
-      />
+      {/* Secondary Navigation Tabs - Sticky */}
+      <div className="bg-white border-b border-gray-200 sticky top-[64px] z-40">
+        <div className="container mx-auto">
+          <div className="flex items-center justify-center md:justify-start space-x-1 px-4 py-2 overflow-x-auto">
+            <NavLinks />
+          </div>
+        </div>
+      </div>
     </>
   );
 };

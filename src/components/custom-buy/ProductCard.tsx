@@ -1,90 +1,84 @@
 
+import React from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { ShoppingBasket, Plus, Minus } from "lucide-react";
-import { useState } from "react";
+import { Plus } from "lucide-react";
+import GroupBuyButton from "@/components/group-buy/GroupBuyButton";
+import { useSupabaseCart } from "@/contexts/SupabaseCartContext";
+import { toast } from "sonner";
 
-interface ProductCardProps {
+interface Product {
   id: number;
   name: string;
   price: number;
   unit: string;
   image: string;
   category: string;
-  quantity: number;
-  onAddToCart: (product: {
-    id: number;
-    name: string;
-    price: number;
-    unit: string;
-    image: string;
-    category: string;
-  }) => void;
-  onRemoveFromCart: (productId: number) => void;
 }
 
-const ProductCard = ({
-  id,
-  name,
-  price,
-  unit,
-  image,
-  category,
-  quantity,
-  onAddToCart,
-  onRemoveFromCart
-}: ProductCardProps) => {
-  const product = { id, name, price, unit, image, category };
-  const [imageError, setImageError] = useState(false);
-  const fallbackImage = "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=2574&auto=format&fit=crop";
-  
+interface ProductCardProps {
+  product: Product;
+}
+
+const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+  const { addToCart, openCart } = useSupabaseCart();
+
+  const handleAddToCart = async () => {
+    await addToCart({
+      product_id: product.id,
+      product_name: product.name,
+      product_price: product.price,
+      product_type: 'product',
+      product_unit: product.unit,
+      quantity: 1
+    });
+    
+    toast.success(`${product.name} added to cart`);
+    
+    // Auto-open cart sidebar
+    setTimeout(() => {
+      openCart();
+    }, 500);
+  };
+
   return (
-    <Card className="overflow-hidden transition-all duration-300 hover:shadow-md">
-      <div className="aspect-square overflow-hidden relative bg-gray-100">
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+      <div className="aspect-square">
         <img 
-          src={imageError ? fallbackImage : image} 
-          alt={name}
-          className="w-full h-full object-cover absolute inset-0 transition-opacity duration-300"
-          loading="lazy"
-          onError={() => setImageError(true)}
+          src={product.image} 
+          alt={product.name}
+          className="w-full h-full object-cover"
         />
       </div>
-      <div className="p-4">
-        <div className="flex flex-col mb-2">
-          <h3 className="font-medium text-base line-clamp-2 h-12" title={name}>{name}</h3>
-          <span className="font-semibold text-orange-500 mt-1 text-right">{price.toLocaleString()} RWF/{unit}</span>
-        </div>
+      <CardContent className="p-4">
+        <h3 className="font-semibold text-lg mb-1">{product.name}</h3>
+        <p className="text-orange-500 font-bold text-xl mb-3">
+          {product.price.toLocaleString()} RWF
+          <span className="text-sm text-gray-500 ml-1">per {product.unit}</span>
+        </p>
         
-        <div className="mt-4">
-          {quantity === 0 ? (
-            <Button 
-              className="w-full bg-orange-500 hover:bg-orange-600"
-              onClick={() => onAddToCart(product)}
-            >
-              <ShoppingBasket className="mr-2 h-4 w-4" />
-              Add to Cart
-            </Button>
-          ) : (
-            <div className="flex items-center justify-between">
-              <Button 
-                variant="outline" 
-                size="icon"
-                onClick={() => onRemoveFromCart(id)}
-              >
-                <Minus className="h-4 w-4" />
-              </Button>
-              <span className="font-medium">{quantity}</span>
-              <Button 
-                variant="outline" 
-                size="icon"
-                onClick={() => onAddToCart(product)}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
+        <div className="space-y-2">
+          <Button 
+            className="w-full bg-khrate-500 hover:bg-khrate-600"
+            onClick={handleAddToCart}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add to Cart
+          </Button>
+          
+          <GroupBuyButton 
+            item={{
+              id: product.id,
+              name: product.name,
+              price: product.price,
+              unit: product.unit,
+              type: 'product'
+            }}
+            variant="outline"
+            className="w-full"
+          />
         </div>
-      </div>
+      </CardContent>
     </Card>
   );
 };

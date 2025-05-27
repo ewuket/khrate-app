@@ -51,6 +51,127 @@ export type Database = {
         }
         Relationships: []
       }
+      group_cart_items: {
+        Row: {
+          created_at: string
+          group_session_id: string | null
+          id: string
+          product_id: number
+          product_items: Json | null
+          product_name: string
+          product_price: number
+          product_type: string
+          product_unit: string | null
+          quantity: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          group_session_id?: string | null
+          id?: string
+          product_id: number
+          product_items?: Json | null
+          product_name: string
+          product_price: number
+          product_type: string
+          product_unit?: string | null
+          quantity?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          group_session_id?: string | null
+          id?: string
+          product_id?: number
+          product_items?: Json | null
+          product_name?: string
+          product_price?: number
+          product_type?: string
+          product_unit?: string | null
+          quantity?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_cart_items_group_session_id_fkey"
+            columns: ["group_session_id"]
+            isOneToOne: false
+            referencedRelation: "group_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_members: {
+        Row: {
+          group_session_id: string | null
+          id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          group_session_id?: string | null
+          id?: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          group_session_id?: string | null
+          id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_members_group_session_id_fkey"
+            columns: ["group_session_id"]
+            isOneToOne: false
+            referencedRelation: "group_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_sessions: {
+        Row: {
+          created_at: string
+          discount_percentage: number
+          id: string
+          join_code: string
+          leader_id: string
+          max_participants: number
+          min_participants: number
+          name: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          discount_percentage?: number
+          id?: string
+          join_code: string
+          leader_id: string
+          max_participants?: number
+          min_participants?: number
+          name?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          discount_percentage?: number
+          id?: string
+          join_code?: string
+          leader_id?: string
+          max_participants?: number
+          min_participants?: number
+          name?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           created_at: string | null
@@ -212,6 +333,20 @@ export type Database = {
           qualifies: boolean
           discount_percentage: number
           orders_remaining: number
+        }[]
+      }
+      generate_join_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_group_summary: {
+        Args: { group_id: string }
+        Returns: {
+          member_count: number
+          total_amount: number
+          discount_amount: number
+          final_amount: number
+          qualifies_for_discount: boolean
         }[]
       }
     }
