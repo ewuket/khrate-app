@@ -6,8 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { CartProvider } from "@/contexts/CartContext";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import AuthLoading from "@/components/auth/AuthLoading";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 // Pages
 import Index from "./pages/Index";
@@ -23,28 +22,6 @@ import Terms from "./pages/Terms";
 import CartSidebar from "./components/cart/CartSidebar";
 
 function AppContent() {
-  const { loading } = useAuth();
-  
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="flex flex-col items-center animate-fade-in">
-          <img 
-            src="/lovable-uploads/206fd2ee-0377-47a0-8083-70118088988f.png" 
-            alt="KHRATE Logo" 
-            className="h-32 w-auto"
-          />
-          <h2 className="mt-4 text-2xl font-bold text-khrate-500">
-            Big Savings in Every Crate
-          </h2>
-          <div className="mt-8">
-            <AuthLoading />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <BrowserRouter>
       <CartSidebar />
