@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PaymentMethodSelector from "./PaymentMethodSelector";
-import { useCart } from "@/contexts/CartContext";
+import { useSupabaseCart } from "@/contexts/SupabaseCartContext";
 import { Check, ChevronRight, CreditCard, Loader2, Phone } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,7 +24,7 @@ const CustomBuyCheckoutDialog: React.FC<CustomBuyCheckoutDialogProps> = ({
   onClose,
   onSuccess
 }) => {
-  const { cart, getCartTotal, clearCart } = useCart();
+  const { cart, getCartTotal, clearCart } = useSupabaseCart();
   const { isAuthenticated, openAuthModal } = useAuth();
   
   const [activeTab, setActiveTab] = useState("delivery");

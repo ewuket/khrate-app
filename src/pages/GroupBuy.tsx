@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -12,7 +11,7 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { useCart } from "@/contexts/CartContext";
+import { useSupabaseCart } from "@/contexts/SupabaseCartContext";
 
 // Sample groups data
 const initialGroups = [
@@ -117,7 +116,7 @@ const GroupBuy = () => {
     groceries: ""
   });
   
-  const { addToCart } = useCart();
+  const { addToCart } = useSupabaseCart();
   
   const filteredGroups = groupType === "all" 
     ? groups 

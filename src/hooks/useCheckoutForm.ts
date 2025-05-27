@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
-import { useCart } from "@/contexts/CartContext";
+import { useSupabaseCart } from "@/contexts/SupabaseCartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { createOrder } from "@/services/orderService";
 
@@ -11,7 +10,7 @@ export interface UseCheckoutFormProps {
 }
 
 export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProps) => {
-  const { cart, clearCart } = useCart();
+  const { cart, clearCart } = useSupabaseCart();
   const { user, profile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
@@ -50,7 +49,7 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
   };
 
   const calculateTotal = () => {
-    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const subtotal = cart.reduce((sum, item) => sum + (item.product_price * item.quantity), 0);
     const discount = profile?.discount_orders_remaining > 0 ? subtotal * 0.1 : 0;
     return subtotal - discount;
   };

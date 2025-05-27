@@ -1,10 +1,9 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Trash2 } from "lucide-react";
 import CartItem from "./CartItem";
 import CheckoutDialog from "@/components/checkout/CheckoutDialog";
-import { useCart } from "@/contexts/CartContext";
+import { useSupabaseCart } from "@/contexts/SupabaseCartContext";
 
 interface CartItem {
   id: number;
@@ -30,7 +29,7 @@ const CustomBuyCart = ({
   calculateTotal,
 }: CustomBuyCartProps) => {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const { clearCart: clearGlobalCart } = useCart();
+  const { clearCart: clearGlobalCart } = useSupabaseCart();
   
   const handleCheckout = () => {
     if (cart.length === 0) {
