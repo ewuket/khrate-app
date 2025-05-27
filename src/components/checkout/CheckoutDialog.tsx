@@ -100,12 +100,15 @@ const CheckoutDialog = ({
               }}
             />
 
-            {/* MoMo Payment Notice */}
+            {/* Mobile Money Payment Notice */}
             {(paymentMethod === "mtn" || paymentMethod === "airtel") && (
-              <div className="bg-amber-50 border border-amber-200 p-4 rounded-md text-amber-800">
+              <div className="bg-blue-50 border border-blue-200 p-4 rounded-md text-blue-800">
                 <p className="font-medium">Payment Instructions</p>
                 <p className="text-sm mt-1">
-                  To complete your order, please send payment to MoMo number: <span className="font-bold">0795754391</span>
+                  Send payment to: <span className="font-bold">0795754391</span>
+                </p>
+                <p className="text-xs text-blue-600 mt-1">
+                  Your order will be confirmed once payment is received.
                 </p>
               </div>
             )}

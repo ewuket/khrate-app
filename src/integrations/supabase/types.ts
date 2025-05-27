@@ -9,13 +9,158 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      orders: {
+        Row: {
+          created_at: string | null
+          delivery_address: string
+          delivery_date: string | null
+          delivery_time_slot: string | null
+          discount_applied: number | null
+          discount_percentage: number | null
+          id: string
+          items: Json
+          original_amount: number
+          payment_method: string
+          payment_status: string
+          phone_number: string | null
+          status: string
+          total_amount: number
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          delivery_address: string
+          delivery_date?: string | null
+          delivery_time_slot?: string | null
+          discount_applied?: number | null
+          discount_percentage?: number | null
+          id?: string
+          items: Json
+          original_amount: number
+          payment_method: string
+          payment_status?: string
+          phone_number?: string | null
+          status?: string
+          total_amount: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          delivery_address?: string
+          delivery_date?: string | null
+          delivery_time_slot?: string | null
+          discount_applied?: number | null
+          discount_percentage?: number | null
+          id?: string
+          items?: Json
+          original_amount?: number
+          payment_method?: string
+          payment_status?: string
+          phone_number?: string | null
+          status?: string
+          total_amount?: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_discounts: {
+        Row: {
+          created_at: string | null
+          discount_percentage: number
+          discount_type: string
+          id: string
+          is_active: boolean | null
+          orders_remaining: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          discount_percentage?: number
+          discount_type?: string
+          id?: string
+          is_active?: boolean | null
+          orders_remaining?: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          discount_percentage?: number
+          discount_type?: string
+          id?: string
+          is_active?: boolean | null
+          orders_remaining?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_discounts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_profiles: {
+        Row: {
+          created_at: string | null
+          discount_orders_remaining: number | null
+          email: string
+          full_name: string | null
+          id: string
+          phone: string | null
+          profile_image_url: string | null
+          total_orders: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          discount_orders_remaining?: number | null
+          email: string
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          profile_image_url?: string | null
+          total_orders?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          discount_orders_remaining?: number | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          profile_image_url?: string | null
+          total_orders?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      apply_user_discount: {
+        Args: { p_user_id: string; p_order_total: number }
+        Returns: {
+          discount_amount: number
+          discount_percentage: number
+          final_total: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
