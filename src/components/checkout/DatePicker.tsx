@@ -22,6 +22,8 @@ interface DatePickerProps {
 }
 
 export function DatePicker({ date, onDateChange }: DatePickerProps) {
+  const [isOpen, setIsOpen] = React.useState(false);
+
   // Function to check if a date is a public holiday
   const isPublicHoliday = (date: Date) => {
     return publicHolidays.some(holiday => 
@@ -41,8 +43,13 @@ export function DatePicker({ date, onDateChange }: DatePickerProps) {
     return date < today || isPublicHoliday(date);
   };
 
+  const handleDateSelect = (selectedDate: Date | undefined) => {
+    onDateChange(selectedDate);
+    setIsOpen(false); // Auto-collapse calendar after selection
+  };
+
   return (
-    <Popover>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -59,7 +66,7 @@ export function DatePicker({ date, onDateChange }: DatePickerProps) {
         <Calendar
           mode="single"
           selected={date}
-          onSelect={onDateChange}
+          onSelect={handleDateSelect}
           disabled={disableDate}
           initialFocus
           className="p-3 pointer-events-auto"

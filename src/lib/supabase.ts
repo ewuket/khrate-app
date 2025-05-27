@@ -35,10 +35,24 @@ const mockClient = {
   })
 } as any;
 
-// Export the appropriate client based on environment variables
-export const supabase = (!supabaseUrl || !supabaseAnonKey) 
-  ? (() => {
-      console.warn('Supabase environment variables not found. Using mock client.');
+// Check if we're in a Lovable environment with Supabase integration
+const isLovableWithSupabase = typeof window !== 'undefined' && 
+  (window as any).__LOVABLE_SUPABASE_URL && 
+  (window as any).__LOVABLE_SUPABASE_ANON_KEY;
+
+// Use Lovable's injected Supabase credentials if available, otherwise fall back to env vars
+const finalSupabaseUrl = isLovableWithSupabase 
+  ? (window as any).__LOVABLE_SUPABASE_URL 
+  : supabaseUrl;
+  
+const finalSupabaseAnonKey = isLovableWithSupabase 
+  ? (window as any).__LOVABLE_SUPABASE_ANON_KEY 
+  : supabaseAnonKey;
+
+// Export the appropriate client based on available credentials
+export const supabase = (finalSupabaseUrl && finalSupabaseAnonKey) 
+  ? createClient(finalSupabaseUrl, finalSupabaseAnonKey)
+  : (() => {
+      console.warn('Supabase not configured. Using mock client.');
       return mockClient;
-    })()
-  : createClient(supabaseUrl, supabaseAnonKey);
+    })();
