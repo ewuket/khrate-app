@@ -122,8 +122,10 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     const membersWithProfiles = data.map(member => ({
       ...member,
-      user_profile: member.user_profiles
-    }));
+      user_profile: Array.isArray(member.user_profiles) 
+        ? member.user_profiles[0] 
+        : member.user_profiles
+    })) as GroupMember[];
 
     setGroupMembers(membersWithProfiles);
   };
@@ -195,7 +197,7 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
       if (memberError) throw memberError;
 
-      setCurrentGroup(groupData);
+      setCurrentGroup(groupData as GroupSession);
       toast.success(`Group created! Share code: ${joinCodeData}`);
       
       // Fetch initial data
@@ -246,7 +248,7 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
       if (existingMember) {
         toast.error('You are already a member of this group');
-        setCurrentGroup(groupData);
+        setCurrentGroup(groupData as GroupSession);
         await Promise.all([
           fetchGroupMembers(groupData.id),
           fetchGroupCartItems(groupData.id),
@@ -265,7 +267,7 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
       if (memberError) throw memberError;
 
-      setCurrentGroup(groupData);
+      setCurrentGroup(groupData as GroupSession);
       toast.success('Successfully joined the group!');
       
       return true;

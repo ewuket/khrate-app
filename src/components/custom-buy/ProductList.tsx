@@ -61,15 +61,7 @@ const ProductList = ({
         {filteredProducts.map(product => (
           <ProductCard
             key={product.id}
-            id={product.id}
-            name={product.name}
-            price={product.price}
-            unit={product.unit}
-            image={product.image}
-            category={product.category}
-            quantity={getItemQuantity(product.id)}
-            onAddToCart={onAddToCart}
-            onRemoveFromCart={onRemoveFromCart}
+            product={product}
           />
         ))}
       </div>

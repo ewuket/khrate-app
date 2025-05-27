@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -10,83 +9,167 @@ import { useSupabaseCart } from "@/contexts/SupabaseCartContext";
 const allBundles = [
   {
     id: 1,
-    name: "Single Bundle",
+    title: "Single Bundle",
     description: "Perfect for 1 person, 7-day essentials",
     price: 32700,
     image: "/lovable-uploads/4730e151-0c90-4bde-a3cf-7eb370e2cac1.png",
-    items: ["Rice (10kg)", "Beans (2kg)", "Tomatoes (1kg)", "Onions (2kg)", "Green Paper (1kg)", "peas (1kg)", "Oil (1L)", "Sugar (1kg)", "Salt (100g)", "Eggs (10)"],
+    items: [
+      { name: "Rice", quantity: "10kg" },
+      { name: "Beans", quantity: "2kg" },
+      { name: "Tomatoes", quantity: "1kg" },
+      { name: "Onions", quantity: "2kg" },
+      { name: "Green Paper", quantity: "1kg" },
+      { name: "Peas", quantity: "1kg" },
+      { name: "Oil", quantity: "1L" },
+      { name: "Sugar", quantity: "1kg" },
+      { name: "Salt", quantity: "100g" },
+      { name: "Eggs", quantity: "10" }
+    ],
     category: "single"
   },
   {
     id: 2,
-    name: "Medium Bundle",
+    title: "Medium Bundle",
     description: "Great for 2-3 people, weekly essentials",
     price: 69240,
     image: "/lovable-uploads/6d22b9d7-17a9-457a-947a-9bb8301a4051.png",
-    items: ["Rice (15kg)", "Beans (5kg)", "Tomatoes (3kg)", "Onions (3kg)", "Green Paper (3kg)", "Oil (3L)", "Sugar (3kg)", "Salt (150g)", "Eggs (12)", "Slice Bread (1pack)", "Milk (2L)"],
+    items: [
+      { name: "Rice", quantity: "15kg" },
+      { name: "Beans", quantity: "5kg" },
+      { name: "Tomatoes", quantity: "3kg" },
+      { name: "Onions", quantity: "3kg" },
+      { name: "Green Paper", quantity: "3kg" },
+      { name: "Oil", quantity: "3L" },
+      { name: "Sugar", quantity: "3kg" },
+      { name: "Salt", quantity: "150g" },
+      { name: "Eggs", quantity: "12" },
+      { name: "Slice Bread", quantity: "1pack" },
+      { name: "Milk", quantity: "2L" }
+    ],
     category: "medium"
   },
   {
     id: 3,
-    name: "Large Bundle",
+    title: "Large Bundle",
     description: "Family size, complete weekly groceries",
     price: 119000,
     image: "/lovable-uploads/30fe686e-a6f6-469f-bb69-c889c304c4e7.png",
-    items: ["Rice (25kg)", "Beans (10kg)", "Tomatoes (5kg)", "Onions (5kg)", "Oil (5L)", "Salt (250g)", "Eggs (24pieces)", "Slice Bread (3pack)", "Milk (4L)", "Cassava Flour (5kg)", "Sugar (5kg)"],
+    items: [
+      { name: "Rice", quantity: "25kg" },
+      { name: "Beans", quantity: "10kg" },
+      { name: "Tomatoes", quantity: "5kg" },
+      { name: "Onions", quantity: "5kg" },
+      { name: "Oil", quantity: "5L" },
+      { name: "Salt", quantity: "250g" },
+      { name: "Eggs", quantity: "24pieces" },
+      { name: "Slice Bread", quantity: "3pack" },
+      { name: "Milk", quantity: "4L" },
+      { name: "Cassava Flour", quantity: "5kg" },
+      { name: "Sugar", quantity: "5kg" }
+    ],
     category: "large"
   },
   {
     id: 4,
-    name: "Vegetables Bundle",
+    title: "Vegetables Bundle",
     description: "Fresh vegetables for the week",
     price: 19999,
     image: "/lovable-uploads/4049f27e-26db-4497-9920-9b60326fe5f7.png",
-    items: ["Tomatoes (1kg)", "Onions (1kg)", "Carrots (3pieces)", "Lettuce (2)", "Peppers (4pieces)", "Cucumber (2pieces)"],
+    items: [
+      { name: "Tomatoes", quantity: "1kg" },
+      { name: "Onions", quantity: "1kg" },
+      { name: "Carrots", quantity: "3pieces" },
+      { name: "Lettuce", quantity: "2" },
+      { name: "Peppers", quantity: "4pieces" },
+      { name: "Cucumber", quantity: "2pieces" }
+    ],
     category: "single"
   },
   {
     id: 5,
-    name: "Breakfast Bundle",
+    title: "Breakfast Bundle",
     description: "Start your day right",
     price: 19999,
     image: "/lovable-uploads/f54999c2-780a-4e38-9b60-7d31fd0fd9bc.png",
-    items: ["Slice Bread (2pack)", "Eggs (24)", "Milk (5L)", "Breakfast Cereal (1kg)", "Jam (300g)", "Butter (500g)", "Coffee (250g)"],
+    items: [
+      { name: "Slice Bread", quantity: "2pack" },
+      { name: "Eggs", quantity: "24" },
+      { name: "Milk", quantity: "5L" },
+      { name: "Breakfast Cereal", quantity: "1kg" },
+      { name: "Jam", quantity: "300g" },
+      { name: "Butter", quantity: "500g" },
+      { name: "Coffee", quantity: "250g" }
+    ],
     category: "medium"
   },
   {
     id: 6,
-    name: "Pantry Essentials",
+    title: "Pantry Essentials",
     description: "Stock your pantry with basics",
     price: 39999,
     image: "/lovable-uploads/64610299-1b2e-480f-ad10-ca5f00ac3808.png",
-    items: ["Rice (10kg)", "Wheat Flour (5kg)", "Sugar (2kg)", "Oil (3L)", "Salt (100g)", "Pasta (3 packs)", "Beans (3kg)", "Lentils (2kg)", "Spices (assorted)"],
+    items: [
+      { name: "Rice", quantity: "10kg" },
+      { name: "Wheat Flour", quantity: "5kg" },
+      { name: "Sugar", quantity: "2kg" },
+      { name: "Oil", quantity: "3L" },
+      { name: "Salt", quantity: "100g" },
+      { name: "Pasta", quantity: "3 packs" },
+      { name: "Beans", quantity: "3kg" },
+      { name: "Lentils", quantity: "2kg" },
+      { name: "Spices", quantity: "assorted" }
+    ],
     category: "large"
   },
   {
     id: 7,
-    name: "Small Fruit Bundle",
+    title: "Small Fruit Bundle",
     description: "Fresh seasonal fruits for 1-2 people",
     price: 8500,
     image: "/lovable-uploads/0225ce03-0269-4b10-b603-3c14cf3e55ca.png",
-    items: ["Oranges (4)", "Apples (4)", "Bananas (6)", "Grapes (1 bunch)", "Strawberries (500g)"],
+    items: [
+      { name: "Oranges", quantity: "4" },
+      { name: "Apples", quantity: "4" },
+      { name: "Bananas", quantity: "6" },
+      { name: "Grapes", quantity: "1 bunch" },
+      { name: "Strawberries", quantity: "500g" }
+    ],
     category: "fruit"
   },
   {
     id: 8,
-    name: "Medium Fruit Bundle",
+    title: "Medium Fruit Bundle",
     description: "Variety pack for a small family",
     price: 16000,
     image: "/lovable-uploads/44536f37-66fe-4604-a318-5afc62c7fcdf.png",
-    items: ["Oranges (6)", "Apples (6)", "Bananas (8)", "Grapes (2 bunches)", "Strawberries (750g)", "Pineapple (1)", "Mango (2)"],
+    items: [
+      { name: "Oranges", quantity: "6" },
+      { name: "Apples", quantity: "6" },
+      { name: "Bananas", quantity: "8" },
+      { name: "Grapes", quantity: "2 bunches" },
+      { name: "Strawberries", quantity: "750g" },
+      { name: "Pineapple", quantity: "1" },
+      { name: "Mango", quantity: "2" }
+    ],
     category: "fruit"
   },
   {
     id: 9,
-    name: "Large Fruit Bundle",
+    title: "Large Fruit Bundle",
     description: "Complete fruit assortment for families",
     price: 29000,
     image: "/lovable-uploads/09c44f3e-b941-47e8-b1c7-86fee2bd1286.png",
-    items: ["Oranges (10)", "Apples (10)", "Bananas (12)", "Grapes (3 bunches)", "Strawberries (1kg)", "Pineapple (2)", "Mango (4)", "Blueberries (250g)", "Raspberries (250g)"],
+    items: [
+      { name: "Oranges", quantity: "10" },
+      { name: "Apples", quantity: "10" },
+      { name: "Bananas", quantity: "12" },
+      { name: "Grapes", quantity: "3 bunches" },
+      { name: "Strawberries", quantity: "1kg" },
+      { name: "Pineapple", quantity: "2" },
+      { name: "Mango", quantity: "4" },
+      { name: "Blueberries", quantity: "250g" },
+      { name: "Raspberries", quantity: "250g" }
+    ],
     category: "fruit"
   }
 ];
@@ -99,8 +182,8 @@ const Bundles = () => {
     ? allBundles 
     : allBundles.filter(bundle => bundle.category === category);
   
-  const handleAddToCart = (bundle: any) => {
-    addToCart(bundle, 'bundle');
+  const handleSaveBundle = (bundleId: number) => {
+    console.log('Bundle saved:', bundleId);
   };
   
   return (
@@ -150,7 +233,7 @@ const Bundles = () => {
                   <BundleCard 
                     key={bundle.id} 
                     bundle={bundle} 
-                    onAddToCart={handleAddToCart}
+                    onSaveBundle={handleSaveBundle}
                   />
                 ))}
               </div>

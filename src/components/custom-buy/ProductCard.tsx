@@ -31,7 +31,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       product_type: 'product',
       product_unit: product.unit,
       quantity: 1
-    });
+    }, 'custom');
     
     toast.success(`${product.name} added to cart`);
     
