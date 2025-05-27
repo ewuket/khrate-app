@@ -9,6 +9,48 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      cart_items: {
+        Row: {
+          created_at: string | null
+          id: string
+          product_id: number
+          product_items: Json | null
+          product_name: string
+          product_price: number
+          product_type: string
+          product_unit: string | null
+          quantity: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          product_id: number
+          product_items?: Json | null
+          product_name: string
+          product_price: number
+          product_type: string
+          product_unit?: string | null
+          quantity?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          product_id?: number
+          product_items?: Json | null
+          product_name?: string
+          product_price?: number
+          product_type?: string
+          product_unit?: string | null
+          quantity?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           created_at: string | null
@@ -117,6 +159,7 @@ export type Database = {
           created_at: string | null
           discount_orders_remaining: number | null
           email: string
+          first_order_discount_used: boolean | null
           full_name: string | null
           id: string
           phone: string | null
@@ -128,6 +171,7 @@ export type Database = {
           created_at?: string | null
           discount_orders_remaining?: number | null
           email: string
+          first_order_discount_used?: boolean | null
           full_name?: string | null
           id: string
           phone?: string | null
@@ -139,6 +183,7 @@ export type Database = {
           created_at?: string | null
           discount_orders_remaining?: number | null
           email?: string
+          first_order_discount_used?: boolean | null
           full_name?: string | null
           id?: string
           phone?: string | null
@@ -159,6 +204,14 @@ export type Database = {
           discount_amount: number
           discount_percentage: number
           final_total: number
+        }[]
+      }
+      check_first_time_discount: {
+        Args: { p_user_id: string }
+        Returns: {
+          qualifies: boolean
+          discount_percentage: number
+          orders_remaining: number
         }[]
       }
     }

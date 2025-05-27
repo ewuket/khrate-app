@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -117,7 +118,8 @@ export const useSupabaseAuth = () => {
         options: {
           data: {
             full_name: fullName
-          }
+          },
+          emailRedirectTo: 'https://www.khrate.com/auth/callback'
         }
       });
 
