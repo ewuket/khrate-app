@@ -43,7 +43,7 @@ export const useSupabaseAuth = () => {
         await fetchUserProfile(session.user.id);
         
         // Check if this is a new user registration and apply first-time discount
-        if (event === 'SIGNED_UP' || (event === 'SIGNED_IN' && !profile)) {
+        if (event === 'SIGNED_UP' as AuthChangeEvent || (event === 'SIGNED_IN' as AuthChangeEvent && !profile)) {
           await applyFirstTimeUserDiscount(session.user.id);
           toast.success("Welcome! You've received a 10% discount on your first 3 orders!");
         }

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -156,8 +157,8 @@ const CustomBuyCheckoutDialog: React.FC<CustomBuyCheckoutDialogProps> = ({
                           <div className="text-sm space-y-1">
                             {cart.map((item) => (
                               <div key={item.id} className="flex justify-between">
-                                <span>{item.name} × {item.quantity}</span>
-                                <span>{formatCurrency(item.price * item.quantity)}</span>
+                                <span>{item.product_name} × {item.quantity}</span>
+                                <span>{formatCurrency(item.product_price * item.quantity)}</span>
                               </div>
                             ))}
                             <Separator className="my-2" />
