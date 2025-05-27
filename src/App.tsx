@@ -6,8 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { CartProvider } from "@/contexts/CartContext";
-import { AuthProvider } from "@/contexts/AuthContext";
-import OTPVerificationModal from "@/components/auth/OTPVerificationModal";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import AuthLoading from "@/components/auth/AuthLoading";
 
 // Pages
 import Index from "./pages/Index";
@@ -21,17 +21,57 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Terms from "./pages/Terms";
 import CartSidebar from "./components/cart/CartSidebar";
-import ChatAssistant from "./components/chat/ChatAssistant";
+
+function AppContent() {
+  const { loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="flex flex-col items-center animate-fade-in">
+          <img 
+            src="/lovable-uploads/206fd2ee-0377-47a0-8083-70118088988f.png" 
+            alt="KHRATE Logo" 
+            className="h-32 w-auto"
+          />
+          <h2 className="mt-4 text-2xl font-bold text-khrate-500">
+            Big Savings in Every Crate
+          </h2>
+          <div className="mt-8">
+            <AuthLoading />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <BrowserRouter>
+      <CartSidebar />
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/bundles" element={<Bundles />} />
+        <Route path="/custom-buy" element={<CustomBuy />} />
+        <Route path="/group-buy" element={<GroupBuy />} />
+        <Route path="/orders" element={<Orders />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
 
 function App() {
   const queryClient = new QueryClient();
-  // Simulating a splash screen
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 1500); // 1.5 second splash screen
+    }, 1500);
 
     return () => clearTimeout(timer);
   }, []);
@@ -60,23 +100,7 @@ function App() {
         <Sonner />
         <AuthProvider>
           <CartProvider>
-            <BrowserRouter>
-              <CartSidebar />
-              <ChatAssistant />
-              <OTPVerificationModal />
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/bundles" element={<Bundles />} />
-                <Route path="/custom-buy" element={<CustomBuy />} />
-                <Route path="/group-buy" element={<GroupBuy />} />
-                <Route path="/orders" element={<Orders />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/terms" element={<Terms />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
+            <AppContent />
           </CartProvider>
         </AuthProvider>
       </TooltipProvider>

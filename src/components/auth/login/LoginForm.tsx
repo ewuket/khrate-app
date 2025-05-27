@@ -10,7 +10,7 @@ interface LoginFormProps {
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ onShowResetPassword }) => {
-  const { login } = useAuth();
+  const { signIn, closeAuthModal } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,7 +20,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ onShowResetPassword }) => {
     setLoading(true);
     
     try {
-      await login(email, password);
+      const { data, error } = await signIn(email, password);
+      if (data && !error) {
+        closeAuthModal();
+      }
     } catch (error) {
       console.error("Login error:", error);
     } finally {

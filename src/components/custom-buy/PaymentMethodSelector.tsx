@@ -63,8 +63,8 @@ const PaymentMethodSelector = ({
             value={phoneNumber}
             onChange={(e) => onPhoneNumberChange(e.target.value)}
           />
-          <div className="text-sm text-muted-foreground bg-amber-50 border border-amber-200 rounded p-2 mt-1">
-            For demo purposes, please send payment to: <span className="font-medium">0795754391</span>
+          <div className="text-sm text-muted-foreground bg-blue-50 border border-blue-200 rounded p-2 mt-1">
+            Send payment to: <span className="font-medium">0795754391</span>
           </div>
         </div>
       )}

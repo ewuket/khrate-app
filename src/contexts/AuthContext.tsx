@@ -1,93 +1,46 @@
 
 import React, { createContext, useState, useContext, useEffect } from "react";
-import { User, AuthContextType } from "@/types/auth";
-import { useAuthStorage } from "@/hooks/useAuthStorage";
-import { useAuthOperations } from "@/hooks/useAuthOperations";
-import { toast } from "sonner";
+import { User } from "@supabase/supabase-js";
+import { UserProfile } from "@/types/user";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+
+interface AuthContextType {
+  user: User | null;
+  profile: UserProfile | null;
+  isAuthenticated: boolean;
+  loading: boolean;
+  isAuthModalOpen: boolean;
+  openAuthModal: () => void;
+  closeAuthModal: () => void;
+  signUp: (email: string, password: string, fullName?: string) => Promise<any>;
+  signIn: (email: string, password: string) => Promise<any>;
+  signOut: () => Promise<void>;
+  updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isOTPModalOpen, setIsOTPModalOpen] = useState(false);
-  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
-  const [pendingUserData, setPendingUserData] = useState<Partial<User> | null>(null);
-  const [otpSent, setOtpSent] = useState(false);
-  const [isVerifyingOTP, setIsVerifyingOTP] = useState(false);
-  
-  const { getStoredUser } = useAuthStorage();
+  const supabaseAuth = useSupabaseAuth();
 
-  // Helper functions for modals
   const openAuthModal = () => setIsAuthModalOpen(true);
   const closeAuthModal = () => setIsAuthModalOpen(false);
-  const openOTPModal = () => setIsOTPModalOpen(true);
-  const closeOTPModal = () => setIsOTPModalOpen(false);
-
-  // Load user from localStorage on mount
-  useEffect(() => {
-    const storedUser = getStoredUser();
-    if (storedUser) {
-      setUser(storedUser);
-    }
-  }, []);
-
-  // Get auth operations
-  const {
-    login,
-    signup,
-    logout,
-    sendOTP,
-    verifyOTP,
-    updateUserProfile
-  } = useAuthOperations(
-    setUser,
-    setPendingEmail,
-    setPendingUserData,
-    setOtpSent,
-    closeAuthModal,
-    openOTPModal,
-    setIsVerifyingOTP
-  );
-
-  // Store pendingEmail and pendingUserData in localStorage when they change
-  useEffect(() => {
-    if (pendingEmail) {
-      localStorage.setItem("pendingEmail", pendingEmail);
-    } else {
-      localStorage.removeItem("pendingEmail");
-    }
-  }, [pendingEmail]);
-
-  useEffect(() => {
-    if (pendingUserData) {
-      localStorage.setItem("pendingUserData", JSON.stringify(pendingUserData));
-    } else {
-      localStorage.removeItem("pendingUserData");
-    }
-  }, [pendingUserData]);
 
   return (
     <AuthContext.Provider
       value={{
-        user,
-        isAuthenticated: !!user,
-        isVerified: !!user?.verified,
+        user: supabaseAuth.user,
+        profile: supabaseAuth.profile,
+        isAuthenticated: supabaseAuth.isAuthenticated,
+        loading: supabaseAuth.loading,
         isAuthModalOpen,
-        pendingEmail,
-        otpSent,
-        isVerifyingOTP,
         openAuthModal,
         closeAuthModal,
-        login,
-        signup,
-        logout,
-        sendOTP,
-        verifyOTP,
-        isOTPModalOpen,
-        openOTPModal,
-        closeOTPModal,
-        updateUserProfile
+        signUp: supabaseAuth.signUp,
+        signIn: supabaseAuth.signIn,
+        signOut: supabaseAuth.signOut,
+        updateProfile: supabaseAuth.updateProfile
       }}
     >
       {children}

@@ -10,12 +10,12 @@ interface AuthButtonsProps {
 }
 
 const AuthButtons = ({ onOpenAuthModal, layout = "desktop" }: AuthButtonsProps) => {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, signOut } = useAuth();
 
   if (isAuthenticated && layout === "mobile") {
     return (
       <Button
-        onClick={logout}
+        onClick={signOut}
         variant="ghost"
         className="flex justify-start text-red-500"
       >
@@ -38,7 +38,7 @@ const AuthButtons = ({ onOpenAuthModal, layout = "desktop" }: AuthButtonsProps) 
           onClick={onOpenAuthModal}
           className="bg-khrate-500 hover:bg-khrate-600"
         >
-          Sign Up
+          Sign Up & Save 10%
         </Button>
       </div>
     );
@@ -57,7 +57,7 @@ const AuthButtons = ({ onOpenAuthModal, layout = "desktop" }: AuthButtonsProps) 
         onClick={onOpenAuthModal}
         className="bg-khrate-500 hover:bg-khrate-600"
       >
-        Sign Up
+        Sign Up & Save 10%
       </Button>
     </>
   );
