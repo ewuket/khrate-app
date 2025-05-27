@@ -49,11 +49,10 @@ jobs:
           action: "upload"
           ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
           # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
-          app_location: "/" # App source code path
+          app_location: "dist" # Point directly to the built files
           api_location: "" # Api source code path - optional
-          output_location: "dist" # Built app content directory - optional
-          app_artifact_location: "dist" # Specify the artifact location to deploy only built files
-          skip_app_build: true
+          output_location: "" # No additional output needed since we're pointing to dist
+          skip_app_build: true # Skip build since we already built
           github_id_token: ${{ steps.idtoken.outputs.result }}
           ###### End of Repository/Build Configurations ######
 
