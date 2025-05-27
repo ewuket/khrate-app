@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -18,19 +17,17 @@ const ChatAssistant = () => {
   const [messages, setMessages] = useState<Message[]>([initialMessage]);
   const [language, setLanguage] = useState<'en' | 'rw'>('en');
   const [isTyping, setIsTyping] = useState(false);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Enhanced scroll to bottom effect
+  // Auto-scroll to bottom when new messages arrive
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   useEffect(() => {
-    if (scrollAreaRef.current) {
-      const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (viewport) {
-        viewport.scrollTop = viewport.scrollHeight;
-      }
-    }
+    scrollToBottom();
   }, [messages, isTyping]);
 
-  // Enhanced message handling with more intelligent responses
   const handleSendMessage = (input: string) => {
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -54,13 +51,11 @@ const ChatAssistant = () => {
       
       setIsTyping(false);
       setMessages(prev => [...prev, botMessage]);
-    }, 1000 + Math.random() * 1000); // Variable typing time for realism
+    }, 1000 + Math.random() * 1000);
   };
 
   const generateIntelligentResponse = (input: string, lang: 'en' | 'rw'): string => {
     const lowerInput = input.toLowerCase();
-    
-    // Enhanced response logic with more categories
     
     // Greetings
     if (lowerInput.match(/\b(hello|hi|hey|good morning|good afternoon|good evening|greetings)\b/)) {
@@ -192,7 +187,7 @@ const ChatAssistant = () => {
       {/* Chat Panel */}
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent className="sm:max-w-md p-0 flex flex-col h-full">
-          <SheetHeader className="px-4 py-4 border-b bg-khrate-500 text-white">
+          <SheetHeader className="px-4 py-4 border-b bg-khrate-500 text-white flex-shrink-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Avatar className="h-8 w-8 bg-white text-khrate-500">
@@ -211,31 +206,29 @@ const ChatAssistant = () => {
             </div>
           </SheetHeader>
           
-          <Tabs defaultValue="chat" className="flex-1 flex flex-col">
-            <TabsList className="grid grid-cols-2 mx-4 my-2">
+          <Tabs defaultValue="chat" className="flex-1 flex flex-col min-h-0">
+            <TabsList className="grid grid-cols-2 mx-4 my-2 flex-shrink-0">
               <TabsTrigger value="chat">Chat</TabsTrigger>
               <TabsTrigger value="support">Human Support</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="chat" className="flex-1 flex flex-col p-4 pt-0">
+            <TabsContent value="chat" className="flex-1 flex flex-col min-h-0 px-4">
               {/* Messages Container with proper scrolling */}
-              <div className="flex-1 relative">
-                <ScrollArea 
-                  ref={scrollAreaRef}
-                  className="h-full w-full pr-4"
-                >
-                  <div className="space-y-4 pb-4">
-                    {messages.map((message) => (
-                      <ChatMessage key={message.id} message={message} />
-                    ))}
-                    
-                    {isTyping && <TypingIndicator />}
-                  </div>
-                </ScrollArea>
-              </div>
+              <ScrollArea className="flex-1 w-full">
+                <div className="space-y-4 pb-4 pr-4">
+                  {messages.map((message) => (
+                    <ChatMessage key={message.id} message={message} />
+                  ))}
+                  
+                  {isTyping && <TypingIndicator />}
+                  
+                  {/* Invisible div to scroll to */}
+                  <div ref={messagesEndRef} />
+                </div>
+              </ScrollArea>
               
               {/* Input Area */}
-              <div className="mt-4 pt-4 border-t">
+              <div className="pt-4 border-t flex-shrink-0">
                 <ChatInput 
                   onSendMessage={handleSendMessage}
                   toggleLanguage={toggleLanguage}
@@ -244,7 +237,7 @@ const ChatAssistant = () => {
               </div>
             </TabsContent>
             
-            <TabsContent value="support">
+            <TabsContent value="support" className="flex-1">
               <SupportTab handleContactSupport={handleContactSupport} />
             </TabsContent>
           </Tabs>
