@@ -18,7 +18,7 @@ const OrderCard = ({ order, onViewDetails, onRateOrder }: OrderCardProps) => {
     // In a real app, we would add the items to the cart here
   };
 
-  const canRate = order.status === "delivered" && (!order.rating || !order.rating.submitted);
+  const canRate = order.status === "delivered" && onRateOrder;
 
   return (
     <Card key={order.id} className="overflow-hidden">
@@ -33,26 +33,26 @@ const OrderCard = ({ order, onViewDetails, onRateOrder }: OrderCardProps) => {
             </div>
             
             <p className="text-sm text-muted-foreground mb-3">
-              Ordered on {new Date(order.date).toLocaleDateString()}
+              Ordered on {order.created_at ? new Date(order.created_at).toLocaleDateString() : 'N/A'}
             </p>
             
             <div className="text-sm text-muted-foreground mb-3">
-              <span className="font-medium">Items:</span> {order.items.join(", ")}
+              <span className="font-medium">Items:</span> {Array.isArray(order.items) ? order.items.map(item => typeof item === 'string' ? item : item.name || 'Item').join(", ") : 'No items'}
             </div>
             
             <div className="text-sm text-muted-foreground">
-              <span className="font-medium">Delivery Address:</span> {order.deliveryAddress}
+              <span className="font-medium">Delivery Address:</span> {order.delivery_address}
             </div>
 
-            {order.deliverySchedule && (
+            {order.delivery_date && order.delivery_time_slot && (
               <div className="text-sm text-muted-foreground mt-3">
-                <span className="font-medium">Delivery Schedule:</span> {new Date(order.deliverySchedule.date).toLocaleDateString()} ({order.deliverySchedule.timeSlot})
+                <span className="font-medium">Delivery Schedule:</span> {new Date(order.delivery_date).toLocaleDateString()} ({order.delivery_time_slot})
               </div>
             )}
           </div>
           
           <div className="flex flex-col items-end">
-            <div className="text-xl font-bold mb-4">{order.total.toLocaleString()} RWF</div>
+            <div className="text-xl font-bold mb-4">{order.total_amount.toLocaleString()} RWF</div>
             
             <div className="space-y-2">
               <Button 
@@ -65,7 +65,7 @@ const OrderCard = ({ order, onViewDetails, onRateOrder }: OrderCardProps) => {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               
-              {canRate && onRateOrder && (
+              {canRate && (
                 <Button 
                   variant="outline" 
                   size="sm" 
