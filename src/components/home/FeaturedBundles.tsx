@@ -1,7 +1,8 @@
+
 import { Button } from "@/components/ui/button";
 import BundleCard from "@/components/bundles/BundleCard";
 import { Link } from "react-router-dom";
-import { useCart } from "@/contexts/CartContext";
+import { useSupabaseCart } from "@/contexts/SupabaseCartContext";
 
 // Sample data for bundles - updated prices to match Bundles page
 const bundles = [
@@ -32,7 +33,7 @@ const bundles = [
 ];
 
 const FeaturedBundles = () => {
-  const { addToCart } = useCart();
+  const { addToCart } = useSupabaseCart();
   
   const handleAddToCart = (bundle: any) => {
     addToCart(bundle, 'bundle');

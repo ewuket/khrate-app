@@ -65,7 +65,7 @@ export const SupabaseCartProvider: React.FC<{ children: React.ReactNode }> = ({ 
         quantity: item.quantity,
         product_unit: item.product_unit || 'item',
         product_type: item.product_type as 'bundle' | 'custom' | 'group',
-        product_items: item.product_items || undefined
+        product_items: Array.isArray(item.product_items) ? item.product_items as string[] : undefined
       }));
 
       setCart(formattedCart);
@@ -109,7 +109,7 @@ export const SupabaseCartProvider: React.FC<{ children: React.ReactNode }> = ({ 
             quantity: 1,
             product_unit: item.unit || 'item',
             product_type: type,
-            product_items: item.items || null
+            product_items: Array.isArray(item.items) ? item.items : null
           })
           .select()
           .single();
@@ -124,7 +124,7 @@ export const SupabaseCartProvider: React.FC<{ children: React.ReactNode }> = ({ 
           quantity: data.quantity,
           product_unit: data.product_unit,
           product_type: data.product_type as 'bundle' | 'custom' | 'group',
-          product_items: data.product_items || undefined
+          product_items: Array.isArray(data.product_items) ? data.product_items as string[] : undefined
         };
 
         setCart(prevCart => [...prevCart, newCartItem]);
