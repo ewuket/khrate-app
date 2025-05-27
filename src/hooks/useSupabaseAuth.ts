@@ -25,14 +25,15 @@ export const useSupabaseAuth = () => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session);
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
         await fetchUserProfile(session.user.id);
         
-        // Check if this is a new user and apply first-time discount
-        if (event === 'SIGNED_UP') {
+        // Check if this is a new user registration and apply first-time discount
+        if (event === 'SIGNED_UP' || (event === 'SIGNED_IN' && !profile)) {
           await applyFirstTimeUserDiscount(session.user.id);
           toast.success("Welcome! You've received a 10% discount on your first 3 orders!");
         }

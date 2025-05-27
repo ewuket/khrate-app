@@ -1,6 +1,6 @@
 
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LogOut } from "lucide-react";
@@ -16,78 +16,72 @@ interface PersonalInfoTabProps {
   handleSaveChanges: () => void;
 }
 
-const PersonalInfoTab = ({ profileData, handleInputChange, handleSaveChanges }: PersonalInfoTabProps) => {
-  const { logout } = useAuth();
-
-  const handleLogout = () => {
-    logout();
-  };
+const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
+  profileData,
+  handleInputChange,
+  handleSaveChanges
+}) => {
+  const { signOut, profile } = useAuth();
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input 
-                id="name" 
-                value={profileData.name}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input 
-                id="phone" 
-                value={profileData.phone}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input 
-                id="email" 
-                value={profileData.email}
-                onChange={handleInputChange}
-                disabled
-                className="bg-gray-50"
-              />
-              <p className="text-xs text-muted-foreground">Email cannot be changed</p>
-            </div>
-          </div>
-          
-          <div className="flex justify-end mt-4">
-            <Button 
-              className="bg-khrate-500 hover:bg-khrate-600"
-              onClick={handleSaveChanges}
-            >
-              Save Changes
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="name">Full Name</Label>
+          <Input 
+            id="name" 
+            value={profileData.name}
+            onChange={handleInputChange}
+            placeholder="Enter your full name" 
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input 
+            id="email" 
+            type="email" 
+            value={profileData.email}
+            onChange={handleInputChange}
+            placeholder="Enter your email" 
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="phone">Phone Number</Label>
+          <Input 
+            id="phone" 
+            value={profileData.phone}
+            onChange={handleInputChange}
+            placeholder="Enter your phone number" 
+          />
+        </div>
+      </div>
+
+      {/* Discount Status */}
+      {profile?.discount_orders_remaining > 0 && (
+        <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+          <h3 className="font-medium text-green-800 mb-2">🎉 Welcome Discount Active!</h3>
+          <p className="text-green-700">
+            You have {profile.discount_orders_remaining} orders remaining with 10% discount.
+          </p>
+        </div>
+      )}
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Account Settings</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <Button 
-              variant="outline" 
-              className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
-              onClick={handleLogout}
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Log Out
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex justify-between pt-4">
+        <Button onClick={handleSaveChanges} className="bg-khrate-500 hover:bg-khrate-600">
+          Save Changes
+        </Button>
+        
+        <Button 
+          onClick={signOut}
+          variant="outline"
+          className="text-red-500 border-red-200 hover:bg-red-50"
+        >
+          <LogOut className="h-4 w-4 mr-2" />
+          Sign Out
+        </Button>
+      </div>
     </div>
   );
 };

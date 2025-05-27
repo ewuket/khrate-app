@@ -1,166 +1,91 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { orderService } from "@/services/orderService";
+import { OrderService } from "@/services/orderService";
 
-interface UseCheckoutFormProps {
-  onOpenChange: (open: boolean) => void;
-  cartItems: any[];
-  cartTotal: number;
-  clearCart: () => void;
+export interface UseCheckoutFormProps {
+  onSuccess: () => void;
 }
 
-export const useCheckoutForm = ({
-  onOpenChange,
-  cartItems,
-  cartTotal,
-  clearCart,
-}: UseCheckoutFormProps) => {
-  const { isAuthenticated, user, profile } = useAuth();
-  const [paymentMethod, setPaymentMethod] = useState("mtn");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [processingPayment, setProcessingPayment] = useState(false);
-  const [guestEmail, setGuestEmail] = useState("");
-  const [deliveryAddress, setDeliveryAddress] = useState("");
-  const [deliverySchedule, setDeliverySchedule] = useState<{
-    date: Date | undefined;
-    timeSlot: string;
-  }>({ date: undefined, timeSlot: "afternoon" });
+export const useCheckoutForm = ({ onSuccess }: UseCheckoutFormProps) => {
+  const { cart, clearCart } = useCart();
+  const { user, profile } = useAuth();
+  const [loading, setLoading] = useState(false);
   
-  const getTimeSlotText = (slot: string) => {
-    switch(slot) {
-      case "morning": return "8AM–11AM";
-      case "midday": return "11AM–2PM";
-      case "afternoon": return "2PM–5PM";
-      case "evening": return "5PM–8PM";
-      default: return "2PM–5PM";
-    }
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    notes: "",
+    paymentMethod: "mtn" as "mtn" | "bank",
+    scheduledDate: "",
+    timeSlot: ""
+  });
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const calculateDiscount = () => {
-    if (isAuthenticated && profile && profile.discount_orders_remaining > 0) {
-      return Math.round(cartTotal * 0.1); // 10% discount
-    }
-    return 0;
+  const calculateTotal = () => {
+    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const discount = profile?.discount_orders_remaining > 0 ? subtotal * 0.1 : 0;
+    return subtotal - discount;
   };
 
-  const getTotalWithDiscount = () => {
-    const discount = calculateDiscount();
-    return cartTotal - discount;
-  };
-  
-  const handlePayment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validate required fields
-    if (!deliverySchedule.date) {
-      toast.error("Please select a delivery date");
+  const processOrder = async () => {
+    if (!formData.name || !formData.email || !formData.phone || !formData.address) {
+      toast.error("Please fill in all required fields");
       return;
     }
 
-    if (!deliveryAddress) {
-      toast.error("Please enter your delivery address");
+    if (cart.length === 0) {
+      toast.error("Your cart is empty");
       return;
     }
 
-    if (!isAuthenticated && !guestEmail) {
-      toast.error("Please enter your email address");
-      return;
-    }
-    
-    setProcessingPayment(true);
+    setLoading(true);
     
     try {
-      const discount = calculateDiscount();
-      const finalTotal = getTotalWithDiscount();
-      
       const orderData = {
-        user_id: isAuthenticated ? user?.id : undefined,
-        guest_email: !isAuthenticated ? guestEmail : undefined,
-        items: cartItems,
-        total_amount: finalTotal,
-        discount_applied: discount,
-        status: 'pending' as const,
-        delivery_address: deliveryAddress,
-        delivery_date: deliverySchedule.date ? format(deliverySchedule.date, "yyyy-MM-dd") : undefined,
-        delivery_time_slot: deliverySchedule.timeSlot,
-        payment_method: paymentMethod,
-        payment_status: 'pending' as const
+        items: cart,
+        customerInfo: {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          notes: formData.notes
+        },
+        paymentMethod: formData.paymentMethod,
+        scheduledDate: formData.scheduledDate,
+        timeSlot: formData.timeSlot,
+        total: calculateTotal(),
+        userId: user?.id
       };
 
-      const { data, error } = await orderService.createOrder(orderData);
+      const orderId = await OrderService.createOrder(orderData);
       
-      if (error) {
-        throw new Error('Failed to create order');
-      }
-
-      // Simulate payment processing
-      setTimeout(() => {
-        setProcessingPayment(false);
-        onOpenChange(false);
-        
-        // Show payment instructions
-        toast("Complete Your Payment", {
-          description: `Send ${finalTotal.toLocaleString()} RWF to 0795754391 via ${paymentMethod.toUpperCase()} Mobile Money`,
-          duration: 10000,
-          action: {
-            label: "Got it",
-            onClick: () => console.log("Payment instructions acknowledged"),
-          },
-        });
-        
-        clearCart();
-        
-        // Show order confirmation
-        const deliveryTimeText = getTimeSlotText(deliverySchedule.timeSlot);
-        const deliveryDateText = deliverySchedule.date ? format(deliverySchedule.date, "PPP") : "";
-        
-        toast.success("Order placed successfully!", {
-          description: `Delivery scheduled for ${deliveryDateText} between ${deliveryTimeText}.${discount > 0 ? ` You saved ${discount.toLocaleString()} RWF!` : ''}`,
-          duration: 5000,
-        });
-
-        // Promote account creation for guest users
-        if (!isAuthenticated) {
-          setTimeout(() => {
-            toast("Create an Account", {
-              description: "Create an account to track orders and get 10% off your first 3 orders!",
-              duration: 8000,
-              action: {
-                label: "Sign Up",
-                onClick: () => {
-                  console.log("User clicked sign up from toast");
-                }
-              }
-            });
-          }, 1000);
-        }
-      }, 2000);
+      // Clear cart and show success
+      clearCart();
+      toast.success("Order placed successfully!");
+      onSuccess();
       
+      return orderId;
     } catch (error) {
-      setProcessingPayment(false);
-      toast.error("Failed to place order. Please try again.");
-      console.error('Order placement error:', error);
+      console.error("Order processing error:", error);
+      toast.error("Failed to process order. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return {
-    paymentMethod,
-    setPaymentMethod,
-    phoneNumber,
-    setPhoneNumber,
-    guestEmail,
-    setGuestEmail,
-    deliveryAddress,
-    setDeliveryAddress,
-    processingPayment,
-    deliverySchedule,
-    setDeliverySchedule,
-    handlePayment,
-    getTimeSlotText,
-    calculateDiscount,
-    getTotalWithDiscount,
+    formData,
+    loading,
+    handleInputChange,
+    processOrder,
+    calculateTotal
   };
 };

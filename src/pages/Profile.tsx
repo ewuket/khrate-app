@@ -9,7 +9,7 @@ import ProfileTabs from "@/components/profile/ProfileTabs";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Profile = () => {
-  const { user, isAuthenticated, updateUserProfile, openAuthModal } = useAuth();
+  const { user, profile, isAuthenticated, updateProfile, openAuthModal } = useAuth();
   const navigate = useNavigate();
   
   const [activeTab, setActiveTab] = useState("personal");
@@ -67,20 +67,19 @@ const Profile = () => {
 
   // Load user data
   useEffect(() => {
-    if (user) {
+    if (user && profile) {
       setProfileData({
-        name: user.name || "",
-        phone: "",
+        name: profile.full_name || "",
+        phone: profile.phone || "",
         email: user.email || ""
       });
       
-      // Load profile image if it exists for this user
-      const savedProfileImage = user.profileImage || localStorage.getItem(`profileImage_${user.id}`);
-      if (savedProfileImage) {
-        setProfileImage(savedProfileImage);
+      // Load profile image if it exists
+      if (profile.profile_image_url) {
+        setProfileImage(profile.profile_image_url);
       }
     }
-  }, [user]);
+  }, [user, profile]);
 
   const handleProfileImageClick = () => {
     if (fileInputRef.current) {
@@ -96,11 +95,8 @@ const Profile = () => {
         const imageData = reader.result as string;
         setProfileImage(imageData);
         
-        // Save to localStorage with user ID
-        localStorage.setItem(`profileImage_${user.id}`, imageData);
-        
         // Update user profile
-        updateUserProfile({ profileImage: imageData });
+        updateProfile({ profile_image_url: imageData });
       };
       reader.readAsDataURL(file);
     }
@@ -118,8 +114,9 @@ const Profile = () => {
     if (!user) return;
     
     // Update user profile
-    updateUserProfile({
-      name: profileData.name
+    updateProfile({
+      full_name: profileData.name,
+      phone: profileData.phone
     });
     
     toast.success("Profile updated successfully!");
