@@ -37,6 +37,18 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleDeliveryScheduleChange = (schedule: { date: Date | undefined, timeSlot: string }) => {
+    const dateString = schedule.date ? schedule.date.toISOString().split('T')[0] : "";
+    setDeliverySchedule({
+      date: dateString,
+      timeSlot: schedule.timeSlot
+    });
+  };
+
+  const handlePaymentMethodChange = (method: string) => {
+    setPaymentMethod(method as "mtn" | "airtel" | "bank");
+  };
+
   const calculateTotal = () => {
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const discount = profile?.discount_orders_remaining > 0 ? subtotal * 0.1 : 0;
@@ -68,23 +80,28 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
     setProcessingPayment(true);
     
     try {
+      const total = calculateTotal();
+      const discount = profile?.discount_orders_remaining > 0 ? total * 0.1 : 0;
+
       const orderData = {
+        user_id: user?.id,
+        guest_email: !user ? formData.email : undefined,
         items: cart,
-        customerInfo: {
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          address: formData.address,
-          notes: formData.notes
-        },
-        paymentMethod: paymentMethod,
-        scheduledDate: deliverySchedule.date,
-        timeSlot: deliverySchedule.timeSlot,
-        total: calculateTotal(),
-        userId: user?.id
+        total_amount: total,
+        discount_applied: discount,
+        status: 'pending' as const,
+        delivery_address: formData.address,
+        delivery_date: deliverySchedule.date,
+        delivery_time_slot: deliverySchedule.timeSlot,
+        payment_method: paymentMethod,
+        payment_status: 'pending' as const
       };
 
-      const orderId = await OrderService.createOrder(orderData);
+      const result = await OrderService.createOrder(orderData);
+      
+      if (result.error) {
+        throw new Error(result.error.message || 'Failed to create order');
+      }
       
       // Clear cart and show success
       clearCart();
@@ -92,7 +109,7 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
       onOpenChange?.(false);
       onSuccess();
       
-      return orderId;
+      return result.data?.id;
     } catch (error) {
       console.error("Order processing error:", error);
       toast.error("Failed to process order. Please try again.");
@@ -107,11 +124,11 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
     loading,
     processingPayment,
     paymentMethod,
-    setPaymentMethod,
+    setPaymentMethod: handlePaymentMethodChange,
     phoneNumber,
     setPhoneNumber,
     deliverySchedule,
-    setDeliverySchedule,
+    setDeliverySchedule: handleDeliveryScheduleChange,
     handleInputChange,
     processOrder,
     calculateTotal,

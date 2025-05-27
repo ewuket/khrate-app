@@ -94,7 +94,10 @@ const CheckoutDialog = ({
             <OrderSummary
               total={getCartTotal()}
               formatPrice={formatPrice}
-              deliverySchedule={deliverySchedule}
+              deliverySchedule={{
+                date: deliverySchedule.date,
+                timeSlot: deliverySchedule.timeSlot
+              }}
             />
 
             {/* MoMo Payment Notice */}

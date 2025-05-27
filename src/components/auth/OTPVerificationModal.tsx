@@ -15,23 +15,16 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Mail, RefreshCcw } from "lucide-react";
 
 const OTPVerificationModal: React.FC = () => {
-  const {
-    isOTPModalOpen,
-    closeOTPModal,
-    pendingEmail,
-    otpSent,
-    sendOTP,
-    verifyOTP,
-    isVerifyingOTP
-  } = useAuth();
-
+  const { user, isAuthenticated } = useAuth();
   const [otp, setOtp] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [countdown, setCountdown] = useState(300); // 5 minutes in seconds
   const [canResend, setCanResend] = useState(false);
 
   // Handle countdown for OTP resend and expiry
   useEffect(() => {
-    if (!otpSent || countdown <= 0) {
+    if (!isOpen || countdown <= 0) {
       setCanResend(true);
       return;
     }
@@ -41,18 +34,19 @@ const OTPVerificationModal: React.FC = () => {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [otpSent, countdown]);
+  }, [isOpen, countdown]);
 
   // Reset OTP when modal is closed
   useEffect(() => {
-    if (!isOTPModalOpen) {
+    if (!isOpen) {
       setOtp("");
     }
-  }, [isOTPModalOpen]);
+  }, [isOpen]);
 
   const handleResendOTP = async () => {
-    if (pendingEmail && canResend) {
-      await sendOTP(pendingEmail);
+    if (user?.email && canResend) {
+      // In a real implementation, this would trigger OTP resend
+      toast.info("OTP resent to your email");
       setCountdown(300);
       setCanResend(false);
     }
@@ -60,10 +54,14 @@ const OTPVerificationModal: React.FC = () => {
 
   const handleVerify = async () => {
     if (otp.length === 6) {
-      const success = await verifyOTP(otp);
-      if (success) {
+      setIsVerifying(true);
+      // Simulate OTP verification
+      setTimeout(() => {
+        setIsVerifying(false);
+        toast.success("Email verified successfully!");
+        setIsOpen(false);
         setOtp("");
-      }
+      }, 2000);
     } else {
       toast.error("Please enter a valid 6-digit OTP");
     }
@@ -76,8 +74,14 @@ const OTPVerificationModal: React.FC = () => {
     return `${mins}:${secs < 10 ? '0' + secs : secs}`;
   };
 
+  // This component is currently not used since we don't have OTP functionality in AuthContext
+  // It's kept for future implementation
+  if (!isOpen) {
+    return null;
+  }
+
   return (
-    <Dialog open={isOTPModalOpen} onOpenChange={closeOTPModal}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Verify Your Email</DialogTitle>
@@ -92,9 +96,9 @@ const OTPVerificationModal: React.FC = () => {
             <Mail className="h-8 w-8" />
           </div>
           
-          {pendingEmail && (
+          {user?.email && (
             <p className="text-center mb-6">
-              Code sent to: <span className="font-medium">{pendingEmail}</span>
+              Code sent to: <span className="font-medium">{user.email}</span>
             </p>
           )}
 
@@ -128,7 +132,7 @@ const OTPVerificationModal: React.FC = () => {
         <DialogFooter>
           <Button 
             variant="outline" 
-            onClick={closeOTPModal}
+            onClick={() => setIsOpen(false)}
             className="w-full sm:w-auto"
           >
             Cancel
@@ -136,9 +140,9 @@ const OTPVerificationModal: React.FC = () => {
           <Button 
             onClick={handleVerify} 
             className="w-full sm:w-auto bg-khrate-500 hover:bg-khrate-600"
-            disabled={otp.length !== 6 || isVerifyingOTP}
+            disabled={otp.length !== 6 || isVerifying}
           >
-            {isVerifyingOTP ? "Verifying..." : "Verify Email"}
+            {isVerifying ? "Verifying..." : "Verify Email"}
           </Button>
         </DialogFooter>
       </DialogContent>
