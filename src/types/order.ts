@@ -1,21 +1,25 @@
 
 export type OrderStatus = "pending" | "processing" | "delivered";
+export type PaymentStatus = "pending" | "completed" | "failed";
 
 export interface Order {
   id: string;
-  date: string;
+  user_id?: string;
+  guest_email?: string;
+  items: any[];
+  total_amount: number;
+  original_amount: number;
+  discount_applied?: number;
+  discount_percentage?: number;
   status: OrderStatus;
-  items: string[];
-  total: number;
-  deliveryAddress: string;
-  deliverySchedule?: {
-    date: string;
-    timeSlot: string;
-  };
-  rating?: {
-    submitted: boolean;
-    date?: string;
-  };
+  delivery_address: string;
+  delivery_date?: string;
+  delivery_time_slot?: string;
+  payment_method: string;
+  payment_status: PaymentStatus;
+  phone_number?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export const statusColors: Record<OrderStatus, string> = {

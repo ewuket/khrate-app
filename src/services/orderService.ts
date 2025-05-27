@@ -33,6 +33,16 @@ export const saveOrder = async (orderData: Omit<Order, 'id' | 'created_at' | 'up
   }
 };
 
+export const createOrder = async (orderData: Omit<Order, 'id' | 'created_at' | 'updated_at'>) => {
+  try {
+    const result = await saveOrder(orderData);
+    return { data: result, error: null };
+  } catch (error) {
+    console.error('Error creating order:', error);
+    return { data: null, error };
+  }
+};
+
 export const applyUserDiscount = async (userId: string, orderTotal: number) => {
   try {
     const { data, error } = await supabase.rpc('apply_user_discount', {
@@ -62,4 +72,12 @@ export const getUserOrders = async (userId: string) => {
     console.error('Error fetching user orders:', error);
     throw error;
   }
+};
+
+// Export as default object for backward compatibility
+export const OrderService = {
+  createOrder,
+  saveOrder,
+  applyUserDiscount,
+  getUserOrders
 };

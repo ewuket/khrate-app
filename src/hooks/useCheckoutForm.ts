@@ -3,7 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { OrderService } from "@/services/orderService";
+import { createOrder } from "@/services/orderService";
 
 export interface UseCheckoutFormProps {
   onSuccess: () => void;
@@ -88,16 +88,18 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
         guest_email: !user ? formData.email : undefined,
         items: cart,
         total_amount: total,
+        original_amount: total + discount,
         discount_applied: discount,
         status: 'pending' as const,
         delivery_address: formData.address,
         delivery_date: deliverySchedule.date,
         delivery_time_slot: deliverySchedule.timeSlot,
         payment_method: paymentMethod,
-        payment_status: 'pending' as const
+        payment_status: 'pending' as const,
+        phone_number: formData.phone
       };
 
-      const result = await OrderService.createOrder(orderData);
+      const result = await createOrder(orderData);
       
       if (result.error) {
         throw new Error(result.error.message || 'Failed to create order');
