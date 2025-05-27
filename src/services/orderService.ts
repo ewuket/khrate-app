@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
@@ -18,7 +17,7 @@ export interface Order {
   created_at?: string;
 }
 
-export const orderService = {
+export const OrderService = {
   async createOrder(orderData: Order) {
     try {
       const { data, error } = await supabase
@@ -90,3 +89,6 @@ export const orderService = {
     }
   }
 };
+
+// Keep backward compatibility
+export const orderService = OrderService;

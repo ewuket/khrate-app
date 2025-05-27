@@ -47,9 +47,8 @@ const CheckoutDialog = ({
     setDeliverySchedule,
     handlePayment
   } = useCheckoutForm({
-    onOpenChange,
-    saveOrder,
-    clearCart
+    onSuccess: saveOrder,
+    onOpenChange
   });
   
   return (
