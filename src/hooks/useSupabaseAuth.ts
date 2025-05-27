@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuthOperations } from './useAuthOperations';
 import { useProfileOperations } from './useProfileOperations';
+import { UserProfile } from '@/types/user';
 
 export const useSupabaseAuth = () => {
   const [user, setUser] = useState<User | null>(null);

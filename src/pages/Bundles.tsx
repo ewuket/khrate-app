@@ -4,7 +4,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import BundleCard from "@/components/bundles/BundleCard";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useCart } from "@/contexts/CartContext";
+import { useSupabaseCart } from "@/contexts/SupabaseCartContext";
 
 // Sample bundle data
 const allBundles = [
@@ -13,7 +13,7 @@ const allBundles = [
     name: "Single Bundle",
     description: "Perfect for 1 person, 7-day essentials",
     price: 32700,
-    image: "/lovable-uploads/4730e151-0c90-4bde-a3cf-7eb370e2cac1.png", // Keeping existing image
+    image: "/lovable-uploads/4730e151-0c90-4bde-a3cf-7eb370e2cac1.png",
     items: ["Rice (10kg)", "Beans (2kg)", "Tomatoes (1kg)", "Onions (2kg)", "Green Paper (1kg)", "peas (1kg)", "Oil (1L)", "Sugar (1kg)", "Salt (100g)", "Eggs (10)"],
     category: "single"
   },
@@ -22,7 +22,7 @@ const allBundles = [
     name: "Medium Bundle",
     description: "Great for 2-3 people, weekly essentials",
     price: 69240,
-    image: "/lovable-uploads/6d22b9d7-17a9-457a-947a-9bb8301a4051.png", // Keeping existing image
+    image: "/lovable-uploads/6d22b9d7-17a9-457a-947a-9bb8301a4051.png",
     items: ["Rice (15kg)", "Beans (5kg)", "Tomatoes (3kg)", "Onions (3kg)", "Green Paper (3kg)", "Oil (3L)", "Sugar (3kg)", "Salt (150g)", "Eggs (12)", "Slice Bread (1pack)", "Milk (2L)"],
     category: "medium"
   },
@@ -31,7 +31,7 @@ const allBundles = [
     name: "Large Bundle",
     description: "Family size, complete weekly groceries",
     price: 119000,
-    image: "/lovable-uploads/30fe686e-a6f6-469f-bb69-c889c304c4e7.png", // Keeping original image
+    image: "/lovable-uploads/30fe686e-a6f6-469f-bb69-c889c304c4e7.png",
     items: ["Rice (25kg)", "Beans (10kg)", "Tomatoes (5kg)", "Onions (5kg)", "Oil (5L)", "Salt (250g)", "Eggs (24pieces)", "Slice Bread (3pack)", "Milk (4L)", "Cassava Flour (5kg)", "Sugar (5kg)"],
     category: "large"
   },
@@ -40,7 +40,7 @@ const allBundles = [
     name: "Vegetables Bundle",
     description: "Fresh vegetables for the week",
     price: 19999,
-    image: "/lovable-uploads/4049f27e-26db-4497-9920-9b60326fe5f7.png", // Keeping existing image
+    image: "/lovable-uploads/4049f27e-26db-4497-9920-9b60326fe5f7.png",
     items: ["Tomatoes (1kg)", "Onions (1kg)", "Carrots (3pieces)", "Lettuce (2)", "Peppers (4pieces)", "Cucumber (2pieces)"],
     category: "single"
   },
@@ -49,7 +49,7 @@ const allBundles = [
     name: "Breakfast Bundle",
     description: "Start your day right",
     price: 19999,
-    image: "/lovable-uploads/f54999c2-780a-4e38-9b60-7d31fd0fd9bc.png", // Updated with new breakfast image
+    image: "/lovable-uploads/f54999c2-780a-4e38-9b60-7d31fd0fd9bc.png",
     items: ["Slice Bread (2pack)", "Eggs (24)", "Milk (5L)", "Breakfast Cereal (1kg)", "Jam (300g)", "Butter (500g)", "Coffee (250g)"],
     category: "medium"
   },
@@ -58,17 +58,16 @@ const allBundles = [
     name: "Pantry Essentials",
     description: "Stock your pantry with basics",
     price: 39999,
-    image: "/lovable-uploads/64610299-1b2e-480f-ad10-ca5f00ac3808.png", // Updated with new pantry essentials image
+    image: "/lovable-uploads/64610299-1b2e-480f-ad10-ca5f00ac3808.png",
     items: ["Rice (10kg)", "Wheat Flour (5kg)", "Sugar (2kg)", "Oil (3L)", "Salt (100g)", "Pasta (3 packs)", "Beans (3kg)", "Lentils (2kg)", "Spices (assorted)"],
     category: "large"
   },
-  // Fruit bundles with updated images
   {
     id: 7,
     name: "Small Fruit Bundle",
     description: "Fresh seasonal fruits for 1-2 people",
     price: 8500,
-    image: "/lovable-uploads/0225ce03-0269-4b10-b603-3c14cf3e55ca.png", // Updated small fruit bundle image
+    image: "/lovable-uploads/0225ce03-0269-4b10-b603-3c14cf3e55ca.png",
     items: ["Oranges (4)", "Apples (4)", "Bananas (6)", "Grapes (1 bunch)", "Strawberries (500g)"],
     category: "fruit"
   },
@@ -77,7 +76,7 @@ const allBundles = [
     name: "Medium Fruit Bundle",
     description: "Variety pack for a small family",
     price: 16000,
-    image: "/lovable-uploads/44536f37-66fe-4604-a318-5afc62c7fcdf.png", // Updated medium fruit bundle image
+    image: "/lovable-uploads/44536f37-66fe-4604-a318-5afc62c7fcdf.png",
     items: ["Oranges (6)", "Apples (6)", "Bananas (8)", "Grapes (2 bunches)", "Strawberries (750g)", "Pineapple (1)", "Mango (2)"],
     category: "fruit"
   },
@@ -86,7 +85,7 @@ const allBundles = [
     name: "Large Fruit Bundle",
     description: "Complete fruit assortment for families",
     price: 29000,
-    image: "/lovable-uploads/09c44f3e-b941-47e8-b1c7-86fee2bd1286.png", // Updated large fruit bundle image
+    image: "/lovable-uploads/09c44f3e-b941-47e8-b1c7-86fee2bd1286.png",
     items: ["Oranges (10)", "Apples (10)", "Bananas (12)", "Grapes (3 bunches)", "Strawberries (1kg)", "Pineapple (2)", "Mango (4)", "Blueberries (250g)", "Raspberries (250g)"],
     category: "fruit"
   }
@@ -94,7 +93,7 @@ const allBundles = [
 
 const Bundles = () => {
   const [category, setCategory] = useState<string>("all");
-  const { addToCart } = useCart();
+  const { addToCart } = useSupabaseCart();
   
   const filteredBundles = category === "all" 
     ? allBundles 
