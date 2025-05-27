@@ -95,7 +95,7 @@ const CheckoutDialog = ({
               total={getCartTotal()}
               formatPrice={formatPrice}
               deliverySchedule={{
-                date: deliverySchedule.date,
+                date: deliverySchedule.date ? new Date(deliverySchedule.date) : undefined,
                 timeSlot: deliverySchedule.timeSlot
               }}
             />
