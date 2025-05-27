@@ -1,9 +1,9 @@
+
 import { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import BundleCard from "@/components/bundles/BundleCard";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useSupabaseCart } from "@/contexts/SupabaseCartContext";
 
 // Sample bundle data
 const allBundles = [
@@ -14,16 +14,16 @@ const allBundles = [
     price: 32700,
     image: "/lovable-uploads/4730e151-0c90-4bde-a3cf-7eb370e2cac1.png",
     items: [
-      { name: "Rice", quantity: "10kg" },
-      { name: "Beans", quantity: "2kg" },
-      { name: "Tomatoes", quantity: "1kg" },
-      { name: "Onions", quantity: "2kg" },
-      { name: "Green Paper", quantity: "1kg" },
-      { name: "Peas", quantity: "1kg" },
-      { name: "Oil", quantity: "1L" },
-      { name: "Sugar", quantity: "1kg" },
-      { name: "Salt", quantity: "100g" },
-      { name: "Eggs", quantity: "10" }
+      { name: "Rice", quantity: 10 },
+      { name: "Beans", quantity: 2 },
+      { name: "Tomatoes", quantity: 1 },
+      { name: "Onions", quantity: 2 },
+      { name: "Green Paper", quantity: 1 },
+      { name: "Peas", quantity: 1 },
+      { name: "Oil", quantity: 1 },
+      { name: "Sugar", quantity: 1 },
+      { name: "Salt", quantity: 0.1 },
+      { name: "Eggs", quantity: 10 }
     ],
     category: "single"
   },
@@ -34,17 +34,17 @@ const allBundles = [
     price: 69240,
     image: "/lovable-uploads/6d22b9d7-17a9-457a-947a-9bb8301a4051.png",
     items: [
-      { name: "Rice", quantity: "15kg" },
-      { name: "Beans", quantity: "5kg" },
-      { name: "Tomatoes", quantity: "3kg" },
-      { name: "Onions", quantity: "3kg" },
-      { name: "Green Paper", quantity: "3kg" },
-      { name: "Oil", quantity: "3L" },
-      { name: "Sugar", quantity: "3kg" },
-      { name: "Salt", quantity: "150g" },
-      { name: "Eggs", quantity: "12" },
-      { name: "Slice Bread", quantity: "1pack" },
-      { name: "Milk", quantity: "2L" }
+      { name: "Rice", quantity: 15 },
+      { name: "Beans", quantity: 5 },
+      { name: "Tomatoes", quantity: 3 },
+      { name: "Onions", quantity: 3 },
+      { name: "Green Paper", quantity: 3 },
+      { name: "Oil", quantity: 3 },
+      { name: "Sugar", quantity: 3 },
+      { name: "Salt", quantity: 0.15 },
+      { name: "Eggs", quantity: 12 },
+      { name: "Slice Bread", quantity: 1 },
+      { name: "Milk", quantity: 2 }
     ],
     category: "medium"
   },
@@ -55,17 +55,17 @@ const allBundles = [
     price: 119000,
     image: "/lovable-uploads/30fe686e-a6f6-469f-bb69-c889c304c4e7.png",
     items: [
-      { name: "Rice", quantity: "25kg" },
-      { name: "Beans", quantity: "10kg" },
-      { name: "Tomatoes", quantity: "5kg" },
-      { name: "Onions", quantity: "5kg" },
-      { name: "Oil", quantity: "5L" },
-      { name: "Salt", quantity: "250g" },
-      { name: "Eggs", quantity: "24pieces" },
-      { name: "Slice Bread", quantity: "3pack" },
-      { name: "Milk", quantity: "4L" },
-      { name: "Cassava Flour", quantity: "5kg" },
-      { name: "Sugar", quantity: "5kg" }
+      { name: "Rice", quantity: 25 },
+      { name: "Beans", quantity: 10 },
+      { name: "Tomatoes", quantity: 5 },
+      { name: "Onions", quantity: 5 },
+      { name: "Oil", quantity: 5 },
+      { name: "Salt", quantity: 0.25 },
+      { name: "Eggs", quantity: 24 },
+      { name: "Slice Bread", quantity: 3 },
+      { name: "Milk", quantity: 4 },
+      { name: "Cassava Flour", quantity: 5 },
+      { name: "Sugar", quantity: 5 }
     ],
     category: "large"
   },
@@ -76,12 +76,12 @@ const allBundles = [
     price: 19999,
     image: "/lovable-uploads/4049f27e-26db-4497-9920-9b60326fe5f7.png",
     items: [
-      { name: "Tomatoes", quantity: "1kg" },
-      { name: "Onions", quantity: "1kg" },
-      { name: "Carrots", quantity: "3pieces" },
-      { name: "Lettuce", quantity: "2" },
-      { name: "Peppers", quantity: "4pieces" },
-      { name: "Cucumber", quantity: "2pieces" }
+      { name: "Tomatoes", quantity: 1 },
+      { name: "Onions", quantity: 1 },
+      { name: "Carrots", quantity: 3 },
+      { name: "Lettuce", quantity: 2 },
+      { name: "Peppers", quantity: 4 },
+      { name: "Cucumber", quantity: 2 }
     ],
     category: "single"
   },
@@ -92,13 +92,13 @@ const allBundles = [
     price: 19999,
     image: "/lovable-uploads/f54999c2-780a-4e38-9b60-7d31fd0fd9bc.png",
     items: [
-      { name: "Slice Bread", quantity: "2pack" },
-      { name: "Eggs", quantity: "24" },
-      { name: "Milk", quantity: "5L" },
-      { name: "Breakfast Cereal", quantity: "1kg" },
-      { name: "Jam", quantity: "300g" },
-      { name: "Butter", quantity: "500g" },
-      { name: "Coffee", quantity: "250g" }
+      { name: "Slice Bread", quantity: 2 },
+      { name: "Eggs", quantity: 24 },
+      { name: "Milk", quantity: 5 },
+      { name: "Breakfast Cereal", quantity: 1 },
+      { name: "Jam", quantity: 0.3 },
+      { name: "Butter", quantity: 0.5 },
+      { name: "Coffee", quantity: 0.25 }
     ],
     category: "medium"
   },
@@ -109,15 +109,15 @@ const allBundles = [
     price: 39999,
     image: "/lovable-uploads/64610299-1b2e-480f-ad10-ca5f00ac3808.png",
     items: [
-      { name: "Rice", quantity: "10kg" },
-      { name: "Wheat Flour", quantity: "5kg" },
-      { name: "Sugar", quantity: "2kg" },
-      { name: "Oil", quantity: "3L" },
-      { name: "Salt", quantity: "100g" },
-      { name: "Pasta", quantity: "3 packs" },
-      { name: "Beans", quantity: "3kg" },
-      { name: "Lentils", quantity: "2kg" },
-      { name: "Spices", quantity: "assorted" }
+      { name: "Rice", quantity: 10 },
+      { name: "Wheat Flour", quantity: 5 },
+      { name: "Sugar", quantity: 2 },
+      { name: "Oil", quantity: 3 },
+      { name: "Salt", quantity: 0.1 },
+      { name: "Pasta", quantity: 3 },
+      { name: "Beans", quantity: 3 },
+      { name: "Lentils", quantity: 2 },
+      { name: "Spices", quantity: 1 }
     ],
     category: "large"
   },
@@ -128,11 +128,11 @@ const allBundles = [
     price: 8500,
     image: "/lovable-uploads/0225ce03-0269-4b10-b603-3c14cf3e55ca.png",
     items: [
-      { name: "Oranges", quantity: "4" },
-      { name: "Apples", quantity: "4" },
-      { name: "Bananas", quantity: "6" },
-      { name: "Grapes", quantity: "1 bunch" },
-      { name: "Strawberries", quantity: "500g" }
+      { name: "Oranges", quantity: 4 },
+      { name: "Apples", quantity: 4 },
+      { name: "Bananas", quantity: 6 },
+      { name: "Grapes", quantity: 1 },
+      { name: "Strawberries", quantity: 0.5 }
     ],
     category: "fruit"
   },
@@ -143,13 +143,13 @@ const allBundles = [
     price: 16000,
     image: "/lovable-uploads/44536f37-66fe-4604-a318-5afc62c7fcdf.png",
     items: [
-      { name: "Oranges", quantity: "6" },
-      { name: "Apples", quantity: "6" },
-      { name: "Bananas", quantity: "8" },
-      { name: "Grapes", quantity: "2 bunches" },
-      { name: "Strawberries", quantity: "750g" },
-      { name: "Pineapple", quantity: "1" },
-      { name: "Mango", quantity: "2" }
+      { name: "Oranges", quantity: 6 },
+      { name: "Apples", quantity: 6 },
+      { name: "Bananas", quantity: 8 },
+      { name: "Grapes", quantity: 2 },
+      { name: "Strawberries", quantity: 0.75 },
+      { name: "Pineapple", quantity: 1 },
+      { name: "Mango", quantity: 2 }
     ],
     category: "fruit"
   },
@@ -160,15 +160,15 @@ const allBundles = [
     price: 29000,
     image: "/lovable-uploads/09c44f3e-b941-47e8-b1c7-86fee2bd1286.png",
     items: [
-      { name: "Oranges", quantity: "10" },
-      { name: "Apples", quantity: "10" },
-      { name: "Bananas", quantity: "12" },
-      { name: "Grapes", quantity: "3 bunches" },
-      { name: "Strawberries", quantity: "1kg" },
-      { name: "Pineapple", quantity: "2" },
-      { name: "Mango", quantity: "4" },
-      { name: "Blueberries", quantity: "250g" },
-      { name: "Raspberries", quantity: "250g" }
+      { name: "Oranges", quantity: 10 },
+      { name: "Apples", quantity: 10 },
+      { name: "Bananas", quantity: 12 },
+      { name: "Grapes", quantity: 3 },
+      { name: "Strawberries", quantity: 1 },
+      { name: "Pineapple", quantity: 2 },
+      { name: "Mango", quantity: 4 },
+      { name: "Blueberries", quantity: 0.25 },
+      { name: "Raspberries", quantity: 0.25 }
     ],
     category: "fruit"
   }
@@ -176,7 +176,6 @@ const allBundles = [
 
 const Bundles = () => {
   const [category, setCategory] = useState<string>("all");
-  const { addToCart } = useSupabaseCart();
   
   const filteredBundles = category === "all" 
     ? allBundles 
