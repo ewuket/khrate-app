@@ -6,10 +6,10 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { ShoppingBasket, Users, Package, Calendar } from "lucide-react";
-import AuthModal from "@/components/auth/AuthModal";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const { openAuthModal } = useAuth();
   
   const features = [
     {
@@ -76,7 +76,7 @@ const Index = () => {
               <Button 
                 className="bg-white text-khrate-500 hover:bg-gray-100" 
                 size="lg"
-                onClick={() => setIsAuthModalOpen(true)}
+                onClick={openAuthModal}
               >
                 Get Started Now
               </Button>
@@ -86,8 +86,6 @@ const Index = () => {
       </main>
       
       <Footer />
-      
-      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </div>
   );
 };

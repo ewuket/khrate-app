@@ -129,26 +129,39 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
     if (!currentGroup) return;
 
     try {
-      const { data, error } = await supabase
+      // First get the group members
+      const { data: membersData, error: membersError } = await supabase
         .from('group_members')
-        .select(`
-          *,
-          user_profiles!inner (
-            full_name,
-            email
-          )
-        `)
+        .select('*')
         .eq('group_session_id', currentGroup.id);
 
-      if (error) throw error;
+      if (membersError) throw membersError;
 
-      const members: GroupMember[] = data.map(member => ({
-        id: member.id,
-        user_id: member.user_id,
-        group_session_id: member.group_session_id,
-        joined_at: member.joined_at,
-        user_profile: member.user_profiles
-      }));
+      // Then get user profiles for each member
+      const memberIds = membersData.map(member => member.user_id);
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('user_profiles')
+        .select('id, full_name, email')
+        .in('id', memberIds);
+
+      if (profilesError) throw profilesError;
+
+      // Combine the data
+      const members: GroupMember[] = membersData.map(member => {
+        const profile = profilesData.find(p => p.id === member.user_id);
+        return {
+          id: member.id,
+          user_id: member.user_id,
+          group_session_id: member.group_session_id,
+          joined_at: member.joined_at,
+          user_profile: profile ? {
+            full_name: profile.full_name,
+            email: profile.email
+          } : {
+            email: 'Unknown User'
+          }
+        };
+      });
 
       setGroupMembers(members);
     } catch (error) {
@@ -176,7 +189,9 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
         quantity: item.quantity,
         product_unit: item.product_unit,
         product_type: item.product_type,
-        product_items: Array.isArray(item.product_items) ? item.product_items : []
+        product_items: Array.isArray(item.product_items) 
+          ? item.product_items.filter((item): item is string => typeof item === 'string')
+          : []
       }));
 
       setGroupCart(cartItems);
