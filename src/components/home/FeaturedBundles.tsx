@@ -3,31 +3,65 @@ import { Button } from "@/components/ui/button";
 import BundleCard from "@/components/bundles/BundleCard";
 import { Link } from "react-router-dom";
 
-// Sample data for bundles - updated prices to match Bundles page
+// Sample data for bundles - updated to match expected structure
 const bundles = [
   {
     id: 1,
-    name: "Single Bundle",
+    title: "Single Bundle",
     description: "Perfect for 1 person, 7-day essentials",
     price: 32700,
     image: "/lovable-uploads/4730e151-0c90-4bde-a3cf-7eb370e2cac1.png",
-    items: ["Rice (10kg)", "Beans (2kg)", "Tomatoes (1kg)", "Onions (2kg)", "Green Paper (1kg)", "peas (1kg)", "Oil (1L)", "Sugar (1kg)", "Salt (100g)", "Eggs (10)"]
+    items: [
+      { name: "Rice", quantity: 10 },
+      { name: "Beans", quantity: 2 },
+      { name: "Tomatoes", quantity: 1 },
+      { name: "Onions", quantity: 2 },
+      { name: "Green Paper", quantity: 1 },
+      { name: "Oil", quantity: 1 },
+      { name: "Sugar", quantity: 1 },
+      { name: "Salt", quantity: 0.1 },
+      { name: "Eggs", quantity: 10 }
+    ]
   },
   {
     id: 2,
-    name: "Medium Bundle",
+    title: "Medium Bundle",
     description: "Great for 2-3 people, weekly essentials",
     price: 69240,
     image: "/lovable-uploads/6d22b9d7-17a9-457a-947a-9bb8301a4051.png",
-    items: ["Rice (15kg)", "Beans (5kg)", "Tomatoes (3kg)", "Onions (3kg)", "Green Paper (3kg)", "Oil (3L)", "Sugar (3kg)", "Salt (150g)", "Eggs (12)", "Slice Bread (1pack)", "Milk (2L)"]
+    items: [
+      { name: "Rice", quantity: 15 },
+      { name: "Beans", quantity: 5 },
+      { name: "Tomatoes", quantity: 3 },
+      { name: "Onions", quantity: 3 },
+      { name: "Green Paper", quantity: 3 },
+      { name: "Oil", quantity: 3 },
+      { name: "Sugar", quantity: 3 },
+      { name: "Salt", quantity: 0.15 },
+      { name: "Eggs", quantity: 12 },
+      { name: "Slice Bread", quantity: 1 },
+      { name: "Milk", quantity: 2 }
+    ]
   },
   {
     id: 3,
-    name: "Large Bundle",
+    title: "Large Bundle",
     description: "Family size, complete weekly groceries",
     price: 119000,
     image: "/lovable-uploads/30fe686e-a6f6-469f-bb69-c889c304c4e7.png",
-    items: ["Rice (25kg)", "Beans (10kg)", "Tomatoes (5kg)", "Onions (5kg)", "Oil (5L)", "Salt (250g)", "Eggs (24pieces)", "Slice Bread (3pack)", "Milk (4L)", "Cassava Flour (5kg)", "Sugar (5kg)"]
+    items: [
+      { name: "Rice", quantity: 25 },
+      { name: "Beans", quantity: 10 },
+      { name: "Tomatoes", quantity: 5 },
+      { name: "Onions", quantity: 5 },
+      { name: "Oil", quantity: 5 },
+      { name: "Salt", quantity: 0.25 },
+      { name: "Eggs", quantity: 24 },
+      { name: "Slice Bread", quantity: 3 },
+      { name: "Milk", quantity: 4 },
+      { name: "Cassava Flour", quantity: 5 },
+      { name: "Sugar", quantity: 5 }
+    ]
   }
 ];
 

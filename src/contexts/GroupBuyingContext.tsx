@@ -1,229 +1,140 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './AuthContext';
-import { toast } from 'sonner';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface GroupSession {
   id: string;
-  name?: string;
+  name: string;
   join_code: string;
   leader_id: string;
   min_participants: number;
   max_participants: number;
   discount_percentage: number;
-  status: 'active' | 'completed' | 'cancelled';
+  status: string;
   created_at: string;
-  updated_at: string;
-}
-
-interface GroupMember {
-  id: string;
-  group_session_id: string;
-  user_id: string;
-  joined_at: string;
-  user_profile?: {
-    full_name?: string;
-    email: string;
-  };
+  member_count?: number;
 }
 
 interface GroupCartItem {
   id: string;
-  group_session_id: string;
-  user_id: string;
   product_id: number;
   product_name: string;
   product_price: number;
-  product_type: string;
-  product_unit: string;
-  product_items?: any;
   quantity: number;
-  created_at: string;
-  updated_at: string;
-}
-
-interface GroupSummary {
-  member_count: number;
-  total_amount: number;
-  discount_amount: number;
-  final_amount: number;
-  qualifies_for_discount: boolean;
+  product_unit: string;
+  product_type: string;
+  product_items?: string[];
 }
 
 interface GroupBuyingContextType {
   currentGroup: GroupSession | null;
-  groupMembers: GroupMember[];
-  groupCartItems: GroupCartItem[];
-  groupSummary: GroupSummary | null;
-  isLoading: boolean;
-  createGroup: (name?: string, minParticipants?: number) => Promise<string | null>;
-  joinGroup: (joinCode: string) => Promise<boolean>;
+  groupCart: GroupCartItem[];
+  availableGroups: GroupSession[];
+  loading: boolean;
+  createGroup: (name: string) => Promise<void>;
+  joinGroup: (joinCode: string) => Promise<void>;
   leaveGroup: () => Promise<void>;
-  addItemToGroupCart: (item: any) => Promise<void>;
-  removeItemFromGroupCart: (itemId: string) => Promise<void>;
-  updateGroupCartItemQuantity: (itemId: string, quantity: number) => Promise<void>;
-  completeGroupOrder: () => Promise<boolean>;
+  addToGroupCart: (item: any, type: 'bundle' | 'custom') => Promise<void>;
+  removeFromGroupCart: (id: string) => Promise<void>;
+  updateGroupCartQuantity: (id: string, quantity: number) => Promise<void>;
+  clearGroupCart: () => Promise<void>;
+  getGroupTotal: () => number;
+  loadAvailableGroups: () => Promise<void>;
 }
 
 const GroupBuyingContext = createContext<GroupBuyingContextType | undefined>(undefined);
 
 export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, isAuthenticated } = useAuth();
   const [currentGroup, setCurrentGroup] = useState<GroupSession | null>(null);
-  const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
-  const [groupCartItems, setGroupCartItems] = useState<GroupCartItem[]>([]);
-  const [groupSummary, setGroupSummary] = useState<GroupSummary | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [groupCart, setGroupCart] = useState<GroupCartItem[]>([]);
+  const [availableGroups, setAvailableGroups] = useState<GroupSession[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { user, isAuthenticated } = useAuth();
 
-  // Subscribe to real-time updates
+  // Load available groups on mount
   useEffect(() => {
-    if (!currentGroup) return;
+    loadAvailableGroups();
+  }, []);
 
-    const groupChannel = supabase
-      .channel(`group-${currentGroup.id}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'group_members',
-        filter: `group_session_id=eq.${currentGroup.id}`
-      }, () => {
-        fetchGroupMembers(currentGroup.id);
-      })
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'group_cart_items',
-        filter: `group_session_id=eq.${currentGroup.id}`
-      }, () => {
-        fetchGroupCartItems(currentGroup.id);
-        fetchGroupSummary(currentGroup.id);
-      })
-      .subscribe();
+  const loadAvailableGroups = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('group_sessions')
+        .select(`
+          *,
+          group_members(count)
+        `)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
 
-    return () => {
-      supabase.removeChannel(groupChannel);
-    };
-  }, [currentGroup?.id]);
+      if (error) throw error;
 
-  const fetchGroupMembers = async (groupId: string) => {
-    const { data, error } = await supabase
-      .from('group_members')
-      .select(`
-        *,
-        user_profiles!inner(full_name, email)
-      `)
-      .eq('group_session_id', groupId);
+      const groupsWithMemberCount = data.map(group => ({
+        ...group,
+        member_count: group.group_members?.[0]?.count || 0
+      }));
 
-    if (error) {
-      console.error('Error fetching group members:', error);
-      return;
-    }
-
-    const membersWithProfiles = data.map(member => ({
-      ...member,
-      user_profile: Array.isArray(member.user_profiles) 
-        ? member.user_profiles[0] 
-        : member.user_profiles
-    })) as GroupMember[];
-
-    setGroupMembers(membersWithProfiles);
-  };
-
-  const fetchGroupCartItems = async (groupId: string) => {
-    const { data, error } = await supabase
-      .from('group_cart_items')
-      .select('*')
-      .eq('group_session_id', groupId)
-      .order('created_at', { ascending: true });
-
-    if (error) {
-      console.error('Error fetching group cart items:', error);
-      return;
-    }
-
-    setGroupCartItems(data);
-  };
-
-  const fetchGroupSummary = async (groupId: string) => {
-    const { data, error } = await supabase
-      .rpc('get_group_summary', { group_id: groupId });
-
-    if (error) {
-      console.error('Error fetching group summary:', error);
-      return;
-    }
-
-    if (data && data.length > 0) {
-      setGroupSummary(data[0]);
+      setAvailableGroups(groupsWithMemberCount);
+    } catch (error) {
+      console.error('Error loading available groups:', error);
     }
   };
 
-  const createGroup = async (name?: string, minParticipants = 3): Promise<string | null> => {
+  const createGroup = async (name: string) => {
     if (!isAuthenticated || !user) {
       toast.error('Please log in to create a group');
-      return null;
+      return;
     }
 
-    setIsLoading(true);
+    setLoading(true);
     try {
-      // Generate join code
+      // Generate a unique join code
       const { data: joinCodeData, error: joinCodeError } = await supabase
         .rpc('generate_join_code');
 
       if (joinCodeError) throw joinCodeError;
 
-      // Create group session
-      const { data: groupData, error: groupError } = await supabase
+      const { data, error } = await supabase
         .from('group_sessions')
         .insert({
           name,
           join_code: joinCodeData,
           leader_id: user.id,
-          min_participants: minParticipants
+          status: 'active'
         })
         .select()
         .single();
 
-      if (groupError) throw groupError;
+      if (error) throw error;
 
       // Add creator as first member
-      const { error: memberError } = await supabase
+      await supabase
         .from('group_members')
         .insert({
-          group_session_id: groupData.id,
+          group_session_id: data.id,
           user_id: user.id
         });
 
-      if (memberError) throw memberError;
-
-      setCurrentGroup(groupData as GroupSession);
-      toast.success(`Group created! Share code: ${joinCodeData}`);
-      
-      // Fetch initial data
-      await Promise.all([
-        fetchGroupMembers(groupData.id),
-        fetchGroupCartItems(groupData.id),
-        fetchGroupSummary(groupData.id)
-      ]);
-
-      return joinCodeData;
+      setCurrentGroup(data);
+      toast.success(`Group "${name}" created! Share code: ${joinCodeData}`);
+      await loadAvailableGroups();
     } catch (error) {
       console.error('Error creating group:', error);
       toast.error('Failed to create group');
-      return null;
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const joinGroup = async (joinCode: string): Promise<boolean> => {
+  const joinGroup = async (joinCode: string) => {
     if (!isAuthenticated || !user) {
       toast.error('Please log in to join a group');
-      return false;
+      return;
     }
 
-    setIsLoading(true);
+    setLoading(true);
     try {
       // Find group by join code
       const { data: groupData, error: groupError } = await supabase
@@ -233,10 +144,7 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
         .eq('status', 'active')
         .single();
 
-      if (groupError || !groupData) {
-        toast.error('Invalid join code or group not found');
-        return false;
-      }
+      if (groupError) throw new Error('Group not found');
 
       // Check if already a member
       const { data: existingMember } = await supabase
@@ -247,40 +155,31 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
         .single();
 
       if (existingMember) {
-        toast.error('You are already a member of this group');
-        setCurrentGroup(groupData as GroupSession);
-        await Promise.all([
-          fetchGroupMembers(groupData.id),
-          fetchGroupCartItems(groupData.id),
-          fetchGroupSummary(groupData.id)
-        ]);
-        return true;
+        setCurrentGroup(groupData);
+        toast.info('You are already a member of this group');
+        return;
       }
 
-      // Add as member
-      const { error: memberError } = await supabase
+      // Add user to group
+      await supabase
         .from('group_members')
         .insert({
           group_session_id: groupData.id,
           user_id: user.id
         });
 
-      if (memberError) throw memberError;
-
-      setCurrentGroup(groupData as GroupSession);
-      toast.success('Successfully joined the group!');
-      
-      return true;
+      setCurrentGroup(groupData);
+      toast.success(`Joined group "${groupData.name}"!`);
+      await loadAvailableGroups();
     } catch (error) {
       console.error('Error joining group:', error);
-      toast.error('Failed to join group');
-      return false;
+      toast.error('Failed to join group. Please check the code.');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const leaveGroup = async (): Promise<void> => {
+  const leaveGroup = async () => {
     if (!currentGroup || !user) return;
 
     try {
@@ -291,60 +190,84 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
         .eq('user_id', user.id);
 
       setCurrentGroup(null);
-      setGroupMembers([]);
-      setGroupCartItems([]);
-      setGroupSummary(null);
-      toast.success('Left the group');
+      setGroupCart([]);
+      toast.info('Left the group');
+      await loadAvailableGroups();
     } catch (error) {
       console.error('Error leaving group:', error);
       toast.error('Failed to leave group');
     }
   };
 
-  const addItemToGroupCart = async (item: any): Promise<void> => {
-    if (!currentGroup || !user) return;
+  const addToGroupCart = async (item: any, type: 'bundle' | 'custom') => {
+    if (!currentGroup || !user) {
+      toast.error('Please join a group first');
+      return;
+    }
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('group_cart_items')
         .insert({
           group_session_id: currentGroup.id,
           user_id: user.id,
           product_id: item.id,
-          product_name: item.name,
+          product_name: item.name || item.title,
           product_price: item.price,
-          product_type: item.type || 'product',
+          quantity: 1,
           product_unit: item.unit || 'item',
-          product_items: item.items || null,
-          quantity: 1
-        });
+          product_type: type,
+          product_items: Array.isArray(item.items) ? item.items : null
+        })
+        .select()
+        .single();
 
       if (error) throw error;
-      toast.success('Item added to group cart');
+
+      const newCartItem: GroupCartItem = {
+        id: data.id,
+        product_id: data.product_id,
+        product_name: data.product_name,
+        product_price: data.product_price,
+        quantity: data.quantity,
+        product_unit: data.product_unit,
+        product_type: data.product_type,
+        product_items: data.product_items
+      };
+
+      setGroupCart(prev => [...prev, newCartItem]);
+      toast.success(`${item.name || item.title} added to group cart`);
     } catch (error) {
-      console.error('Error adding item to group cart:', error);
+      console.error('Error adding to group cart:', error);
       toast.error('Failed to add item to group cart');
     }
   };
 
-  const removeItemFromGroupCart = async (itemId: string): Promise<void> => {
+  const removeFromGroupCart = async (id: string) => {
+    if (!user) return;
+
     try {
       const { error } = await supabase
         .from('group_cart_items')
         .delete()
-        .eq('id', itemId);
+        .eq('id', id)
+        .eq('user_id', user.id);
 
       if (error) throw error;
-      toast.success('Item removed from group cart');
+
+      setGroupCart(prev => prev.filter(item => item.id !== id));
+      toast.info('Item removed from group cart');
     } catch (error) {
-      console.error('Error removing item from group cart:', error);
+      console.error('Error removing from group cart:', error);
       toast.error('Failed to remove item');
     }
   };
 
-  const updateGroupCartItemQuantity = async (itemId: string, quantity: number): Promise<void> => {
+  const updateGroupCartQuantity = async (id: string, quantity: number) => {
+    if (!user) return;
+
     if (quantity <= 0) {
-      await removeItemFromGroupCart(itemId);
+      await removeFromGroupCart(id);
       return;
     }
 
@@ -352,56 +275,64 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
       const { error } = await supabase
         .from('group_cart_items')
         .update({ quantity })
-        .eq('id', itemId);
+        .eq('id', id)
+        .eq('user_id', user.id);
 
       if (error) throw error;
+
+      setGroupCart(prev =>
+        prev.map(item =>
+          item.id === id ? { ...item, quantity } : item
+        )
+      );
     } catch (error) {
       console.error('Error updating quantity:', error);
       toast.error('Failed to update quantity');
     }
   };
 
-  const completeGroupOrder = async (): Promise<boolean> => {
-    if (!currentGroup || !user || currentGroup.leader_id !== user.id) {
-      toast.error('Only group leaders can complete orders');
-      return false;
-    }
+  const clearGroupCart = async () => {
+    if (!user || !currentGroup) return;
 
     try {
-      // Update group status to completed
       const { error } = await supabase
-        .from('group_sessions')
-        .update({ status: 'completed' })
-        .eq('id', currentGroup.id);
+        .from('group_cart_items')
+        .delete()
+        .eq('group_session_id', currentGroup.id)
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
-      toast.success('Group order completed!');
-      return true;
+      setGroupCart([]);
+      toast.info('Group cart cleared');
     } catch (error) {
-      console.error('Error completing group order:', error);
-      toast.error('Failed to complete group order');
-      return false;
+      console.error('Error clearing group cart:', error);
+      toast.error('Failed to clear cart');
     }
   };
 
-  const value: GroupBuyingContextType = {
-    currentGroup,
-    groupMembers,
-    groupCartItems,
-    groupSummary,
-    isLoading,
-    createGroup,
-    joinGroup,
-    leaveGroup,
-    addItemToGroupCart,
-    removeItemFromGroupCart,
-    updateGroupCartItemQuantity,
-    completeGroupOrder
+  const getGroupTotal = () => {
+    return groupCart.reduce((total, item) => total + (item.product_price * item.quantity), 0);
   };
 
   return (
-    <GroupBuyingContext.Provider value={value}>
+    <GroupBuyingContext.Provider
+      value={{
+        currentGroup,
+        groupCart,
+        availableGroups,
+        loading,
+        createGroup,
+        joinGroup,
+        leaveGroup,
+        addToGroupCart,
+        removeFromGroupCart,
+        updateGroupCartQuantity,
+        clearGroupCart,
+        getGroupTotal,
+        loadAvailableGroups
+      }}
+    >
       {children}
     </GroupBuyingContext.Provider>
   );

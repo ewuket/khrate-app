@@ -7,67 +7,69 @@ import { useSupabaseCart } from "@/contexts/SupabaseCartContext";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import GroupBuyButton from "@/components/group-buy/GroupBuyButton";
-import { SaveBundleButton } from '../custom-buy/SaveBundleButton';
+
+interface BundleItem {
+  name: string;
+  quantity: number;
+}
+
+interface Bundle {
+  id: number;
+  title?: string;
+  name?: string;
+  description: string;
+  price: number;
+  image: string;
+  items: BundleItem[] | string[];
+}
 
 interface BundleCardProps {
-  bundle: {
-    id: number;
-    name?: string;
-    title?: string;
-    description: string;
-    price: number;
-    image: string;
-    items: { name: string; quantity: number }[] | string[];
-  };
+  bundle: Bundle;
   onSaveBundle?: (bundleId: number) => void;
 }
 
 const BundleCard: React.FC<BundleCardProps> = ({ bundle, onSaveBundle }) => {
-  const { addToCart, openCart } = useSupabaseCart();
+  const { addToCart } = useSupabaseCart();
   const { user } = useAuth();
-  
-  // Handle both name and title properties
+
   const bundleName = bundle.title || bundle.name || 'Bundle';
-  
-  const handleSaveBundle = () => {
-    if (onSaveBundle) {
-      onSaveBundle(bundle.id);
-      toast.success("Bundle saved!");
-    }
-  };
 
   const handleAddToCart = async () => {
-    await addToCart({
-      product_id: bundle.id,
-      product_name: bundleName,
-      product_price: bundle.price,
-      product_type: 'bundle',
-      product_unit: 'bundle',
-      product_items: bundle.items,
-      quantity: 1
-    }, 'bundle');
-    
-    toast.success(`${bundleName} added to cart`);
-    
-    // Auto-open cart sidebar
-    setTimeout(() => {
-      openCart();
-    }, 500);
+    try {
+      await addToCart({
+        id: bundle.id,
+        name: bundleName,
+        price: bundle.price,
+        unit: 'bundle',
+        items: bundle.items
+      }, 'bundle');
+      
+      toast.success(`${bundleName} added to cart`);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast.error('Failed to add item to cart');
+    }
   };
 
-  // Handle both string[] and object[] formats for items
   const renderItems = () => {
-    if (typeof bundle.items[0] === 'string') {
-      return (bundle.items as string[]).map((item, index) => (
-        <li key={index}>{item}</li>
-      ));
-    } else {
-      return (bundle.items as { name: string; quantity: number }[]).map((item, index) => (
-        <li key={index}>
-          {item.quantity} {item.name}
-        </li>
-      ));
+    if (Array.isArray(bundle.items) && bundle.items.length > 0) {
+      if (typeof bundle.items[0] === 'object' && 'name' in bundle.items[0]) {
+        // Bundle items with quantity
+        return (bundle.items as BundleItem[]).map((item, index) => (
+          <li key={index} className="text-sm text-gray-600">
+            {item.quantity}kg {item.name}
+          </li>
+        ));
+      } else {
+        // String array items
+        return (bundle.items as string[]).map((item, index) => (
+          <li key={index} className="text-sm text-gray-600">
+            {item}
+          </li>
+        ));
+      }
     }
+    return null;
   };
 
   return (
@@ -78,8 +80,8 @@ const BundleCard: React.FC<BundleCardProps> = ({ bundle, onSaveBundle }) => {
       </CardHeader>
       
       <div className="aspect-square">
-        <img 
-          src={bundle.image} 
+        <img
+          src={bundle.image}
           alt={bundleName}
           className="w-full h-full object-cover"
         />
@@ -91,7 +93,7 @@ const BundleCard: React.FC<BundleCardProps> = ({ bundle, onSaveBundle }) => {
           <ul className="list-disc pl-4 space-y-1">
             {renderItems()}
           </ul>
-          <p className="text-orange-500 font-bold text-xl mt-3">
+          <p className="text-khrate-500 font-bold text-xl mt-3">
             {bundle.price.toLocaleString()} RWF
           </p>
         </div>
@@ -105,7 +107,7 @@ const BundleCard: React.FC<BundleCardProps> = ({ bundle, onSaveBundle }) => {
             Add Bundle to Cart
           </Button>
           
-          <GroupBuyButton 
+          <GroupBuyButton
             item={{
               id: bundle.id,
               name: bundleName,
@@ -117,10 +119,6 @@ const BundleCard: React.FC<BundleCardProps> = ({ bundle, onSaveBundle }) => {
             variant="outline"
             className="w-full"
           />
-          
-          {user && onSaveBundle && (
-            <SaveBundleButton bundleId={bundle.id} onSaveBundle={handleSaveBundle} />
-          )}
         </div>
       </CardContent>
     </Card>
