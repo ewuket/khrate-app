@@ -59,7 +59,7 @@ const Navbar = () => {
                 className="relative p-2 text-gray-600 hover:text-khrate-500 transition-colors"
               >
                 <ShoppingCart className="h-6 w-6" />
-                <CartBadge count={cart.length} />
+                <CartBadge itemCount={cart.length} />
               </button>
 
               {/* Auth Section */}

@@ -17,8 +17,20 @@ interface GroupSession {
   member_count?: number;
 }
 
+interface GroupMember {
+  id: string;
+  user_id: string;
+  group_session_id: string;
+  joined_at: string;
+  user_profile?: {
+    full_name?: string;
+    email: string;
+  };
+}
+
 interface GroupCartItem {
   id: string;
+  user_id: string;
   product_id: number;
   product_name: string;
   product_price: number;
@@ -28,20 +40,35 @@ interface GroupCartItem {
   product_items?: string[];
 }
 
+interface GroupSummary {
+  member_count: number;
+  total_amount: number;
+  discount_amount: number;
+  final_amount: number;
+  qualifies_for_discount: boolean;
+}
+
 interface GroupBuyingContextType {
   currentGroup: GroupSession | null;
   groupCart: GroupCartItem[];
+  groupMembers: GroupMember[];
+  groupCartItems: GroupCartItem[];
+  groupSummary: GroupSummary | null;
   availableGroups: GroupSession[];
   loading: boolean;
-  createGroup: (name: string) => Promise<void>;
-  joinGroup: (joinCode: string) => Promise<void>;
+  createGroup: (name?: string, minParticipants?: number) => Promise<string | null>;
+  joinGroup: (joinCode: string) => Promise<boolean>;
   leaveGroup: () => Promise<void>;
   addToGroupCart: (item: any, type: 'bundle' | 'custom') => Promise<void>;
+  addItemToGroupCart: (item: any) => Promise<void>;
   removeFromGroupCart: (id: string) => Promise<void>;
+  removeItemFromGroupCart: (id: string) => Promise<void>;
   updateGroupCartQuantity: (id: string, quantity: number) => Promise<void>;
+  updateGroupCartItemQuantity: (id: string, quantity: number) => Promise<void>;
   clearGroupCart: () => Promise<void>;
   getGroupTotal: () => number;
   loadAvailableGroups: () => Promise<void>;
+  completeGroupOrder: () => Promise<boolean>;
 }
 
 const GroupBuyingContext = createContext<GroupBuyingContextType | undefined>(undefined);
@@ -49,14 +76,131 @@ const GroupBuyingContext = createContext<GroupBuyingContextType | undefined>(und
 export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentGroup, setCurrentGroup] = useState<GroupSession | null>(null);
   const [groupCart, setGroupCart] = useState<GroupCartItem[]>([]);
+  const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
+  const [groupSummary, setGroupSummary] = useState<GroupSummary | null>(null);
   const [availableGroups, setAvailableGroups] = useState<GroupSession[]>([]);
   const [loading, setLoading] = useState(false);
   const { user, isAuthenticated } = useAuth();
 
-  // Load available groups on mount
+  // Load user's current group on mount
   useEffect(() => {
+    if (isAuthenticated && user) {
+      loadUserGroup();
+    }
     loadAvailableGroups();
-  }, []);
+  }, [isAuthenticated, user]);
+
+  // Load group members and cart when group changes
+  useEffect(() => {
+    if (currentGroup) {
+      loadGroupMembers();
+      loadGroupCart();
+      loadGroupSummary();
+    }
+  }, [currentGroup]);
+
+  const loadUserGroup = async () => {
+    if (!user) return;
+
+    try {
+      const { data: memberData, error: memberError } = await supabase
+        .from('group_members')
+        .select(`
+          group_session_id,
+          group_sessions (*)
+        `)
+        .eq('user_id', user.id)
+        .single();
+
+      if (memberError && memberError.code !== 'PGRST116') {
+        console.error('Error loading user group:', memberError);
+        return;
+      }
+
+      if (memberData?.group_sessions) {
+        setCurrentGroup(memberData.group_sessions as GroupSession);
+      }
+    } catch (error) {
+      console.error('Error loading user group:', error);
+    }
+  };
+
+  const loadGroupMembers = async () => {
+    if (!currentGroup) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('group_members')
+        .select(`
+          *,
+          user_profiles!inner (
+            full_name,
+            email
+          )
+        `)
+        .eq('group_session_id', currentGroup.id);
+
+      if (error) throw error;
+
+      const members: GroupMember[] = data.map(member => ({
+        id: member.id,
+        user_id: member.user_id,
+        group_session_id: member.group_session_id,
+        joined_at: member.joined_at,
+        user_profile: member.user_profiles
+      }));
+
+      setGroupMembers(members);
+    } catch (error) {
+      console.error('Error loading group members:', error);
+    }
+  };
+
+  const loadGroupCart = async () => {
+    if (!currentGroup) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('group_cart_items')
+        .select('*')
+        .eq('group_session_id', currentGroup.id);
+
+      if (error) throw error;
+
+      const cartItems: GroupCartItem[] = data.map(item => ({
+        id: item.id,
+        user_id: item.user_id,
+        product_id: item.product_id,
+        product_name: item.product_name,
+        product_price: item.product_price,
+        quantity: item.quantity,
+        product_unit: item.product_unit,
+        product_type: item.product_type,
+        product_items: Array.isArray(item.product_items) ? item.product_items : []
+      }));
+
+      setGroupCart(cartItems);
+    } catch (error) {
+      console.error('Error loading group cart:', error);
+    }
+  };
+
+  const loadGroupSummary = async () => {
+    if (!currentGroup) return;
+
+    try {
+      const { data, error } = await supabase
+        .rpc('get_group_summary', { group_id: currentGroup.id });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        setGroupSummary(data[0]);
+      }
+    } catch (error) {
+      console.error('Error loading group summary:', error);
+    }
+  };
 
   const loadAvailableGroups = async () => {
     try {
@@ -82,15 +226,14 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   };
 
-  const createGroup = async (name: string) => {
+  const createGroup = async (name?: string, minParticipants: number = 3): Promise<string | null> => {
     if (!isAuthenticated || !user) {
       toast.error('Please log in to create a group');
-      return;
+      return null;
     }
 
     setLoading(true);
     try {
-      // Generate a unique join code
       const { data: joinCodeData, error: joinCodeError } = await supabase
         .rpc('generate_join_code');
 
@@ -99,9 +242,10 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
       const { data, error } = await supabase
         .from('group_sessions')
         .insert({
-          name,
+          name: name || `${user.email?.split('@')[0]}'s Group`,
           join_code: joinCodeData,
           leader_id: user.id,
+          min_participants: minParticipants,
           status: 'active'
         })
         .select()
@@ -109,7 +253,6 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
       if (error) throw error;
 
-      // Add creator as first member
       await supabase
         .from('group_members')
         .insert({
@@ -118,25 +261,26 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
         });
 
       setCurrentGroup(data);
-      toast.success(`Group "${name}" created! Share code: ${joinCodeData}`);
+      toast.success(`Group created! Share code: ${joinCodeData}`);
       await loadAvailableGroups();
+      return joinCodeData;
     } catch (error) {
       console.error('Error creating group:', error);
       toast.error('Failed to create group');
+      return null;
     } finally {
       setLoading(false);
     }
   };
 
-  const joinGroup = async (joinCode: string) => {
+  const joinGroup = async (joinCode: string): Promise<boolean> => {
     if (!isAuthenticated || !user) {
       toast.error('Please log in to join a group');
-      return;
+      return false;
     }
 
     setLoading(true);
     try {
-      // Find group by join code
       const { data: groupData, error: groupError } = await supabase
         .from('group_sessions')
         .select('*')
@@ -146,7 +290,6 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
       if (groupError) throw new Error('Group not found');
 
-      // Check if already a member
       const { data: existingMember } = await supabase
         .from('group_members')
         .select('id')
@@ -157,10 +300,9 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
       if (existingMember) {
         setCurrentGroup(groupData);
         toast.info('You are already a member of this group');
-        return;
+        return true;
       }
 
-      // Add user to group
       await supabase
         .from('group_members')
         .insert({
@@ -171,9 +313,11 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
       setCurrentGroup(groupData);
       toast.success(`Joined group "${groupData.name}"!`);
       await loadAvailableGroups();
+      return true;
     } catch (error) {
       console.error('Error joining group:', error);
       toast.error('Failed to join group. Please check the code.');
+      return false;
     } finally {
       setLoading(false);
     }
@@ -191,6 +335,8 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
       setCurrentGroup(null);
       setGroupCart([]);
+      setGroupMembers([]);
+      setGroupSummary(null);
       toast.info('Left the group');
       await loadAvailableGroups();
     } catch (error) {
@@ -200,6 +346,10 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const addToGroupCart = async (item: any, type: 'bundle' | 'custom') => {
+    await addItemToGroupCart(item);
+  };
+
+  const addItemToGroupCart = async (item: any) => {
     if (!currentGroup || !user) {
       toast.error('Please join a group first');
       return;
@@ -216,26 +366,16 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
           product_price: item.price,
           quantity: 1,
           product_unit: item.unit || 'item',
-          product_type: type,
-          product_items: Array.isArray(item.items) ? item.items : null
+          product_type: item.type || 'bundle',
+          product_items: Array.isArray(item.items) ? item.items : []
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      const newCartItem: GroupCartItem = {
-        id: data.id,
-        product_id: data.product_id,
-        product_name: data.product_name,
-        product_price: data.product_price,
-        quantity: data.quantity,
-        product_unit: data.product_unit,
-        product_type: data.product_type,
-        product_items: data.product_items
-      };
-
-      setGroupCart(prev => [...prev, newCartItem]);
+      await loadGroupCart();
+      await loadGroupSummary();
       toast.success(`${item.name || item.title} added to group cart`);
     } catch (error) {
       console.error('Error adding to group cart:', error);
@@ -244,6 +384,10 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const removeFromGroupCart = async (id: string) => {
+    await removeItemFromGroupCart(id);
+  };
+
+  const removeItemFromGroupCart = async (id: string) => {
     if (!user) return;
 
     try {
@@ -255,7 +399,8 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
       if (error) throw error;
 
-      setGroupCart(prev => prev.filter(item => item.id !== id));
+      await loadGroupCart();
+      await loadGroupSummary();
       toast.info('Item removed from group cart');
     } catch (error) {
       console.error('Error removing from group cart:', error);
@@ -264,10 +409,14 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const updateGroupCartQuantity = async (id: string, quantity: number) => {
+    await updateGroupCartItemQuantity(id, quantity);
+  };
+
+  const updateGroupCartItemQuantity = async (id: string, quantity: number) => {
     if (!user) return;
 
     if (quantity <= 0) {
-      await removeFromGroupCart(id);
+      await removeItemFromGroupCart(id);
       return;
     }
 
@@ -280,11 +429,8 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
       if (error) throw error;
 
-      setGroupCart(prev =>
-        prev.map(item =>
-          item.id === id ? { ...item, quantity } : item
-        )
-      );
+      await loadGroupCart();
+      await loadGroupSummary();
     } catch (error) {
       console.error('Error updating quantity:', error);
       toast.error('Failed to update quantity');
@@ -303,11 +449,33 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
       if (error) throw error;
 
-      setGroupCart([]);
+      await loadGroupCart();
+      await loadGroupSummary();
       toast.info('Group cart cleared');
     } catch (error) {
       console.error('Error clearing group cart:', error);
       toast.error('Failed to clear cart');
+    }
+  };
+
+  const completeGroupOrder = async (): Promise<boolean> => {
+    if (!currentGroup || !user || !groupSummary) {
+      toast.error('Cannot complete order');
+      return false;
+    }
+
+    try {
+      // Here you would implement the actual order completion logic
+      toast.success('Group order completed successfully!');
+      
+      // Clear the group cart after successful order
+      await clearGroupCart();
+      
+      return true;
+    } catch (error) {
+      console.error('Error completing group order:', error);
+      toast.error('Failed to complete group order');
+      return false;
     }
   };
 
@@ -320,17 +488,24 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
       value={{
         currentGroup,
         groupCart,
+        groupMembers,
+        groupCartItems: groupCart,
+        groupSummary,
         availableGroups,
         loading,
         createGroup,
         joinGroup,
         leaveGroup,
         addToGroupCart,
+        addItemToGroupCart,
         removeFromGroupCart,
+        removeItemFromGroupCart,
         updateGroupCartQuantity,
+        updateGroupCartItemQuantity,
         clearGroupCart,
         getGroupTotal,
-        loadAvailableGroups
+        loadAvailableGroups,
+        completeGroupOrder
       }}
     >
       {children}

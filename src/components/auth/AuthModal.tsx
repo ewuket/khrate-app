@@ -16,12 +16,8 @@ import SignupForm from "./signup/SignupForm";
 import PasswordResetForm from "./password-reset/PasswordResetForm";
 import ResetEmailSent from "./password-reset/ResetEmailSent";
 
-interface AuthModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
+const AuthModal: React.FC = () => {
+  const { isAuthModalOpen, closeAuthModal } = useAuth();
   const [activeTab, setActiveTab] = useState("login");
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [resetSent, setResetSent] = useState(false);
@@ -34,19 +30,19 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   
   const handleGuestCheckout = () => {
     toast.success("Continuing as guest");
-    onClose();
+    closeAuthModal();
   };
   
   const handleCloseModal = () => {
-    // Reset all states when modal is closed
     setShowResetPassword(false);
     setResetSent(false);
     setResetEmail("");
-    onClose();
+    setActiveTab("login");
+    closeAuthModal();
   };
   
   return (
-    <Dialog open={isOpen} onOpenChange={handleCloseModal}>
+    <Dialog open={isAuthModalOpen} onOpenChange={handleCloseModal}>
       <DialogContent className="sm:max-w-[425px]">
         {!showResetPassword ? (
           <>
@@ -65,15 +61,15 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               
               <TabsContent value="login" className="space-y-4 py-4">
                 <LoginForm 
-                  onShowResetPassword={() => {
-                    setShowResetPassword(true);
-                    setActiveTab("login");
-                  }} 
+                  onSwitchToSignup={() => setActiveTab("signup")}
+                  onSwitchToReset={() => setShowResetPassword(true)} 
                 />
               </TabsContent>
               
               <TabsContent value="signup" className="space-y-4 py-4">
-                <SignupForm />
+                <SignupForm 
+                  onSwitchToLogin={() => setActiveTab("login")}
+                />
               </TabsContent>
             </Tabs>
             
