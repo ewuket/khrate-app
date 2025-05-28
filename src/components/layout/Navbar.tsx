@@ -19,13 +19,12 @@ const Navbar = () => {
     { href: "/bundles", label: "Bundles" },
     { href: "/custom-buy", label: "Custom Buy" },
     { href: "/group-buy", label: "Group Buy" },
-    { href: "/orders", label: "Orders" },
-    { href: "/contact", label: "Contact" },
+    { href: "/orders", label: "My Orders" },
   ];
 
   return (
     <>
-      <nav className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50">
+      <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -35,7 +34,7 @@ const Navbar = () => {
                 alt="Khrate Logo" 
                 className="h-8 w-auto"
               />
-              <span className="text-2xl font-bold text-khrate-500">Khrate</span>
+              <span className="text-2xl font-bold text-khrate-500">KHRATE</span>
             </Link>
 
             {/* Desktop Navigation */}
@@ -66,10 +65,21 @@ const Navbar = () => {
               {isAuthenticated ? (
                 <ProfileDropdown />
               ) : (
-                <Button onClick={openAuthModal} variant="outline" className="hidden md:flex">
-                  <User className="h-4 w-4 mr-2" />
-                  Sign In
-                </Button>
+                <div className="hidden md:flex items-center space-x-3">
+                  <Button 
+                    variant="ghost" 
+                    onClick={openAuthModal}
+                    className="text-gray-700 hover:text-khrate-500"
+                  >
+                    Login
+                  </Button>
+                  <Button 
+                    onClick={openAuthModal}
+                    className="bg-khrate-500 hover:bg-khrate-600 text-white"
+                  >
+                    Sign Up & Save 10%
+                  </Button>
+                </div>
               )}
 
               {/* Mobile menu button */}
@@ -97,15 +107,27 @@ const Navbar = () => {
                   </Link>
                 ))}
                 {!isAuthenticated && (
-                  <button
-                    onClick={() => {
-                      openAuthModal();
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="mx-4 mt-2 px-4 py-2 bg-khrate-500 text-white rounded-md hover:bg-khrate-600 transition-colors"
-                  >
-                    Sign In
-                  </button>
+                  <div className="px-4 pt-4 space-y-2 border-t">
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        openAuthModal();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full justify-start"
+                    >
+                      Login
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        openAuthModal();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full bg-khrate-500 hover:bg-khrate-600 text-white"
+                    >
+                      Sign Up & Save 10%
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>

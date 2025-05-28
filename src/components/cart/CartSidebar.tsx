@@ -30,13 +30,15 @@ const CartSidebar = () => {
     getCartTotal 
   } = useSupabaseCart();
   
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, openAuthModal } = useAuth();
   
   const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   const handleCheckout = () => {
     if (!isAuthenticated) {
       toast.error("Please log in to checkout");
+      openAuthModal();
+      closeCart();
       return;
     }
     
@@ -70,28 +72,24 @@ const CartSidebar = () => {
       status: "pending",
       items: orderItems,
       total: getCartTotal(),
-      deliveryAddress: "Default Address", // In a real app, this would be user's address
+      deliveryAddress: "Default Address",
       deliverySchedule: {
-        date: "", // Will be set in the checkout dialog
+        date: "",
         timeSlot: "afternoon"
       }
     };
     
-    // Get user-specific storage key
     const storageKey = isAuthenticated && user?.id 
       ? `khrate_orders_${user.id}` 
       : 'khrate_guest_orders';
     
-    // Get existing orders or create empty array
     const existingOrdersStr = localStorage.getItem(storageKey);
     const existingOrders = existingOrdersStr ? JSON.parse(existingOrdersStr) : [];
     
-    // Add new order and save
     const updatedOrders = [order, ...existingOrders];
     localStorage.setItem(storageKey, JSON.stringify(updatedOrders));
   };
 
-  // Convert Supabase cart items to format expected by CheckoutDialog
   const cartItems = cart.map(item => ({
     id: item.product_id,
     name: item.product_name,
@@ -101,32 +99,6 @@ const CartSidebar = () => {
     type: item.product_type
   }));
 
-  if (!isAuthenticated) {
-    return (
-      <Sheet open={isCartOpen} onOpenChange={closeCart}>
-        <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-          <SheetHeader className="flex flex-row justify-between items-center">
-            <SheetTitle className="flex items-center">
-              <ShoppingCart className="mr-2 h-5 w-5" />
-              Your Cart
-            </SheetTitle>
-            <Button variant="ghost" size="icon" onClick={closeCart}>
-              <X className="h-5 w-5" />
-              <span className="sr-only">Close</span>
-            </Button>
-          </SheetHeader>
-          
-          <div className="py-6 text-center">
-            <p className="text-muted-foreground mb-4">Please log in to view your cart</p>
-            <Button onClick={closeCart} className="bg-khrate-500 hover:bg-khrate-600">
-              Close
-            </Button>
-          </div>
-        </SheetContent>
-      </Sheet>
-    );
-  }
-
   return (
     <>
       <Sheet open={isCartOpen} onOpenChange={closeCart}>
@@ -134,7 +106,7 @@ const CartSidebar = () => {
           <SheetHeader className="flex flex-row justify-between items-center">
             <SheetTitle className="flex items-center">
               <ShoppingCart className="mr-2 h-5 w-5" />
-              Your Cart
+              Your Cart ({cart.length})
             </SheetTitle>
             <Button variant="ghost" size="icon" onClick={closeCart}>
               <X className="h-5 w-5" />
