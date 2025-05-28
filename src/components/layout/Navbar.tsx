@@ -27,14 +27,13 @@ const Navbar = () => {
       <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <Link to="/" className="flex items-center space-x-2">
+            {/* Logo - Only Image */}
+            <Link to="/" className="flex items-center">
               <img 
-                src="/lovable-uploads/7bd74977-70dd-4c12-8ccd-42b15a0320c1.png" 
-                alt="Khrate Logo" 
-                className="h-8 w-auto"
+                src="/lovable-uploads/32e88e9a-d13e-4797-bc20-1ea08858de5e.png" 
+                alt="KHRATE Logo" 
+                className="h-10 w-auto"
               />
-              <span className="text-2xl font-bold text-khrate-500">KHRATE</span>
             </Link>
 
             {/* Desktop Navigation */}
