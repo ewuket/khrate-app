@@ -349,6 +349,10 @@ export type Database = {
           qualifies_for_discount: boolean
         }[]
       }
+      validate_password_strength: {
+        Args: { password: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

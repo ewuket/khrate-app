@@ -20,15 +20,18 @@ export const useCartOperations = (
     try {
       console.log('Adding item to cart:', item, type);
       
+      // Check if item already exists in cart
       const existingItem = cart.find(cartItem => 
         cartItem.product_id === item.id && cartItem.product_type === type
       );
 
       if (existingItem) {
         await updateQuantity(existingItem.id, existingItem.quantity + 1);
+        toast.success(`${item.name} quantity updated in cart`);
         return;
       }
 
+      // Prepare cart data for insertion
       const cartData = {
         user_id: user.id,
         product_id: item.id,
@@ -55,6 +58,7 @@ export const useCartOperations = (
 
       console.log('Cart item inserted successfully:', data);
 
+      // Create new cart item for local state
       const newCartItem: CartItem = {
         id: data.id,
         product_id: data.product_id,
@@ -66,9 +70,12 @@ export const useCartOperations = (
         product_items: Array.isArray(data.product_items) ? data.product_items as string[] : undefined
       };
 
+      // Update local cart state
       setCart(prevCart => [...prevCart, newCartItem]);
+      
+      // Open cart sidebar
       openCart();
-      toast.success(`${item.name} added to cart`);
+      
     } catch (error) {
       console.error('Error adding to cart:', error);
       toast.error('Failed to add item to cart');

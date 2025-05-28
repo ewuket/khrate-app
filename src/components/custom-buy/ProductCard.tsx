@@ -21,24 +21,22 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const { addToCart, openCart } = useSupabaseCart();
+  const { addToCart } = useSupabaseCart();
 
   const handleAddToCart = async () => {
-    await addToCart({
-      product_id: product.id,
-      product_name: product.name,
-      product_price: product.price,
-      product_type: 'product',
-      product_unit: product.unit,
-      quantity: 1
-    }, 'custom');
-    
-    toast.success(`${product.name} added to cart`);
-    
-    // Auto-open cart sidebar
-    setTimeout(() => {
-      openCart();
-    }, 500);
+    try {
+      await addToCart({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        unit: product.unit
+      }, 'custom');
+      
+      toast.success(`${product.name} added to cart`);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast.error('Failed to add item to cart');
+    }
   };
 
   return (

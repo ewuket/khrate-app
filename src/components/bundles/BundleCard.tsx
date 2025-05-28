@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Eye } from "lucide-react";
 import { useSupabaseCart } from "@/contexts/SupabaseCartContext";
@@ -56,13 +56,9 @@ const BundleCard: React.FC<BundleCardProps> = ({ bundle, onSaveBundle }) => {
 
   return (
     <>
-      <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-        <CardHeader className="pb-3">
-          <CardTitle>{bundleName}</CardTitle>
-          <CardDescription>{bundle.description}</CardDescription>
-        </CardHeader>
-        
-        <div className="aspect-[4/3] w-full">
+      <Card className="overflow-hidden hover:shadow-lg transition-shadow bg-white">
+        {/* Image Section */}
+        <div className="aspect-square w-full bg-gray-50">
           <img
             src={bundle.image}
             alt={bundleName}
@@ -70,25 +66,29 @@ const BundleCard: React.FC<BundleCardProps> = ({ bundle, onSaveBundle }) => {
           />
         </div>
         
+        {/* Content Section - Title and Description below image */}
         <CardContent className="p-6">
           <div className="mb-4">
-            <p className="text-khrate-500 font-bold text-xl mb-3">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">{bundleName}</h3>
+            <p className="text-gray-600 text-sm mb-3">{bundle.description}</p>
+            
+            <p className="text-khrate-500 font-bold text-2xl mb-4">
               {bundle.price.toLocaleString()} RWF
             </p>
-            
+          </div>
+          
+          <div className="space-y-3">
             <Button 
               variant="outline" 
-              className="w-full mb-3"
+              className="w-full border-gray-300 text-gray-700"
               onClick={() => setPreviewOpen(true)}
             >
               <Eye className="mr-2 h-4 w-4" />
               Preview Items
             </Button>
-          </div>
-          
-          <div className="space-y-2">
+            
             <Button 
-              className="w-full bg-khrate-500 hover:bg-khrate-600"
+              className="w-full bg-khrate-500 hover:bg-khrate-600 text-white"
               onClick={handleAddToCart}
             >
               <ShoppingCart className="mr-2 h-4 w-4" />

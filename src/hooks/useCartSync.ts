@@ -18,6 +18,8 @@ export const useCartSync = () => {
 
     setLoading(true);
     try {
+      console.log('Syncing cart for user:', user.id);
+      
       const { data, error } = await supabase
         .from('cart_items')
         .select('*')
@@ -45,6 +47,7 @@ export const useCartSync = () => {
     } catch (error) {
       console.error('Error syncing cart:', error);
       toast.error('Failed to load cart items');
+      setCart([]); // Clear cart on error to prevent stale data
     } finally {
       setLoading(false);
     }
@@ -55,6 +58,7 @@ export const useCartSync = () => {
       syncCart();
     } else {
       setCart([]);
+      setLoading(false);
     }
   }, [user, isAuthenticated]);
 
