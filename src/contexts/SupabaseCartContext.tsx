@@ -55,9 +55,12 @@ export const SupabaseCartProvider: React.FC<{ children: React.ReactNode }> = ({ 
         .eq('user_id', user.id)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error syncing cart:', error);
+        throw error;
+      }
       
-      const formattedCart: CartItem[] = data.map(item => ({
+      const formattedCart: CartItem[] = (data || []).map(item => ({
         id: item.id,
         product_id: item.product_id,
         product_name: item.product_name,
@@ -69,6 +72,7 @@ export const SupabaseCartProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }));
 
       setCart(formattedCart);
+      console.log('Cart synced successfully:', formattedCart);
     } catch (error) {
       console.error('Error syncing cart:', error);
       toast.error('Failed to load cart items');
@@ -79,7 +83,11 @@ export const SupabaseCartProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   // Load cart when user changes
   useEffect(() => {
-    syncCart();
+    if (isAuthenticated && user) {
+      syncCart();
+    } else {
+      setCart([]);
+    }
   }, [user, isAuthenticated]);
 
   const addToCart = async (item: any, type: 'bundle' | 'custom' | 'group') => {
@@ -89,6 +97,8 @@ export const SupabaseCartProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
 
     try {
+      console.log('Adding item to cart:', item, type);
+      
       // Check if item already exists in cart
       const existingItem = cart.find(cartItem => 
         cartItem.product_id === item.id && cartItem.product_type === type
@@ -97,39 +107,48 @@ export const SupabaseCartProvider: React.FC<{ children: React.ReactNode }> = ({ 
       if (existingItem) {
         // Update quantity
         await updateQuantity(existingItem.id, existingItem.quantity + 1);
-      } else {
-        // Add new item
-        const { data, error } = await supabase
-          .from('cart_items')
-          .insert({
-            user_id: user.id,
-            product_id: item.id,
-            product_name: item.name,
-            product_price: item.price,
-            quantity: 1,
-            product_unit: item.unit || 'item',
-            product_type: type,
-            product_items: Array.isArray(item.items) ? item.items : null
-          })
-          .select()
-          .single();
-
-        if (error) throw error;
-
-        const newCartItem: CartItem = {
-          id: data.id,
-          product_id: data.product_id,
-          product_name: data.product_name,
-          product_price: data.product_price,
-          quantity: data.quantity,
-          product_unit: data.product_unit,
-          product_type: data.product_type as 'bundle' | 'custom' | 'group',
-          product_items: Array.isArray(data.product_items) ? data.product_items as string[] : undefined
-        };
-
-        setCart(prevCart => [...prevCart, newCartItem]);
+        return;
       }
-      
+
+      // Add new item
+      const cartData = {
+        user_id: user.id,
+        product_id: item.id,
+        product_name: item.name,
+        product_price: item.price,
+        quantity: 1,
+        product_unit: item.unit || 'item',
+        product_type: type,
+        product_items: Array.isArray(item.items) ? item.items : null
+      };
+
+      console.log('Inserting cart data:', cartData);
+
+      const { data, error } = await supabase
+        .from('cart_items')
+        .insert(cartData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase insert error:', error);
+        throw error;
+      }
+
+      console.log('Cart item inserted successfully:', data);
+
+      const newCartItem: CartItem = {
+        id: data.id,
+        product_id: data.product_id,
+        product_name: data.product_name,
+        product_price: data.product_price,
+        quantity: data.quantity,
+        product_unit: data.product_unit,
+        product_type: data.product_type as 'bundle' | 'custom' | 'group',
+        product_items: Array.isArray(data.product_items) ? data.product_items as string[] : undefined
+      };
+
+      setCart(prevCart => [...prevCart, newCartItem]);
       openCart();
       toast.success(`${item.name} added to cart`);
     } catch (error) {

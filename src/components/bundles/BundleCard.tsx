@@ -62,7 +62,7 @@ const BundleCard: React.FC<BundleCardProps> = ({ bundle, onSaveBundle }) => {
           <CardDescription>{bundle.description}</CardDescription>
         </CardHeader>
         
-        <div className="aspect-square">
+        <div className="aspect-[4/3] w-full">
           <img
             src={bundle.image}
             alt={bundleName}

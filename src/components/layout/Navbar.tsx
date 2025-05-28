@@ -30,7 +30,7 @@ const Navbar = () => {
             {/* Logo - Only Image */}
             <Link to="/" className="flex items-center">
               <img 
-                src="/lovable-uploads/32e88e9a-d13e-4797-bc20-1ea08858de5e.png" 
+                src="/lovable-uploads/b034db2f-a75a-403c-b5bd-8bf7d611bba1.png" 
                 alt="KHRATE Logo" 
                 className="h-10 w-auto"
               />
@@ -68,14 +68,16 @@ const Navbar = () => {
                   <Button 
                     variant="ghost" 
                     onClick={openAuthModal}
-                    className="text-gray-700 hover:text-khrate-500"
+                    className="text-gray-700 hover:text-khrate-500 flex items-center gap-2"
                   >
+                    <User className="h-4 w-4" />
                     Login
                   </Button>
                   <Button 
                     onClick={openAuthModal}
-                    className="bg-khrate-500 hover:bg-khrate-600 text-white"
+                    className="bg-khrate-500 hover:bg-khrate-600 text-white flex items-center gap-2"
                   >
+                    <User className="h-4 w-4" />
                     Sign Up & Save 10%
                   </Button>
                 </div>
@@ -113,8 +115,9 @@ const Navbar = () => {
                         openAuthModal();
                         setIsMobileMenuOpen(false);
                       }}
-                      className="w-full justify-start"
+                      className="w-full justify-start flex items-center gap-2"
                     >
+                      <User className="h-4 w-4" />
                       Login
                     </Button>
                     <Button
@@ -122,8 +125,9 @@ const Navbar = () => {
                         openAuthModal();
                         setIsMobileMenuOpen(false);
                       }}
-                      className="w-full bg-khrate-500 hover:bg-khrate-600 text-white"
+                      className="w-full bg-khrate-500 hover:bg-khrate-600 text-white flex items-center gap-2"
                     >
+                      <User className="h-4 w-4" />
                       Sign Up & Save 10%
                     </Button>
                   </div>
