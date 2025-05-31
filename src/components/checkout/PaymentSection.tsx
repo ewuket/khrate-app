@@ -35,6 +35,7 @@ const PaymentSection = ({
         phoneNumber={phoneNumber}
         onPhoneNumberChange={onPhoneNumberChange}
         onShowPaymentInstructions={handleShowPaymentInstructions}
+        phoneNumberLabel="Enter the number you used to make the payment"
       />
     </div>
   );

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import GroupBuyButton from "@/components/group-buy/GroupBuyButton";
 import { useCartContext } from "@/contexts/CartContext";
+import { toast } from "sonner";
 
 interface Product {
   id: number;
@@ -17,13 +18,15 @@ interface Product {
 
 interface ProductCardProps {
   product: Product;
+  onAddToCart?: (product: Product) => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
   const { addToCart } = useCartContext();
 
   const handleAddToCart = async () => {
     try {
+      // Add to global cart (for checkout)
       await addToCart({
         id: product.id,
         name: product.name,
@@ -31,8 +34,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         unit: product.unit,
         type: 'custom'
       });
+
+      // Add to local cart (for custom buy page display)
+      if (onAddToCart) {
+        onAddToCart(product);
+      }
+
+      toast.success(`${product.name} added to cart!`);
     } catch (error) {
       console.error('Error adding to cart:', error);
+      toast.error('Failed to add item to cart');
     }
   };
 

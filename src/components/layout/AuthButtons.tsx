@@ -12,7 +12,13 @@ interface AuthButtonsProps {
 const AuthButtons = ({ onOpenAuthModal, layout = "desktop" }: AuthButtonsProps) => {
   const { isAuthenticated, signOut, openAuthModal } = useAuth();
 
-  const handleOpenAuth = onOpenAuthModal || openAuthModal;
+  const handleOpenAuth = () => {
+    if (onOpenAuthModal) {
+      onOpenAuthModal();
+    } else {
+      openAuthModal();
+    }
+  };
 
   if (isAuthenticated && layout === "mobile") {
     return (
@@ -43,6 +49,19 @@ const AuthButtons = ({ onOpenAuthModal, layout = "desktop" }: AuthButtonsProps) 
           Sign Up & Save 10%
         </Button>
       </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return (
+      <Button
+        onClick={signOut}
+        variant="ghost"
+        className="text-gray-700 hover:text-khrate-500"
+      >
+        <LogOut className="h-4 w-4 mr-2" />
+        Logout
+      </Button>
     );
   }
   

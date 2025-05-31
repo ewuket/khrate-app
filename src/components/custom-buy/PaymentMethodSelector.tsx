@@ -18,6 +18,7 @@ interface PaymentMethodSelectorProps {
   phoneNumber: string;
   onPhoneNumberChange: (phoneNumber: string) => void;
   onShowPaymentInstructions: () => void;
+  phoneNumberLabel?: string;
 }
 
 const PaymentMethodSelector = ({
@@ -26,6 +27,7 @@ const PaymentMethodSelector = ({
   phoneNumber,
   onPhoneNumberChange,
   onShowPaymentInstructions,
+  phoneNumberLabel = "Phone Number"
 }: PaymentMethodSelectorProps) => {
   
   return (
@@ -47,7 +49,7 @@ const PaymentMethodSelector = ({
       {(selectedMethod === "mtn" || selectedMethod === "airtel") && (
         <div className="space-y-2">
           <div className="flex justify-between">
-            <Label htmlFor="phone-number">Phone Number</Label>
+            <Label htmlFor="phone-number">{phoneNumberLabel}</Label>
             <Button 
               variant="link" 
               size="sm" 

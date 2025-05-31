@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { toast } from "sonner";
 import { useSupabaseCart } from "@/contexts/SupabaseCartContext";
@@ -75,6 +76,11 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
       return;
     }
 
+    if (!phoneNumber && (paymentMethod === "mtn" || paymentMethod === "airtel")) {
+      toast.error("Please enter the number you used to make the payment");
+      return;
+    }
+
     setLoading(true);
     setProcessingPayment(true);
     
@@ -95,7 +101,7 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
         delivery_time_slot: deliverySchedule.timeSlot,
         payment_method: paymentMethod,
         payment_status: 'pending' as const,
-        phone_number: formData.phone
+        phone_number: phoneNumber || formData.phone
       };
 
       const result = await createOrder(orderData);
@@ -106,7 +112,7 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
       
       // Clear cart and show success
       clearCart();
-      toast.success("Order placed successfully!");
+      toast.success("Thank you! Your payment has been noted. Our team will confirm and deliver your order shortly.");
       onOpenChange?.(false);
       onSuccess();
       

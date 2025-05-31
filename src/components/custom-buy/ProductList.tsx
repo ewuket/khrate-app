@@ -14,9 +14,10 @@ interface Product {
 
 interface ProductListProps {
   products: Product[];
+  onAddToCart: (product: Product) => void;
 }
 
-const ProductList = ({ products }: ProductListProps) => {
+const ProductList = ({ products, onAddToCart }: ProductListProps) => {
   const [category, setCategory] = useState<string>("all");
   
   const filteredProducts = category === "all" 
@@ -49,11 +50,12 @@ const ProductList = ({ products }: ProductListProps) => {
         </div>
       </Tabs>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         {filteredProducts.map(product => (
           <ProductCard
             key={product.id}
             product={product}
+            onAddToCart={onAddToCart}
           />
         ))}
       </div>
