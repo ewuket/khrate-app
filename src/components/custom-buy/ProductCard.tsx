@@ -4,8 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import GroupBuyButton from "@/components/group-buy/GroupBuyButton";
-import { useSupabaseCart } from "@/contexts/SupabaseCartContext";
-import { toast } from "sonner";
+import { useCartContext } from "@/contexts/CartContext";
 
 interface Product {
   id: number;
@@ -21,7 +20,7 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const { addToCart } = useSupabaseCart();
+  const { addToCart } = useCartContext();
 
   const handleAddToCart = async () => {
     try {
@@ -29,13 +28,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         id: product.id,
         name: product.name,
         price: product.price,
-        unit: product.unit
-      }, 'custom');
-      
-      toast.success(`${product.name} added to cart`);
+        unit: product.unit,
+        type: 'custom'
+      });
     } catch (error) {
       console.error('Error adding to cart:', error);
-      toast.error('Failed to add item to cart');
     }
   };
 

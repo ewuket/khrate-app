@@ -16,7 +16,7 @@ const LoginForm = ({ onSwitchToSignup, onSwitchToReset }: LoginFormProps) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, closeAuthModal } = useAuth();
 
   const isValidEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -24,11 +24,16 @@ const LoginForm = ({ onSwitchToSignup, onSwitchToReset }: LoginFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return;
+    if (!email || !password) {
+      return;
+    }
     
     setLoading(true);
     try {
-      await signIn(email, password);
+      const result = await signIn(email, password);
+      if (result && !result.error) {
+        closeAuthModal();
+      }
     } catch (error) {
       console.error('Login error:', error);
     } finally {
@@ -88,23 +93,27 @@ const LoginForm = ({ onSwitchToSignup, onSwitchToReset }: LoginFormProps) => {
       </Button>
 
       <div className="flex flex-col space-y-2 text-sm text-center">
-        <button
-          type="button"
-          onClick={onSwitchToReset}
-          className="text-khrate-500 hover:underline"
-        >
-          Forgot your password?
-        </button>
-        <div>
-          Don't have an account?{' '}
+        {onSwitchToReset && (
           <button
             type="button"
-            onClick={onSwitchToSignup}
-            className="text-khrate-500 hover:underline font-medium"
+            onClick={onSwitchToReset}
+            className="text-khrate-500 hover:underline"
           >
-            Sign up
+            Forgot your password?
           </button>
-        </div>
+        )}
+        {onSwitchToSignup && (
+          <div>
+            Don't have an account?{' '}
+            <button
+              type="button"
+              onClick={onSwitchToSignup}
+              className="text-khrate-500 hover:underline font-medium"
+            >
+              Sign up
+            </button>
+          </div>
+        )}
       </div>
     </form>
   );

@@ -20,7 +20,6 @@ const Navbar = () => {
     { title: "Bundles", path: "/bundles" },
     { title: "Custom Buy", path: "/custom-buy" },
     { title: "Group Buy", path: "/group-buy" },
-    { title: "About", path: "/about" },
     { title: "Contact", path: "/contact" }
   ];
 
@@ -31,7 +30,7 @@ const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <img 
-              src="/lovable-uploads/99149a9c-234b-46ab-bd67-67d22129abb2.png" 
+              src="/lovable-uploads/ea7e14fb-6084-4c08-94cf-b35bb353cd1c.png" 
               alt="Khrate" 
               className="h-8 w-auto"
             />

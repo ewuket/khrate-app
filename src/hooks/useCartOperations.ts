@@ -15,31 +15,44 @@ export const useCartOperations = () => {
     
     try {
       if (isAuthenticated && user) {
-        // Add to Supabase cart for authenticated users
-        const cartItem = {
-          user_id: user.id,
-          product_id: item.id,
-          product_name: item.name,
-          product_price: item.price,
-          product_unit: item.unit || 'item',
-          product_type: item.type || 'bundle',
-          quantity: 1,
-          product_items: item.items ? JSON.stringify(item.items) : null
-        };
-
-        const { data, error } = await supabase
+        // Check if item already exists in cart
+        const { data: existingItems, error: checkError } = await supabase
           .from('cart_items')
-          .upsert(cartItem, {
-            onConflict: 'user_id,product_id',
-            ignoreDuplicates: false
-          })
-          .select()
-          .single();
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('product_id', item.id);
 
-        if (error) throw error;
-        
-        console.log('Item added to Supabase cart:', data);
-        toast.success(`${item.name} added to cart!`);
+        if (checkError) throw checkError;
+
+        if (existingItems && existingItems.length > 0) {
+          // Update quantity if item exists
+          const { error } = await supabase
+            .from('cart_items')
+            .update({ quantity: existingItems[0].quantity + 1 })
+            .eq('id', existingItems[0].id);
+
+          if (error) throw error;
+          toast.success(`${item.name} quantity updated in cart!`);
+        } else {
+          // Add new item to cart
+          const cartItem = {
+            user_id: user.id,
+            product_id: item.id,
+            product_name: item.name,
+            product_price: item.price,
+            product_unit: item.unit || 'item',
+            product_type: item.type || 'bundle',
+            quantity: 1,
+            product_items: item.items ? JSON.stringify(item.items) : null
+          };
+
+          const { error } = await supabase
+            .from('cart_items')
+            .insert(cartItem);
+
+          if (error) throw error;
+          toast.success(`${item.name} added to cart!`);
+        }
       } else {
         // Add to localStorage for guest users
         const guestCart = JSON.parse(localStorage.getItem('khrate_guest_cart') || '[]');
@@ -61,7 +74,6 @@ export const useCartOperations = () => {
         }
         
         localStorage.setItem('khrate_guest_cart', JSON.stringify(guestCart));
-        console.log('Item added to guest cart:', guestCart);
         toast.success(`${item.name} added to cart!`);
       }
     } catch (error) {
@@ -99,7 +111,10 @@ export const useCartOperations = () => {
   }, [user, isAuthenticated]);
 
   const updateQuantity = useCallback(async (itemId: string, quantity: number) => {
-    if (quantity <= 0) return;
+    if (quantity <= 0) {
+      await removeFromCart(itemId);
+      return;
+    }
     
     setLoading(true);
     
@@ -125,7 +140,7 @@ export const useCartOperations = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, isAuthenticated]);
+  }, [user, isAuthenticated, removeFromCart]);
 
   const clearCart = useCallback(async () => {
     setLoading(true);

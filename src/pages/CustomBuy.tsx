@@ -1,69 +1,10 @@
 
-import { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ProductList from "@/components/custom-buy/ProductList";
-import CustomBuyCart from "@/components/custom-buy/CustomBuyCart";
 import products from "@/components/custom-buy/productsData";
-import { toast } from "sonner";
-
-interface CartItem {
-  id: number;
-  name: string;
-  price: number;
-  quantity: number;
-  unit: string;
-}
 
 const CustomBuy = () => {
-  const [cart, setCart] = useState<CartItem[]>([]);
-  
-  const addToCart = (product: typeof products[0]) => {
-    const existingItem = cart.find(item => item.id === product.id);
-    if (existingItem) {
-      setCart(cart.map(item => 
-        item.id === product.id 
-          ? { ...item, quantity: item.quantity + 1 } 
-          : item
-      ));
-    } else {
-      setCart([...cart, { 
-        id: product.id, 
-        name: product.name, 
-        price: product.price, 
-        quantity: 1,
-        unit: product.unit
-      }]);
-    }
-    toast.success(`${product.name} added to cart`);
-  };
-  
-  const removeFromCart = (productId: number) => {
-    const existingItem = cart.find(item => item.id === productId);
-    if (existingItem && existingItem.quantity > 1) {
-      setCart(cart.map(item => 
-        item.id === productId 
-          ? { ...item, quantity: item.quantity - 1 } 
-          : item
-      ));
-    } else {
-      setCart(cart.filter(item => item.id !== productId));
-      const product = products.find(p => p.id === productId);
-      if (product) {
-        toast.info(`${product.name} removed from cart`);
-      }
-    }
-  };
-  
-  const calculateTotal = () => {
-    return cart.reduce((total, item) => total + (item.price * item.quantity), 0).toLocaleString();
-  };
-  
-  const getItemQuantity = (productId: number) => {
-    const item = cart.find(item => item.id === productId);
-    return item ? item.quantity : 0;
-  };
-  
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -80,28 +21,7 @@ const CustomBuy = () => {
         
         <section className="py-12">
           <div className="container mx-auto">
-            <div className="flex flex-col lg:flex-row gap-8">
-              {/* Products Section */}
-              <div className="lg:w-2/3">
-                <ProductList 
-                  products={products}
-                  getItemQuantity={getItemQuantity}
-                  onAddToCart={addToCart}
-                  onRemoveFromCart={removeFromCart}
-                />
-              </div>
-              
-              {/* Cart Section */}
-              <div className="lg:w-1/3">
-                <CustomBuyCart 
-                  cart={cart}
-                  products={products}
-                  onAddToCart={addToCart}
-                  onRemoveFromCart={removeFromCart}
-                  calculateTotal={calculateTotal}
-                />
-              </div>
-            </div>
+            <ProductList products={products} />
           </div>
         </section>
       </main>

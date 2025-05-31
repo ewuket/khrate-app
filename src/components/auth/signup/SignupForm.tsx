@@ -16,7 +16,7 @@ const SignupForm = ({ onSwitchToLogin }: SignupFormProps) => {
   const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { signUp } = useAuth();
+  const { signUp, closeAuthModal } = useAuth();
 
   const isValidEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -28,11 +28,16 @@ const SignupForm = ({ onSwitchToLogin }: SignupFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password || !fullName) return;
+    if (!email || !password || !fullName) {
+      return;
+    }
     
     setLoading(true);
     try {
-      await signUp(email, password, fullName);
+      const result = await signUp(email, password, fullName);
+      if (result && !result.error) {
+        closeAuthModal();
+      }
     } catch (error) {
       console.error('Signup error:', error);
     } finally {
@@ -110,16 +115,18 @@ const SignupForm = ({ onSwitchToLogin }: SignupFormProps) => {
         {loading ? 'Creating account...' : 'Create Account'}
       </Button>
 
-      <div className="text-sm text-center">
-        Already have an account?{' '}
-        <button
-          type="button"
-          onClick={onSwitchToLogin}
-          className="text-khrate-500 hover:underline font-medium"
-        >
-          Sign in
-        </button>
-      </div>
+      {onSwitchToLogin && (
+        <div className="text-sm text-center">
+          Already have an account?{' '}
+          <button
+            type="button"
+            onClick={onSwitchToLogin}
+            className="text-khrate-500 hover:underline font-medium"
+          >
+            Sign in
+          </button>
+        </div>
+      )}
     </form>
   );
 };
