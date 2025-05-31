@@ -349,8 +349,20 @@ export type Database = {
           qualifies_for_discount: boolean
         }[]
       }
+      sanitize_text_input: {
+        Args: { input_text: string; max_length?: number }
+        Returns: string
+      }
+      validate_email_format: {
+        Args: { email: string }
+        Returns: boolean
+      }
       validate_password_strength: {
         Args: { password: string }
+        Returns: boolean
+      }
+      validate_phone_number: {
+        Args: { phone: string }
         Returns: boolean
       }
     }

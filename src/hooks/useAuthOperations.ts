@@ -1,18 +1,34 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useInputValidation } from './useInputValidation';
+import { cleanupAuthState, performSecureSignOut, performSecureSignIn } from '@/utils/authStateCleanup';
 
 export const useAuthOperations = () => {
+  const { validateEmail, sanitizeTextInput } = useInputValidation();
+
   const signUp = async (email: string, password: string, fullName?: string) => {
     try {
+      // Validate email
+      const emailValidation = await validateEmail(email);
+      if (!emailValidation.isValid) {
+        throw new Error(emailValidation.error);
+      }
+
+      // Sanitize full name
+      const sanitizedName = fullName ? await sanitizeTextInput(fullName, 100) : '';
+
+      // Clean up any existing auth state
+      cleanupAuthState();
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            full_name: fullName
+            full_name: sanitizedName
           },
-          emailRedirectTo: 'https://www.khrate.com/auth/callback'
+          emailRedirectTo: `${window.location.origin}/`
         }
       });
 
@@ -24,6 +40,7 @@ export const useAuthOperations = () => {
       
       return { data, error: null };
     } catch (error: any) {
+      console.error('Signup error:', error);
       toast.error(error.message);
       return { data: null, error };
     }
@@ -31,16 +48,20 @@ export const useAuthOperations = () => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      // Validate email
+      const emailValidation = await validateEmail(email);
+      if (!emailValidation.isValid) {
+        throw new Error(emailValidation.error);
+      }
 
-      if (error) throw error;
+      const result = await performSecureSignIn(supabase, email, password);
+      
+      if (result.error) throw result.error;
       
       toast.success('Welcome back!');
-      return { data, error: null };
+      return result;
     } catch (error: any) {
+      console.error('Signin error:', error);
       toast.error(error.message);
       return { data: null, error };
     }
@@ -48,12 +69,14 @@ export const useAuthOperations = () => {
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      const success = await performSecureSignOut(supabase);
       
-      toast.success('Signed out successfully');
+      if (success) {
+        toast.success('Signed out successfully');
+      }
     } catch (error: any) {
-      toast.error(error.message);
+      console.error('Signout error:', error);
+      toast.error('Sign out failed');
     }
   };
 

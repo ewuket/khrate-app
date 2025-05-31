@@ -18,7 +18,7 @@ export const useCartSync = () => {
 
     setLoading(true);
     try {
-      console.log('Syncing cart for user:', user.id);
+      console.log('Syncing cart for user with security validation:', user.id);
       
       const { data, error } = await supabase
         .from('cart_items')
@@ -28,7 +28,14 @@ export const useCartSync = () => {
 
       if (error) {
         console.error('Error syncing cart:', error);
-        throw error;
+        if (error.message.includes('row-level security')) {
+          console.error('RLS policy blocked cart sync - this should not happen for authenticated users');
+          toast.error('Security error: Unable to load cart');
+        } else {
+          toast.error('Failed to load cart items');
+        }
+        setCart([]);
+        return;
       }
       
       const formattedCart: CartItem[] = (data || []).map(item => ({
@@ -43,11 +50,11 @@ export const useCartSync = () => {
       }));
 
       setCart(formattedCart);
-      console.log('Cart synced successfully:', formattedCart);
+      console.log('Cart synced successfully:', formattedCart.length, 'items');
     } catch (error) {
       console.error('Error syncing cart:', error);
       toast.error('Failed to load cart items');
-      setCart([]); // Clear cart on error to prevent stale data
+      setCart([]);
     } finally {
       setLoading(false);
     }

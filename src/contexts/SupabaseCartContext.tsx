@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState } from "react";
 import { CartContextType } from "@/types/cart";
 import { useCartSync } from "@/hooks/useCartSync";
-import { useCartOperations } from "@/hooks/useCartOperations";
+import { useSecureCartOperations } from "@/hooks/useSecureCartOperations";
 
 const SupabaseCartContext = createContext<CartContextType | undefined>(undefined);
 
@@ -19,7 +19,7 @@ export const SupabaseCartProvider: React.FC<{ children: React.ReactNode }> = ({ 
     updateQuantity,
     clearCart,
     getCartTotal
-  } = useCartOperations(cart, setCart, openCart);
+  } = useSecureCartOperations(cart, setCart, openCart);
 
   return (
     <SupabaseCartContext.Provider 
