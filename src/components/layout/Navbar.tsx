@@ -11,9 +11,18 @@ import CartButton from "./CartButton";
 import { Menu } from "lucide-react";
 
 const Navbar = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, openAuthModal } = useAuth();
   const { cart } = useCartContext();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const navLinks = [
+    { title: "Home", path: "/" },
+    { title: "Bundles", path: "/bundles" },
+    { title: "Custom Buy", path: "/custom-buy" },
+    { title: "Group Buy", path: "/group-buy" },
+    { title: "About", path: "/about" },
+    { title: "Contact", path: "/contact" }
+  ];
 
   return (
     <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
@@ -30,13 +39,13 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
-            <NavLinks />
+            <NavLinks links={navLinks} />
           </div>
 
           {/* Desktop Auth & Cart */}
           <div className="hidden md:flex items-center space-x-4">
             <CartButton />
-            <AuthButtons />
+            <AuthButtons onOpenAuthModal={openAuthModal} />
           </div>
 
           {/* Mobile menu button */}
@@ -56,7 +65,10 @@ const Navbar = () => {
       {/* Mobile Menu */}
       <MobileMenu 
         isOpen={isMobileMenuOpen} 
-        onClose={() => setIsMobileMenuOpen(false)} 
+        navLinks={navLinks}
+        isLoggedIn={isAuthenticated}
+        onOpenAuthModal={openAuthModal}
+        onCloseMenu={() => setIsMobileMenuOpen(false)} 
       />
     </nav>
   );

@@ -5,12 +5,14 @@ import { LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface AuthButtonsProps {
-  onOpenAuthModal: () => void;
+  onOpenAuthModal?: () => void;
   layout?: "desktop" | "mobile";
 }
 
 const AuthButtons = ({ onOpenAuthModal, layout = "desktop" }: AuthButtonsProps) => {
-  const { isAuthenticated, signOut } = useAuth();
+  const { isAuthenticated, signOut, openAuthModal } = useAuth();
+
+  const handleOpenAuth = onOpenAuthModal || openAuthModal;
 
   if (isAuthenticated && layout === "mobile") {
     return (
@@ -30,12 +32,12 @@ const AuthButtons = ({ onOpenAuthModal, layout = "desktop" }: AuthButtonsProps) 
       <div className="flex flex-col space-y-2 pt-4 border-t">
         <Button 
           variant="ghost" 
-          onClick={onOpenAuthModal}
+          onClick={handleOpenAuth}
         >
           Login
         </Button>
         <Button 
-          onClick={onOpenAuthModal}
+          onClick={handleOpenAuth}
           className="bg-khrate-500 hover:bg-khrate-600"
         >
           Sign Up & Save 10%
@@ -48,13 +50,13 @@ const AuthButtons = ({ onOpenAuthModal, layout = "desktop" }: AuthButtonsProps) 
     <>
       <Button 
         variant="ghost" 
-        onClick={onOpenAuthModal}
+        onClick={handleOpenAuth}
         className="text-gray-700 hover:text-khrate-500"
       >
         Login
       </Button>
       <Button 
-        onClick={onOpenAuthModal}
+        onClick={handleOpenAuth}
         className="bg-khrate-500 hover:bg-khrate-600"
       >
         Sign Up & Save 10%
