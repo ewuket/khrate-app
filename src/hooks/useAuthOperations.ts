@@ -80,9 +80,31 @@ export const useAuthOperations = () => {
     }
   };
 
+  const resetPassword = async (email: string) => {
+    try {
+      // Validate email
+      const emailValidation = await validateEmail(email);
+      if (!emailValidation.isValid) {
+        throw new Error(emailValidation.error);
+      }
+
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`
+      });
+
+      if (error) throw error;
+      
+      return { error: null };
+    } catch (error: any) {
+      console.error('Password reset error:', error);
+      return { error };
+    }
+  };
+
   return {
     signUp,
     signIn,
-    signOut
+    signOut,
+    resetPassword
   };
 };

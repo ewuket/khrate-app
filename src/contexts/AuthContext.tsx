@@ -15,6 +15,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, fullName?: string) => Promise<any>;
   signIn: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<any>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
 }
 
@@ -40,6 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signUp: supabaseAuth.signUp,
         signIn: supabaseAuth.signIn,
         signOut: supabaseAuth.signOut,
+        resetPassword: supabaseAuth.resetPassword,
         updateProfile: supabaseAuth.updateProfile
       }}
     >

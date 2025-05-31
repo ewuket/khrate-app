@@ -12,7 +12,7 @@ export const useSupabaseAuth = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const { signUp, signIn, signOut } = useAuthOperations();
+  const { signUp, signIn, signOut, resetPassword } = useAuthOperations();
   const { 
     profile, 
     setProfile, 
@@ -74,6 +74,7 @@ export const useSupabaseAuth = () => {
     signUp,
     signIn,
     signOut: handleSignOut,
+    resetPassword,
     updateProfile
   };
 };
