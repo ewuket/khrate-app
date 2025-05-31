@@ -14,17 +14,9 @@ interface Product {
 
 interface ProductListProps {
   products: Product[];
-  getItemQuantity: (id: number) => number;
-  onAddToCart: (product: Product) => void;
-  onRemoveFromCart: (productId: number) => void;
 }
 
-const ProductList = ({ 
-  products, 
-  getItemQuantity, 
-  onAddToCart, 
-  onRemoveFromCart 
-}: ProductListProps) => {
+const ProductList = ({ products }: ProductListProps) => {
   const [category, setCategory] = useState<string>("all");
   
   const filteredProducts = category === "all" 
