@@ -3,230 +3,155 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
-import { Eye, EyeOff, Check, X } from "lucide-react";
+import { Eye, EyeOff, Check } from "lucide-react";
 
 interface SignupFormProps {
-  onSwitchToLogin: () => void;
+  onLoginClick: () => void;
 }
 
-const SignupForm: React.FC<SignupFormProps> = ({ onSwitchToLogin }) => {
+const SignupForm = ({ onLoginClick }: SignupFormProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [emailValid, setEmailValid] = useState(false);
+  const [passwordValid, setPasswordValid] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { signUp, closeAuthModal } = useAuth();
+  
+  const { signUp } = useAuth();
 
-  // Email validation
-  const isValidEmail = (email: string) => {
+  const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  // Password strength validation
-  const isStrongPassword = (password: string) => {
+  const validatePassword = (password: string) => {
     return password.length >= 8 && 
-           /[A-Z]/.test(password) && 
-           /[a-z]/.test(password) && 
-           /[0-9]/.test(password);
+           /[0-9]/.test(password) && 
+           /[a-zA-Z]/.test(password);
   };
 
-  // Password match validation
-  const passwordsMatch = password === confirmPassword && confirmPassword !== '';
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmail(value);
+    setEmailValid(validateEmail(value));
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPassword(value);
+    setPasswordValid(validatePassword(value));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!emailValid || !passwordValid || !fullName.trim()) return;
     
-    if (!email || !password || !confirmPassword || !fullName) {
-      toast.error('Please fill in all fields');
-      return;
-    }
-
-    if (!isValidEmail(email)) {
-      toast.error('Please enter a valid email address');
-      return;
-    }
-
-    if (!isStrongPassword(password)) {
-      toast.error('Password must be at least 8 characters with uppercase, lowercase, and numbers');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
-
     setLoading(true);
-    
     try {
-      const { error } = await signUp(email, password, fullName);
-      if (!error) {
-        closeAuthModal();
-        toast.success('Account created successfully! Please check your email to verify your account.');
-      }
-    } catch (error) {
-      console.error('Signup error:', error);
+      await signUp(email, password, fullName.trim());
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="fullName">Full Name</Label>
-        <Input
-          id="fullName"
-          type="text"
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-          placeholder="Enter your full name"
-          required
-        />
-      </div>
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader className="space-y-1">
+        <CardTitle className="text-2xl text-center">Create an account</CardTitle>
+        <CardDescription className="text-center">
+          Enter your details to get started
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="fullName">Full Name</Label>
+            <Input
+              id="fullName"
+              type="text"
+              placeholder="Enter your full name"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+            />
+          </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <div className="relative">
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className={`pr-10 ${
-              email && isValidEmail(email) 
-                ? 'border-green-500 focus:border-green-500' 
-                : email 
-                ? 'border-red-500 focus:border-red-500' 
-                : ''
-            }`}
-            placeholder="Enter your email"
-            required
-          />
-          {email && (
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-              {isValidEmail(email) ? (
-                <Check className="h-4 w-4 text-green-500" />
-              ) : (
-                <X className="h-4 w-4 text-red-500" />
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <div className="relative">
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={handleEmailChange}
+                className={`pr-10 ${emailValid && email ? 'border-green-500' : ''}`}
+                required
+              />
+              {emailValid && email && (
+                <Check className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-500" />
               )}
             </div>
-          )}
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
-        <div className="relative">
-          <Input
-            id="password"
-            type={showPassword ? "text" : "password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className={`pr-20 ${
-              password && isStrongPassword(password) 
-                ? 'border-green-500 focus:border-green-500' 
-                : password 
-                ? 'border-red-500 focus:border-red-500' 
-                : ''
-            }`}
-            placeholder="Create a password"
-            required
-          />
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
-            {password && (
-              <>
-                {isStrongPassword(password) ? (
-                  <Check className="h-4 w-4 text-green-500" />
-                ) : (
-                  <X className="h-4 w-4 text-red-500" />
-                )}
-              </>
-            )}
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
           </div>
-        </div>
-        {password && !isStrongPassword(password) && (
-          <p className="text-xs text-red-500">
-            Password must be at least 8 characters with uppercase, lowercase, and numbers
-          </p>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Confirm Password</Label>
-        <div className="relative">
-          <Input
-            id="confirmPassword"
-            type={showConfirmPassword ? "text" : "password"}
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className={`pr-20 ${
-              confirmPassword && passwordsMatch 
-                ? 'border-green-500 focus:border-green-500' 
-                : confirmPassword 
-                ? 'border-red-500 focus:border-red-500' 
-                : ''
-            }`}
-            placeholder="Confirm your password"
-            required
-          />
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
-            {confirmPassword && (
-              <>
-                {passwordsMatch ? (
-                  <Check className="h-4 w-4 text-green-500" />
+          
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Create a strong password"
+                value={password}
+                onChange={handlePasswordChange}
+                className={`pr-10 ${passwordValid && password ? 'border-green-500' : ''}`}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4 text-gray-400" />
                 ) : (
-                  <X className="h-4 w-4 text-red-500" />
+                  <Eye className="h-4 w-4 text-gray-400" />
                 )}
-              </>
-            )}
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
+              </button>
+              {passwordValid && password && (
+                <Check className="absolute right-10 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-500" />
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Password must be at least 8 characters with letters and numbers
+            </p>
           </div>
-        </div>
-        {confirmPassword && !passwordsMatch && (
-          <p className="text-xs text-red-500">
-            Passwords do not match
-          </p>
-        )}
-      </div>
 
-      <Button 
-        type="submit" 
-        className="w-full bg-khrate-500 hover:bg-khrate-600" 
-        disabled={loading}
-      >
-        {loading ? 'Creating account...' : 'Create Account'}
-      </Button>
+          <Button 
+            type="submit" 
+            className="w-full bg-khrate-500 hover:bg-khrate-600"
+            disabled={loading || !emailValid || !passwordValid || !fullName.trim()}
+          >
+            {loading ? "Creating account..." : "Create Account"}
+          </Button>
 
-      <p className="text-center text-sm text-gray-600">
-        Already have an account?{' '}
-        <button
-          type="button"
-          onClick={onSwitchToLogin}
-          className="text-khrate-500 hover:text-khrate-600 font-medium"
-        >
-          Sign in
-        </button>
-      </p>
-    </form>
+          <div className="text-center">
+            <span className="text-sm text-muted-foreground">
+              Already have an account?{" "}
+              <button
+                type="button"
+                onClick={onLoginClick}
+                className="text-khrate-500 hover:underline font-medium"
+              >
+                Sign in
+              </button>
+            </span>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
 

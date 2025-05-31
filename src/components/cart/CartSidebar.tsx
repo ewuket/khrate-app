@@ -1,7 +1,7 @@
 
 import { ShoppingCart, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useSupabaseCart } from "@/contexts/SupabaseCartContext";
+import { useCartContext } from "@/contexts/CartContext";
 import { useState } from "react";
 import { 
   Sheet, 
@@ -12,12 +12,11 @@ import {
 } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-
-// Import refactored components
 import CartItem from "./CartItem";
 import EmptyCart from "./EmptyCart";
 import CartSummary from "./CartSummary";
 import CheckoutDialog from "../checkout/CheckoutDialog";
+import GuestCheckoutOption from "../checkout/GuestCheckoutOption";
 
 const CartSidebar = () => {
   const { 
@@ -28,76 +27,43 @@ const CartSidebar = () => {
     updateQuantity, 
     clearCart, 
     getCartTotal 
-  } = useSupabaseCart();
+  } = useCartContext();
   
-  const { isAuthenticated, user, openAuthModal } = useAuth();
+  const { isAuthenticated, openAuthModal } = useAuth();
   
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [showGuestOptions, setShowGuestOptions] = useState(false);
 
   const handleCheckout = () => {
-    if (!isAuthenticated) {
-      toast.error("Please log in to checkout");
-      openAuthModal();
-      closeCart();
-      return;
-    }
-    
     if (cart.length === 0) {
       toast.error("Your cart is empty");
       return;
     }
+
+    if (!isAuthenticated) {
+      setShowGuestOptions(true);
+      return;
+    }
+    
     setCheckoutOpen(true);
     closeCart();
+  };
+
+  const handleGuestCheckout = () => {
+    setShowGuestOptions(false);
+    setCheckoutOpen(true);
+    closeCart();
+  };
+
+  const handleSignUp = () => {
+    setShowGuestOptions(false);
+    closeCart();
+    openAuthModal();
   };
 
   const formatPrice = (price: number) => {
     return price.toLocaleString() + " RWF";
   };
-  
-  const saveOrder = () => {
-    if (cart.length === 0) return;
-    
-    const orderId = `order_${Date.now()}`;
-    const orderItems = cart.map(item => ({
-      id: item.product_id,
-      name: item.product_name,
-      price: item.product_price,
-      quantity: item.quantity,
-      unit: item.product_unit,
-    }));
-    
-    const order = {
-      id: orderId,
-      date: new Date().toISOString(),
-      status: "pending",
-      items: orderItems,
-      total: getCartTotal(),
-      deliveryAddress: "Default Address",
-      deliverySchedule: {
-        date: "",
-        timeSlot: "afternoon"
-      }
-    };
-    
-    const storageKey = isAuthenticated && user?.id 
-      ? `khrate_orders_${user.id}` 
-      : 'khrate_guest_orders';
-    
-    const existingOrdersStr = localStorage.getItem(storageKey);
-    const existingOrders = existingOrdersStr ? JSON.parse(existingOrdersStr) : [];
-    
-    const updatedOrders = [order, ...existingOrders];
-    localStorage.setItem(storageKey, JSON.stringify(updatedOrders));
-  };
-
-  const cartItems = cart.map(item => ({
-    id: item.product_id,
-    name: item.product_name,
-    price: item.product_price,
-    quantity: item.quantity,
-    unit: item.product_unit,
-    type: item.product_type
-  }));
 
   return (
     <>
@@ -149,14 +115,36 @@ const CartSidebar = () => {
         </SheetContent>
       </Sheet>
 
+      {/* Guest Checkout Options */}
+      <Sheet open={showGuestOptions} onOpenChange={setShowGuestOptions}>
+        <SheetContent className="w-full sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle>Checkout Options</SheetTitle>
+          </SheetHeader>
+          
+          <div className="py-6">
+            <GuestCheckoutOption
+              onContinueAsGuest={handleGuestCheckout}
+              onSignUp={handleSignUp}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
+
       <CheckoutDialog
         open={checkoutOpen}
         onOpenChange={setCheckoutOpen}
         getCartTotal={getCartTotal}
         formatPrice={formatPrice}
-        cartItems={cartItems}
+        cartItems={cart.map(item => ({
+          id: item.product_id,
+          name: item.product_name,
+          price: item.product_price,
+          quantity: item.quantity,
+          unit: item.product_unit
+        }))}
         clearCart={clearCart}
-        saveOrder={saveOrder}
+        saveOrder={() => {}}
       />
     </>
   );

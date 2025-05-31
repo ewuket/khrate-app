@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart } from "lucide-react";
-import { useSupabaseCart } from "@/contexts/SupabaseCartContext";
+import { useCartContext } from "@/contexts/CartContext";
 import CartBadge from "@/components/cart/CartBadge";
 
 interface CartButtonProps {
@@ -12,7 +12,7 @@ interface CartButtonProps {
 }
 
 const CartButton = ({ variant = "ghost", size = "icon", className = "" }: CartButtonProps) => {
-  const { cart, openCart } = useSupabaseCart();
+  const { cart, openCart } = useCartContext();
   
   return (
     <Button 

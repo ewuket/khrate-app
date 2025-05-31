@@ -1,163 +1,161 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
-import { CartItem } from "@/types/cart";
+import { useState, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { CartItem } from '@/types/cart';
 
-export const useCartOperations = (
-  cart: CartItem[], 
-  setCart: React.Dispatch<React.SetStateAction<CartItem[]>>,
-  openCart: () => void
-) => {
+export const useCartOperations = () => {
   const { user, isAuthenticated } = useAuth();
+  const [loading, setLoading] = useState(false);
 
-  const addToCart = async (item: any, type: 'bundle' | 'custom' | 'group') => {
-    if (!isAuthenticated || !user) {
-      toast.error('Please log in to add items to cart');
-      return;
-    }
-
+  const addToCart = useCallback(async (item: any) => {
+    console.log('Adding item to cart:', item);
+    setLoading(true);
+    
     try {
-      console.log('Adding item to cart:', item, type);
-      
-      // Check if item already exists in cart
-      const existingItem = cart.find(cartItem => 
-        cartItem.product_id === item.id && cartItem.product_type === type
-      );
+      if (isAuthenticated && user) {
+        // Add to Supabase cart for authenticated users
+        const cartItem = {
+          user_id: user.id,
+          product_id: item.id,
+          product_name: item.name,
+          product_price: item.price,
+          product_unit: item.unit || 'item',
+          product_type: item.type || 'bundle',
+          quantity: 1,
+          product_items: item.items ? JSON.stringify(item.items) : null
+        };
 
-      if (existingItem) {
-        await updateQuantity(existingItem.id, existingItem.quantity + 1);
-        toast.success(`${item.name} quantity updated in cart`);
-        return;
+        const { data, error } = await supabase
+          .from('cart_items')
+          .upsert(cartItem, {
+            onConflict: 'user_id,product_id',
+            ignoreDuplicates: false
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        
+        console.log('Item added to Supabase cart:', data);
+        toast.success(`${item.name} added to cart!`);
+      } else {
+        // Add to localStorage for guest users
+        const guestCart = JSON.parse(localStorage.getItem('khrate_guest_cart') || '[]');
+        const existingItemIndex = guestCart.findIndex((cartItem: any) => cartItem.product_id === item.id);
+        
+        if (existingItemIndex >= 0) {
+          guestCart[existingItemIndex].quantity += 1;
+        } else {
+          guestCart.push({
+            id: `guest-${Date.now()}`,
+            product_id: item.id,
+            product_name: item.name,
+            product_price: item.price,
+            product_unit: item.unit || 'item',
+            product_type: item.type || 'bundle',
+            quantity: 1,
+            product_items: item.items
+          });
+        }
+        
+        localStorage.setItem('khrate_guest_cart', JSON.stringify(guestCart));
+        console.log('Item added to guest cart:', guestCart);
+        toast.success(`${item.name} added to cart!`);
       }
-
-      // Prepare cart data for insertion
-      const cartData = {
-        user_id: user.id,
-        product_id: item.id,
-        product_name: item.name,
-        product_price: item.price,
-        quantity: 1,
-        product_unit: item.unit || 'item',
-        product_type: type,
-        product_items: Array.isArray(item.items) ? item.items : null
-      };
-
-      console.log('Inserting cart data:', cartData);
-
-      const { data, error } = await supabase
-        .from('cart_items')
-        .insert(cartData)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Supabase insert error:', error);
-        throw error;
-      }
-
-      console.log('Cart item inserted successfully:', data);
-
-      // Create new cart item for local state
-      const newCartItem: CartItem = {
-        id: data.id,
-        product_id: data.product_id,
-        product_name: data.product_name,
-        product_price: data.product_price,
-        quantity: data.quantity,
-        product_unit: data.product_unit,
-        product_type: data.product_type as 'bundle' | 'custom' | 'group',
-        product_items: Array.isArray(data.product_items) ? data.product_items as string[] : undefined
-      };
-
-      // Update local cart state
-      setCart(prevCart => [...prevCart, newCartItem]);
-      
-      // Open cart sidebar
-      openCart();
-      
     } catch (error) {
       console.error('Error adding to cart:', error);
       toast.error('Failed to add item to cart');
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [user, isAuthenticated]);
 
-  const removeFromCart = async (id: string) => {
-    if (!isAuthenticated || !user) return;
-
+  const removeFromCart = useCallback(async (itemId: string) => {
+    setLoading(true);
+    
     try {
-      const { error } = await supabase
-        .from('cart_items')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', user.id);
+      if (isAuthenticated && user) {
+        const { error } = await supabase
+          .from('cart_items')
+          .delete()
+          .eq('id', itemId);
 
-      if (error) throw error;
-
-      setCart(prevCart => prevCart.filter(item => item.id !== id));
-      toast.info('Item removed from cart');
+        if (error) throw error;
+        toast.success('Item removed from cart');
+      } else {
+        const guestCart = JSON.parse(localStorage.getItem('khrate_guest_cart') || '[]');
+        const filteredCart = guestCart.filter((item: any) => item.id !== itemId);
+        localStorage.setItem('khrate_guest_cart', JSON.stringify(filteredCart));
+        toast.success('Item removed from cart');
+      }
     } catch (error) {
       console.error('Error removing from cart:', error);
-      toast.error('Failed to remove item from cart');
+      toast.error('Failed to remove item');
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [user, isAuthenticated]);
 
-  const updateQuantity = async (id: string, quantity: number) => {
-    if (!isAuthenticated || !user) return;
-
-    if (quantity <= 0) {
-      await removeFromCart(id);
-      return;
-    }
-
+  const updateQuantity = useCallback(async (itemId: string, quantity: number) => {
+    if (quantity <= 0) return;
+    
+    setLoading(true);
+    
     try {
-      const { error } = await supabase
-        .from('cart_items')
-        .update({ quantity })
-        .eq('id', id)
-        .eq('user_id', user.id);
+      if (isAuthenticated && user) {
+        const { error } = await supabase
+          .from('cart_items')
+          .update({ quantity })
+          .eq('id', itemId);
 
-      if (error) throw error;
-
-      setCart(prevCart => 
-        prevCart.map(item => 
-          item.id === id ? { ...item, quantity } : item
-        )
-      );
+        if (error) throw error;
+      } else {
+        const guestCart = JSON.parse(localStorage.getItem('khrate_guest_cart') || '[]');
+        const itemIndex = guestCart.findIndex((item: any) => item.id === itemId);
+        if (itemIndex >= 0) {
+          guestCart[itemIndex].quantity = quantity;
+          localStorage.setItem('khrate_guest_cart', JSON.stringify(guestCart));
+        }
+      }
     } catch (error) {
       console.error('Error updating quantity:', error);
       toast.error('Failed to update quantity');
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [user, isAuthenticated]);
 
-  const clearCart = async () => {
-    if (!isAuthenticated || !user) return;
-
+  const clearCart = useCallback(async () => {
+    setLoading(true);
+    
     try {
-      const { error } = await supabase
-        .from('cart_items')
-        .delete()
-        .eq('user_id', user.id);
+      if (isAuthenticated && user) {
+        const { error } = await supabase
+          .from('cart_items')
+          .delete()
+          .eq('user_id', user.id);
 
-      if (error) throw error;
-
-      setCart([]);
-      toast.info("Cart has been cleared");
+        if (error) throw error;
+      } else {
+        localStorage.removeItem('khrate_guest_cart');
+      }
+      
+      toast.success('Cart cleared');
     } catch (error) {
       console.error('Error clearing cart:', error);
       toast.error('Failed to clear cart');
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const getCartTotal = () => {
-    return cart.reduce((total, item) => total + (item.product_price * item.quantity), 0);
-  };
+  }, [user, isAuthenticated]);
 
   return {
     addToCart,
     removeFromCart,
     updateQuantity,
     clearCart,
-    getCartTotal
+    loading
   };
 };
