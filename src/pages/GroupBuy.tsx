@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -46,9 +45,13 @@ const GroupBuy = () => {
   };
 
   const handleJoinPresetGroup = async (groupId: string) => {
-    // For now, simulate joining a preset group with a toast
-    // In a real implementation, this would create or join an actual group
-    toast.success(`Joined ${groupId.replace('-', ' ')} group! Start adding items to your group cart.`);
+    if (!isAuthenticated) {
+      openAuthModal();
+      return;
+    }
+    
+    // Simulate joining a preset group with enhanced feedback
+    toast.success(`Successfully joined ${groupId.replace('-', ' ')} group! Start adding items to your group cart.`);
   };
 
   return (
@@ -69,7 +72,6 @@ const GroupBuy = () => {
           <div className="container mx-auto">
             {!currentGroup ? (
               <>
-                {/* Preset Groups Section */}
                 <PresetGroups onJoinGroup={handleJoinPresetGroup} />
 
                 <div className="my-12">
@@ -83,7 +85,6 @@ const GroupBuy = () => {
                   </div>
                 </div>
 
-                {/* How it works section */}
                 <div className="bg-khrate-50 border border-khrate-100 rounded-lg p-6 mb-8">
                   <h2 className="text-xl font-semibold mb-2">How Group Buy Works</h2>
                   <p className="text-muted-foreground mb-4">
@@ -117,7 +118,6 @@ const GroupBuy = () => {
                   </div>
                 </div>
 
-                {/* Action buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
                   <Button 
                     className="bg-khrate-500 hover:bg-khrate-600"
@@ -138,7 +138,6 @@ const GroupBuy = () => {
                   </Button>
                 </div>
 
-                {/* Benefits */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <Card>
                     <CardHeader>
@@ -184,7 +183,6 @@ const GroupBuy = () => {
                 </div>
               </>
             ) : (
-              /* Current Group Display */
               <div className="space-y-6">
                 <Card>
                   <CardHeader>
@@ -272,7 +270,6 @@ const GroupBuy = () => {
       
       <Footer />
 
-      {/* Modals */}
       <CreateGroupModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}

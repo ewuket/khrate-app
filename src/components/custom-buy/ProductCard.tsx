@@ -4,7 +4,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import GroupBuyButton from "@/components/group-buy/GroupBuyButton";
-import { useCartContext } from "@/contexts/CartContext";
 import { toast } from "sonner";
 
 interface Product {
@@ -22,28 +21,20 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
-  const { addToCart } = useCartContext();
-
   const handleAddToCart = async () => {
     try {
-      console.log('Adding product to cart:', product);
+      console.log('Adding product to custom cart:', product);
       
-      // Add to global cart but suppress the main cart popup for custom buy page
-      await addToCart({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        unit: product.unit,
-        type: 'custom'
-      }, true); // Pass true to skip opening the cart popup
-
-      // Add to local cart (for custom buy page display)
+      // Only add to local cart (for custom buy page display)
       if (onAddToCart) {
         onAddToCart(product);
+        
+        // Show subtle feedback without opening any popup
+        toast.success(`${product.name} added to cart`, {
+          duration: 2000,
+          position: 'bottom-right'
+        });
       }
-
-      // Show subtle feedback instead of opening cart popup
-      console.log(`${product.name} added to cart successfully`);
     } catch (error) {
       console.error('Error adding to cart:', error);
       toast.error('Failed to add item to cart');

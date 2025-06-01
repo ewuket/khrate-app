@@ -6,7 +6,7 @@ import { useCartContext } from '@/contexts/CartContext';
 import { toast } from 'sonner';
 
 interface DeliverySchedule {
-  date: string;
+  date: Date | undefined;
   timeSlot: string;
 }
 
@@ -20,7 +20,7 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [processingPayment, setProcessingPayment] = useState(false);
   const [deliverySchedule, setDeliverySchedule] = useState<DeliverySchedule>({
-    date: '',
+    date: undefined,
     timeSlot: ''
   });
 
@@ -62,12 +62,12 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
         items: cart,
         original_amount: getCartTotal(),
         total_amount: getCartTotal(),
-        delivery_date: deliverySchedule.date,
+        delivery_date: deliverySchedule.date?.toISOString().split('T')[0],
         delivery_time_slot: deliverySchedule.timeSlot,
         payment_method: paymentMethod,
         payment_status: 'pending',
         status: 'pending',
-        delivery_address: 'Default Address', // This should be updated with actual address selection
+        delivery_address: 'Default Address',
         phone_number: phoneNumber || null
       };
 
@@ -77,10 +77,8 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
 
       if (error) throw error;
 
-      // Show success message
       toast.success('✅ Your order has been submitted. Khrate has been notified. You will receive delivery updates soon.');
       
-      // Clear cart and close modal
       await clearCart();
       onOpenChange(false);
       onSuccess();
@@ -93,6 +91,10 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
     }
   };
 
+  const handleDeliveryScheduleChange = (schedule: { date: Date | undefined; timeSlot: string }) => {
+    setDeliverySchedule(schedule);
+  };
+
   return {
     paymentMethod,
     setPaymentMethod,
@@ -100,7 +102,7 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
     setPhoneNumber,
     processingPayment,
     deliverySchedule,
-    setDeliverySchedule,
+    setDeliverySchedule: handleDeliveryScheduleChange,
     handlePayment
   };
 };

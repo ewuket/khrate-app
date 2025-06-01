@@ -63,7 +63,6 @@ const CheckoutDialog = ({
         
         <form onSubmit={handlePayment}>
           <div className="grid gap-6 py-4">
-            {/* Login/Register prompt for guest users */}
             {!isAuthenticated && (
               <div className="mb-4">
                 <GuestUserPrompt 
@@ -75,14 +74,12 @@ const CheckoutDialog = ({
               </div>
             )}
             
-            {/* Scheduled Delivery Section */}
             <ScheduledDelivery 
               onDeliveryScheduleChange={setDeliverySchedule} 
             />
             
             <Separator />
             
-            {/* Payment Section */}
             <PaymentSection
               paymentMethod={paymentMethod}
               onPaymentMethodChange={setPaymentMethod}
@@ -90,17 +87,15 @@ const CheckoutDialog = ({
               onPhoneNumberChange={setPhoneNumber}
             />
             
-            {/* Order Summary */}
             <OrderSummary
               total={getCartTotal()}
               formatPrice={formatPrice}
               deliverySchedule={{
-                date: deliverySchedule.date ? new Date(deliverySchedule.date) : undefined,
+                date: deliverySchedule.date,
                 timeSlot: deliverySchedule.timeSlot
               }}
             />
 
-            {/* Mobile Money Payment Notice */}
             {(paymentMethod === "mtn" || paymentMethod === "airtel") && (
               <div className="bg-blue-50 border border-blue-200 p-4 rounded-md text-blue-800">
                 <p className="font-medium">Payment Instructions</p>
