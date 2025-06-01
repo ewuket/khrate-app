@@ -10,7 +10,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import CreateGroupModal from "@/components/group-buy/CreateGroupModal";
 import JoinGroupModal from "@/components/group-buy/JoinGroupModal";
 import GroupCartSidebar from "@/components/group-buy/GroupCartSidebar";
+import PresetGroups from "@/components/group-buy/PresetGroups";
 import { formatCurrency } from "@/lib/utils";
+import { toast } from "sonner";
 
 const GroupBuy = () => {
   const { isAuthenticated, openAuthModal } = useAuth();
@@ -19,7 +21,8 @@ const GroupBuy = () => {
     groupMembers, 
     groupCartItems, 
     groupSummary,
-    leaveGroup 
+    leaveGroup,
+    joinGroup 
   } = useGroupBuying();
   
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -42,6 +45,12 @@ const GroupBuy = () => {
     setShowJoinModal(true);
   };
 
+  const handleJoinPresetGroup = async (groupId: string) => {
+    // For now, simulate joining a preset group with a toast
+    // In a real implementation, this would create or join an actual group
+    toast.success(`Joined ${groupId.replace('-', ' ')} group! Start adding items to your group cart.`);
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -60,6 +69,20 @@ const GroupBuy = () => {
           <div className="container mx-auto">
             {!currentGroup ? (
               <>
+                {/* Preset Groups Section */}
+                <PresetGroups onJoinGroup={handleJoinPresetGroup} />
+
+                <div className="my-12">
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">Or create your own</span>
+                    </div>
+                  </div>
+                </div>
+
                 {/* How it works section */}
                 <div className="bg-khrate-50 border border-khrate-100 rounded-lg p-6 mb-8">
                   <h2 className="text-xl font-semibold mb-2">How Group Buy Works</h2>

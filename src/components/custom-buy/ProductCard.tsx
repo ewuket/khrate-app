@@ -28,21 +28,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
     try {
       console.log('Adding product to cart:', product);
       
-      // Add to global cart (for checkout) - don't open cart sidebar for custom buy
+      // Add to global cart but suppress the main cart popup for custom buy page
       await addToCart({
         id: product.id,
         name: product.name,
         price: product.price,
         unit: product.unit,
         type: 'custom'
-      });
+      }, true); // Pass true to skip opening the cart popup
 
       // Add to local cart (for custom buy page display)
       if (onAddToCart) {
         onAddToCart(product);
       }
 
-      // Don't show toast for custom buy page - cart will update visually
+      // Show subtle feedback instead of opening cart popup
       console.log(`${product.name} added to cart successfully`);
     } catch (error) {
       console.error('Error adding to cart:', error);

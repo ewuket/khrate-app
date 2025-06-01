@@ -9,6 +9,7 @@ import { useCartContext } from "@/contexts/CartContext";
 import AuthButtons from "./AuthButtons";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthModal from "@/components/auth/AuthModal";
+import NavLinks from "./NavLinks";
 
 const Navbar = () => {
   const { cart, openCart } = useCartContext();
@@ -22,6 +23,14 @@ const Navbar = () => {
     openAuthModal();
     setIsMobileMenuOpen(false);
   };
+
+  const navLinks = [
+    { title: "Home", path: "/" },
+    { title: "Bundles", path: "/bundles" },
+    { title: "Custom Buy", path: "/custom-buy" },
+    { title: "Group Buy", path: "/group-buy" },
+    { title: "Contact", path: "/contact" }
+  ];
 
   return (
     <nav className="bg-white shadow-sm border-b">
@@ -38,15 +47,7 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/bundles" className="text-gray-700 hover:text-khrate-500 transition-colors">
-              Bundles
-            </Link>
-            <Link to="/custom-buy" className="text-gray-700 hover:text-khrate-500 transition-colors">
-              Custom Buy
-            </Link>
-            <Link to="/group-buy" className="text-gray-700 hover:text-khrate-500 transition-colors">
-              Group Buy
-            </Link>
+            <NavLinks links={navLinks} />
           </div>
 
           {/* Desktop Auth & Cart */}
@@ -81,27 +82,11 @@ const Navbar = () => {
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                 <div className="flex flex-col space-y-6 mt-6">
-                  <Link 
-                    to="/bundles" 
-                    className="text-lg font-medium"
+                  <NavLinks 
+                    links={navLinks} 
                     onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Bundles
-                  </Link>
-                  <Link 
-                    to="/custom-buy" 
                     className="text-lg font-medium"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Custom Buy
-                  </Link>
-                  <Link 
-                    to="/group-buy" 
-                    className="text-lg font-medium"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Group Buy
-                  </Link>
+                  />
                   
                   <div className="border-t pt-4">
                     <Button

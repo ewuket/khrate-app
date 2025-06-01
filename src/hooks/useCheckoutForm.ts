@@ -1,160 +1,106 @@
 
-import { useState } from "react";
-import { toast } from "sonner";
-import { useSupabaseCart } from "@/contexts/SupabaseCartContext";
-import { useAuth } from "@/contexts/AuthContext";
-import { createOrder } from "@/services/orderService";
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCartContext } from '@/contexts/CartContext';
+import { toast } from 'sonner';
 
-export interface UseCheckoutFormProps {
+interface DeliverySchedule {
+  date: string;
+  timeSlot: string;
+}
+
+interface UseCheckoutFormProps {
   onSuccess: () => void;
-  onOpenChange?: (open: boolean) => void;
+  onOpenChange: (open: boolean) => void;
 }
 
 export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProps) => {
-  const { cart, clearCart } = useSupabaseCart();
-  const { user, profile } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<string>('');
+  const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [processingPayment, setProcessingPayment] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"mtn" | "airtel" | "bank">("mtn");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [deliverySchedule, setDeliverySchedule] = useState({
-    date: "",
-    timeSlot: ""
-  });
-  
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-    notes: "",
-    paymentMethod: "mtn" as "mtn" | "bank",
-    scheduledDate: "",
-    timeSlot: ""
+  const [deliverySchedule, setDeliverySchedule] = useState<DeliverySchedule>({
+    date: '',
+    timeSlot: ''
   });
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  const { user } = useAuth();
+  const { cart, getCartTotal, clearCart } = useCartContext();
 
-  const handleDeliveryScheduleChange = (schedule: { date: Date | undefined, timeSlot: string }) => {
-    const dateString = schedule.date ? schedule.date.toISOString().split('T')[0] : "";
-    setDeliverySchedule({
-      date: dateString,
-      timeSlot: schedule.timeSlot
-    });
-  };
-
-  const handlePaymentMethodChange = (method: string) => {
-    setPaymentMethod(method as "mtn" | "airtel" | "bank");
-  };
-
-  const calculateTotal = () => {
-    const subtotal = cart.reduce((sum, item) => sum + (item.product_price * item.quantity), 0);
-    const discount = profile?.discount_orders_remaining > 0 ? subtotal * 0.1 : 0;
-    return subtotal - discount;
+  const validateForm = () => {
+    if (!deliverySchedule.date) {
+      toast.error('Please select a delivery date');
+      return false;
+    }
+    if (!deliverySchedule.timeSlot) {
+      toast.error('Please select a delivery time slot');
+      return false;
+    }
+    if (!paymentMethod) {
+      toast.error('Please select a payment method');
+      return false;
+    }
+    if ((paymentMethod === 'mtn' || paymentMethod === 'airtel') && !phoneNumber) {
+      toast.error('Please enter your phone number');
+      return false;
+    }
+    return true;
   };
 
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
-    await processOrder();
-  };
-
-  const processOrder = async () => {
-    console.log('Processing order with data:', {
-      formData,
-      cart: cart.length,
-      deliverySchedule,
-      phoneNumber,
-      paymentMethod
-    });
-
-    // Validation
-    if (!formData.name || !formData.email || !formData.phone || !formData.address) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-
-    if (cart.length === 0) {
-      toast.error("Your cart is empty");
-      return;
-    }
-
-    if (!deliverySchedule.date) {
-      toast.error("Please select a delivery date");
-      return;
-    }
-
-    if (!phoneNumber && (paymentMethod === "mtn" || paymentMethod === "airtel")) {
-      toast.error("Please enter the number you used to make the payment");
-      return;
-    }
-
-    setLoading(true);
-    setProcessingPayment(true);
     
-    try {
-      const total = calculateTotal();
-      const discount = profile?.discount_orders_remaining > 0 ? total * 0.1 : 0;
+    if (!validateForm()) {
+      return;
+    }
 
+    setProcessingPayment(true);
+
+    try {
       const orderData = {
-        user_id: user?.id,
-        guest_email: !user ? formData.email : undefined,
+        user_id: user?.id || null,
         items: cart,
-        total_amount: total,
-        original_amount: total + discount,
-        discount_applied: discount,
-        status: 'pending' as const,
-        delivery_address: formData.address,
+        original_amount: getCartTotal(),
+        total_amount: getCartTotal(),
         delivery_date: deliverySchedule.date,
         delivery_time_slot: deliverySchedule.timeSlot,
         payment_method: paymentMethod,
-        payment_status: 'pending' as const,
-        phone_number: phoneNumber || formData.phone
+        payment_status: 'pending',
+        status: 'pending',
+        delivery_address: 'Default Address', // This should be updated with actual address selection
+        phone_number: phoneNumber || null
       };
 
-      console.log('Creating order with data:', orderData);
-      const result = await createOrder(orderData);
-      
-      if (result.error) {
-        throw new Error(result.error.message || 'Failed to create order');
-      }
-      
-      // Clear cart and show success
-      await clearCart();
-      
+      const { error } = await supabase
+        .from('orders')
+        .insert([orderData]);
+
+      if (error) throw error;
+
       // Show success message
-      toast.success("✅ Your order has been submitted. Khrate has been notified. You will receive delivery updates soon.", {
-        duration: 6000,
-        className: "bg-green-50 border-green-200 text-green-800"
-      });
+      toast.success('✅ Your order has been submitted. Khrate has been notified. You will receive delivery updates soon.');
       
-      onOpenChange?.(false);
+      // Clear cart and close modal
+      await clearCart();
+      onOpenChange(false);
       onSuccess();
-      
-      return result.data?.id;
+
     } catch (error) {
-      console.error("Order processing error:", error);
-      toast.error("Failed to process order. Please try again.");
+      console.error('Error creating order:', error);
+      toast.error('Failed to place order. Please try again.');
     } finally {
-      setLoading(false);
       setProcessingPayment(false);
     }
   };
 
   return {
-    formData,
-    loading,
-    processingPayment,
     paymentMethod,
-    setPaymentMethod: handlePaymentMethodChange,
+    setPaymentMethod,
     phoneNumber,
     setPhoneNumber,
+    processingPayment,
     deliverySchedule,
-    setDeliverySchedule: handleDeliveryScheduleChange,
-    handleInputChange,
-    processOrder,
-    calculateTotal,
+    setDeliverySchedule,
     handlePayment
   };
 };
