@@ -13,6 +13,7 @@ const AuthButtons = ({ onOpenAuthModal, layout = "desktop" }: AuthButtonsProps) 
   const { isAuthenticated, signOut, openAuthModal } = useAuth();
 
   const handleOpenAuth = () => {
+    console.log('Auth button clicked, opening modal');
     if (onOpenAuthModal) {
       onOpenAuthModal();
     } else {

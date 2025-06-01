@@ -9,7 +9,7 @@ interface CartContextType {
   loading: boolean;
   openCart: () => void;
   closeCart: () => void;
-  addToCart: (item: any) => Promise<void>;
+  addToCart: (item: any, skipCartOpen?: boolean) => Promise<void>;
   removeFromCart: (itemId: string) => Promise<void>;
   updateQuantity: (itemId: string, quantity: number) => Promise<void>;
   clearCart: () => Promise<void>;

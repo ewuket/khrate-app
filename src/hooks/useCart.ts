@@ -61,10 +61,15 @@ export const useCart = () => {
     return cart.reduce((total, item) => total + (item.product_price * item.quantity), 0);
   };
 
-  const addToCart = async (item: any) => {
+  const addToCart = async (item: any, skipCartOpen: boolean = false) => {
+    console.log('Adding to cart with skipCartOpen:', skipCartOpen);
     await operations.addToCart(item);
     await syncCart(); // Refresh cart after adding
-    setIsCartOpen(true); // Open cart to show added item
+    
+    // Only open cart if not explicitly skipped (for custom buy page)
+    if (!skipCartOpen) {
+      setIsCartOpen(true);
+    }
   };
 
   const removeFromCart = async (itemId: string) => {

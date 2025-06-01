@@ -61,6 +61,15 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
   };
 
   const processOrder = async () => {
+    console.log('Processing order with data:', {
+      formData,
+      cart: cart.length,
+      deliverySchedule,
+      phoneNumber,
+      paymentMethod
+    });
+
+    // Validation
     if (!formData.name || !formData.email || !formData.phone || !formData.address) {
       toast.error("Please fill in all required fields");
       return;
@@ -104,6 +113,7 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
         phone_number: phoneNumber || formData.phone
       };
 
+      console.log('Creating order with data:', orderData);
       const result = await createOrder(orderData);
       
       if (result.error) {
@@ -111,8 +121,14 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
       }
       
       // Clear cart and show success
-      clearCart();
-      toast.success("Thank you! Your payment has been noted. Our team will confirm and deliver your order shortly.");
+      await clearCart();
+      
+      // Show success message
+      toast.success("✅ Your order has been submitted. Khrate has been notified. You will receive delivery updates soon.", {
+        duration: 6000,
+        className: "bg-green-50 border-green-200 text-green-800"
+      });
+      
       onOpenChange?.(false);
       onSuccess();
       

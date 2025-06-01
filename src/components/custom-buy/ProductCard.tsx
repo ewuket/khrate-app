@@ -26,7 +26,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
 
   const handleAddToCart = async () => {
     try {
-      // Add to global cart (for checkout)
+      console.log('Adding product to cart:', product);
+      
+      // Add to global cart (for checkout) - don't open cart sidebar for custom buy
       await addToCart({
         id: product.id,
         name: product.name,
@@ -40,7 +42,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
         onAddToCart(product);
       }
 
-      toast.success(`${product.name} added to cart!`);
+      // Don't show toast for custom buy page - cart will update visually
+      console.log(`${product.name} added to cart successfully`);
     } catch (error) {
       console.error('Error adding to cart:', error);
       toast.error('Failed to add item to cart');

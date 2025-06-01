@@ -10,6 +10,8 @@ interface GuestCheckoutOptionProps {
 }
 
 const GuestCheckoutOption = ({ onContinueAsGuest, onSignUp }: GuestCheckoutOptionProps) => {
+  console.log('GuestCheckoutOption rendered');
+  
   return (
     <div className="space-y-4">
       <Card>
@@ -24,7 +26,10 @@ const GuestCheckoutOption = ({ onContinueAsGuest, onSignUp }: GuestCheckoutOptio
         </CardHeader>
         <CardContent>
           <Button 
-            onClick={onContinueAsGuest}
+            onClick={() => {
+              console.log('Continue as guest clicked');
+              onContinueAsGuest();
+            }}
             className="w-full bg-khrate-500 hover:bg-khrate-600"
           >
             <ShoppingCart className="mr-2 h-4 w-4" />
@@ -48,7 +53,10 @@ const GuestCheckoutOption = ({ onContinueAsGuest, onSignUp }: GuestCheckoutOptio
             <li>• Save delivery addresses</li>
           </ul>
           <Button 
-            onClick={onSignUp}
+            onClick={() => {
+              console.log('Create account clicked');
+              onSignUp();
+            }}
             variant="outline"
             className="w-full"
           >

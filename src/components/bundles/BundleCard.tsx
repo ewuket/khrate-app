@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Eye } from "lucide-react";
-import { useSupabaseCart } from "@/contexts/SupabaseCartContext";
+import { useCartContext } from "@/contexts/CartContext";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import GroupBuyButton from "@/components/group-buy/GroupBuyButton";
@@ -30,7 +30,7 @@ interface BundleCardProps {
 }
 
 const BundleCard: React.FC<BundleCardProps> = ({ bundle, onSaveBundle }) => {
-  const { addToCart } = useSupabaseCart();
+  const { addToCart } = useCartContext();
   const { user } = useAuth();
   const [previewOpen, setPreviewOpen] = useState(false);
 
@@ -38,18 +38,21 @@ const BundleCard: React.FC<BundleCardProps> = ({ bundle, onSaveBundle }) => {
 
   const handleAddToCart = async () => {
     try {
+      console.log('Adding bundle to cart:', bundle);
+      
       await addToCart({
         id: bundle.id,
         name: bundleName,
         price: bundle.price,
         unit: 'bundle',
-        items: bundle.items
-      }, 'bundle');
+        items: bundle.items,
+        type: 'bundle'
+      });
       
-      toast.success(`${bundleName} added to cart`);
+      toast.success(`${bundleName} added to cart!`);
       setPreviewOpen(false);
     } catch (error) {
-      console.error('Error adding to cart:', error);
+      console.error('Error adding bundle to cart:', error);
       toast.error('Failed to add item to cart');
     }
   };
