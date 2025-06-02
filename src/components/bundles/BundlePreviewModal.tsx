@@ -2,98 +2,137 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart } from "lucide-react";
-
-interface BundleItem {
-  name: string;
-  quantity: number;
-}
+import { Separator } from "@/components/ui/separator";
+import { ShoppingCart, Users, X } from "lucide-react";
+import { useCartContext } from "@/contexts/CartContext";
+import { toast } from "sonner";
+import GroupBuyButton from "@/components/group-buy/GroupBuyButton";
 
 interface Bundle {
   id: number;
-  title?: string;
-  name?: string;
+  title: string;
   description: string;
   price: number;
+  originalPrice: number;
+  savings: number;
+  category: string;
   image: string;
-  items: BundleItem[] | string[];
+  items: string[];
+  delivery: string;
 }
 
 interface BundlePreviewModalProps {
   bundle: Bundle | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onAddToCart: () => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
-  bundle,
-  open,
-  onOpenChange,
-  onAddToCart
-}) => {
+const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({ bundle, isOpen, onClose }) => {
+  const { addToCart } = useCartContext();
+
   if (!bundle) return null;
 
-  const bundleName = bundle.title || bundle.name || 'Bundle';
+  const handleAddToCart = async () => {
+    try {
+      const bundleItem = {
+        id: bundle.id,
+        name: bundle.title,
+        price: bundle.price,
+        unit: 'bundle',
+        type: 'bundle',
+        items: bundle.items
+      };
 
-  const renderItems = () => {
-    if (Array.isArray(bundle.items) && bundle.items.length > 0) {
-      if (typeof bundle.items[0] === 'object' && 'name' in bundle.items[0]) {
-        // Bundle items with quantity
-        return (bundle.items as BundleItem[]).map((item, index) => (
-          <li key={index} className="flex justify-between items-center py-2 border-b border-gray-100">
-            <span className="text-gray-700">{item.name}</span>
-            <span className="text-gray-500 text-sm">{item.quantity}kg</span>
-          </li>
-        ));
-      } else {
-        // String array items
-        return (bundle.items as string[]).map((item, index) => (
-          <li key={index} className="py-2 border-b border-gray-100 text-gray-700">
-            {item}
-          </li>
-        ));
-      }
+      await addToCart(bundleItem);
+      toast.success(`${bundle.title} added to cart!`);
+      onClose();
+    } catch (error) {
+      console.error('Error adding bundle to cart:', error);
+      toast.error('Failed to add bundle to cart');
     }
-    return null;
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">{bundleName}</DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-4">
-          <div className="aspect-square">
-            <img
-              src={bundle.image}
-              alt={bundleName}
-              className="w-full h-full object-cover rounded-lg"
-            />
-          </div>
-          
-          <p className="text-gray-600">{bundle.description}</p>
-          
-          <div className="space-y-2">
-            <h4 className="font-semibold text-gray-900">What's included:</h4>
-            <ul className="space-y-1 max-h-48 overflow-y-auto">
-              {renderItems()}
-            </ul>
-          </div>
-          
-          <div className="flex items-center justify-between pt-4 border-t">
-            <p className="text-khrate-500 font-bold text-xl">
-              {bundle.price.toLocaleString()} RWF
-            </p>
-            <Button 
-              onClick={onAddToCart}
-              className="bg-khrate-500 hover:bg-khrate-600"
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-xl font-bold pr-8">{bundle.title}</DialogTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="h-6 w-6 p-0 hover:bg-gray-100 absolute right-4 top-4"
             >
-              <ShoppingCart className="mr-2 h-4 w-4" />
-              Add to Cart
+              <X className="h-4 w-4" />
             </Button>
+          </div>
+        </DialogHeader>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div className="aspect-[4/3] rounded-lg overflow-hidden">
+              <img 
+                src={bundle.image} 
+                alt={bundle.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="space-y-2">
+              <p className="text-muted-foreground">{bundle.description}</p>
+              <p className="text-sm text-muted-foreground">📦 {bundle.delivery}</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl font-bold text-khrate-600">{bundle.price.toLocaleString()} RWF</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="line-through">{bundle.originalPrice.toLocaleString()} RWF</span>
+                <span className="text-green-600 font-medium">Save {bundle.savings.toLocaleString()} RWF</span>
+              </div>
+            </div>
+
+            <Separator />
+
+            <div>
+              <h4 className="font-semibold mb-2">What's included:</h4>
+              <ul className="space-y-1">
+                {bundle.items.map((item, index) => (
+                  <li key={index} className="text-sm flex items-center gap-2">
+                    <span className="w-1 h-1 bg-khrate-500 rounded-full"></span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-3">
+              <Button 
+                className="w-full bg-khrate-500 hover:bg-khrate-600"
+                onClick={handleAddToCart}
+              >
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                Add to Cart
+              </Button>
+              
+              <GroupBuyButton 
+                item={{
+                  id: bundle.id,
+                  name: bundle.title,
+                  price: bundle.price,
+                  unit: 'bundle',
+                  type: 'bundle',
+                  items: bundle.items
+                }}
+                variant="outline"
+                className="w-full"
+              />
+            </div>
           </div>
         </div>
       </DialogContent>

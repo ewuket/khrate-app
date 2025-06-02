@@ -1,7 +1,6 @@
 
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ProductCard from "./ProductCard";
-import { useState } from "react";
+import React from 'react';
+import ProductCard from './ProductCard';
 
 interface Product {
   id: number;
@@ -17,48 +16,25 @@ interface ProductListProps {
   onAddToCart: (product: Product) => void;
 }
 
-const ProductList = ({ products, onAddToCart }: ProductListProps) => {
-  const [category, setCategory] = useState<string>("all");
-  
-  const filteredProducts = category === "all" 
-    ? products 
-    : products.filter(product => product.category === category);
-    
-  return (
-    <div>
-      <Tabs 
-        defaultValue="all" 
-        className="mb-8"
-        onValueChange={setCategory}
-        value={category}
-      >
-        <div className="border-b mb-6">
-          <TabsList className="bg-transparent">
-            <TabsTrigger value="all" className="data-[state=active]:text-khrate-500 data-[state=active]:border-khrate-500 rounded-none border-b-2 border-transparent data-[state=active]:bg-transparent">
-              All Items
-            </TabsTrigger>
-            <TabsTrigger value="perishable" className="data-[state=active]:text-khrate-500 data-[state=active]:border-khrate-500 rounded-none border-b-2 border-transparent data-[state=active]:bg-transparent">
-              Perishables
-            </TabsTrigger>
-            <TabsTrigger value="non-perishable" className="data-[state=active]:text-khrate-500 data-[state=active]:border-khrate-500 rounded-none border-b-2 border-transparent data-[state=active]:bg-transparent">
-              Non-Perishables
-            </TabsTrigger>
-            <TabsTrigger value="household" className="data-[state=active]:text-khrate-500 data-[state=active]:border-khrate-500 rounded-none border-b-2 border-transparent data-[state=active]:bg-transparent">
-              Household
-            </TabsTrigger>
-          </TabsList>
-        </div>
-      </Tabs>
-      
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        {filteredProducts.map(product => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            onAddToCart={onAddToCart}
-          />
-        ))}
+const ProductList: React.FC<ProductListProps> = ({ products, onAddToCart }) => {
+  if (products.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-500 text-lg">No products found matching your criteria.</p>
+        <p className="text-gray-400 text-sm mt-2">Try adjusting your search or category filter.</p>
       </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+      {products.map(product => (
+        <ProductCard
+          key={product.id}
+          product={product}
+          onAddToCart={onAddToCart}
+        />
+      ))}
     </div>
   );
 };

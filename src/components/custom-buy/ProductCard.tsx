@@ -25,11 +25,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
     try {
       console.log('Adding product to custom cart:', product);
       
-      // Only add to local cart (for custom buy page display)
       if (onAddToCart) {
         onAddToCart(product);
         
-        // Show subtle feedback without opening any popup
         toast.success(`${product.name} added to cart`, {
           duration: 2000,
           position: 'bottom-right'
@@ -42,27 +40,27 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
   };
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-      <div className="aspect-square">
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full">
+      <div className="aspect-[4/3] sm:aspect-square">
         <img 
           src={product.image} 
           alt={product.name}
           className="w-full h-full object-cover"
         />
       </div>
-      <CardContent className="p-4">
-        <h3 className="font-semibold text-lg mb-1">{product.name}</h3>
-        <p className="text-orange-500 font-bold text-xl mb-3">
+      <CardContent className="p-3 sm:p-4 flex flex-col h-full">
+        <h3 className="font-semibold text-sm sm:text-lg mb-1 line-clamp-2">{product.name}</h3>
+        <p className="text-orange-500 font-bold text-lg sm:text-xl mb-3">
           {product.price.toLocaleString()} RWF
-          <span className="text-sm text-gray-500 ml-1">per {product.unit}</span>
+          <span className="text-xs sm:text-sm text-gray-500 ml-1">per {product.unit}</span>
         </p>
         
-        <div className="space-y-2">
+        <div className="space-y-2 mt-auto">
           <Button 
-            className="w-full bg-khrate-500 hover:bg-khrate-600"
+            className="w-full bg-khrate-500 hover:bg-khrate-600 text-sm sm:text-base h-9 sm:h-10"
             onClick={handleAddToCart}
           >
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
             Add to Cart
           </Button>
           
@@ -75,7 +73,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
               type: 'product'
             }}
             variant="outline"
-            className="w-full"
+            className="w-full text-sm sm:text-base h-9 sm:h-10"
+            size="sm"
           />
         </div>
       </CardContent>

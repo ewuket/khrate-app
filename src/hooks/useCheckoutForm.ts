@@ -77,7 +77,14 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
 
       if (error) throw error;
 
-      toast.success('✅ Your order has been submitted. Khrate has been notified. You will receive delivery updates soon.');
+      toast.success('🎉 Your order has been successfully submitted to Khrate for confirmation. You will receive delivery updates soon!', {
+        duration: 5000,
+        style: {
+          background: '#f0fdf4',
+          border: '1px solid #22c55e',
+          color: '#15803d'
+        }
+      });
       
       await clearCart();
       onOpenChange(false);

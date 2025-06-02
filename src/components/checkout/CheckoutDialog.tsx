@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { X } from "lucide-react";
 import ScheduledDelivery from "@/components/checkout/ScheduledDelivery";
 import { useAuth } from "@/contexts/AuthContext";
 import PaymentSection from "./PaymentSection";
@@ -55,10 +56,22 @@ const CheckoutDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Complete Your Order</DialogTitle>
-          <DialogDescription>
-            Schedule your delivery and choose a payment method.
-          </DialogDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle>Complete Your Order</DialogTitle>
+              <DialogDescription>
+                Schedule your delivery and choose a payment method.
+              </DialogDescription>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onOpenChange(false)}
+              className="h-6 w-6 p-0 hover:bg-gray-100"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </DialogHeader>
         
         <form onSubmit={handlePayment}>

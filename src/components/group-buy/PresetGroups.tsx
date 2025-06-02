@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, MapPin, Clock, ShoppingCart, Lock } from "lucide-react";
+import { Users, MapPin, Clock, ShoppingCart, Lock, Eye } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import GroupPreviewModal from "./GroupPreviewModal";
 
 interface PresetGroup {
   id: string;
@@ -70,6 +71,8 @@ interface PresetGroupsProps {
 
 const PresetGroups: React.FC<PresetGroupsProps> = ({ onJoinGroup }) => {
   const { isAuthenticated, openAuthModal } = useAuth();
+  const [selectedGroup, setSelectedGroup] = useState<PresetGroup | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   const handleJoinGroup = (groupId: string) => {
     if (!isAuthenticated) {
@@ -79,11 +82,16 @@ const PresetGroups: React.FC<PresetGroupsProps> = ({ onJoinGroup }) => {
     onJoinGroup(groupId);
   };
 
+  const handlePreviewGroup = (group: PresetGroup) => {
+    setSelectedGroup(group);
+    setShowPreview(true);
+  };
+
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold mb-2">Popular Group Buys</h2>
-        <p className="text-muted-foreground">
+        <h2 className="text-xl sm:text-2xl font-bold mb-2">Popular Group Buys</h2>
+        <p className="text-muted-foreground text-sm sm:text-base">
           Join existing groups in your area for instant discounts
         </p>
         {!isAuthenticated && (
@@ -96,56 +104,67 @@ const PresetGroups: React.FC<PresetGroupsProps> = ({ onJoinGroup }) => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         {presetGroups.map((group) => (
           <Card key={group.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>{group.name}</span>
-                <span className="text-sm bg-green-100 text-green-700 px-2 py-1 rounded">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center justify-between text-base sm:text-lg">
+                <span className="truncate pr-2">{group.name}</span>
+                <span className="text-xs sm:text-sm bg-green-100 text-green-700 px-2 py-1 rounded whitespace-nowrap">
                   {group.discount}
                 </span>
               </CardTitle>
-              <CardDescription>{group.description}</CardDescription>
+              <CardDescription className="text-sm">{group.description}</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <MapPin className="h-4 w-4" />
-                    {group.location}
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Users className="h-4 w-4" />
-                    {group.memberCount} members
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="h-4 w-4" />
-                    {group.estimatedDelivery}
-                  </div>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                  <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span className="truncate">{group.location}</span>
                 </div>
-
-                <div className="border-t pt-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <ShoppingCart className="h-4 w-4 text-khrate-500" />
-                    <span className="text-sm font-medium">Popular Items:</span>
-                  </div>
-                  <div className="text-xs text-muted-foreground space-y-1">
-                    {group.sampleItems.map((item, index) => (
-                      <div key={index}>• {item}</div>
-                    ))}
-                  </div>
-                  <div className="mt-2 text-sm font-medium text-khrate-600">
-                    Avg. Total: {group.totalValue.toLocaleString()} RWF
-                  </div>
+                
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                  <Users className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span>{group.memberCount} members</span>
                 </div>
+                
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                  <Clock className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span>{group.estimatedDelivery}</span>
+                </div>
+              </div>
 
+              <div className="border-t pt-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 text-khrate-500 flex-shrink-0" />
+                  <span className="text-xs sm:text-sm font-medium">Popular Items:</span>
+                </div>
+                <div className="text-xs text-muted-foreground space-y-1">
+                  {group.sampleItems.slice(0, 3).map((item, index) => (
+                    <div key={index} className="truncate">• {item}</div>
+                  ))}
+                  {group.sampleItems.length > 3 && (
+                    <div className="text-xs text-khrate-500">+ {group.sampleItems.length - 3} more items</div>
+                  )}
+                </div>
+                <div className="mt-2 text-xs sm:text-sm font-medium text-khrate-600">
+                  Avg. Total: {group.totalValue.toLocaleString()} RWF
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline"
+                  onClick={() => handlePreviewGroup(group)}
+                  className="flex-1 text-xs sm:text-sm h-8 sm:h-9"
+                >
+                  <Eye className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                  Preview
+                </Button>
                 <Button 
                   onClick={() => handleJoinGroup(group.id)}
                   disabled={!isAuthenticated}
-                  className={`w-full ${isAuthenticated ? 'bg-khrate-500 hover:bg-khrate-600' : 'bg-gray-400'}`}
+                  className={`flex-1 text-xs sm:text-sm h-8 sm:h-9 ${isAuthenticated ? 'bg-khrate-500 hover:bg-khrate-600' : 'bg-gray-400'}`}
                 >
                   {isAuthenticated ? 'Join Group' : 'Login to Join'}
                 </Button>
@@ -154,6 +173,12 @@ const PresetGroups: React.FC<PresetGroupsProps> = ({ onJoinGroup }) => {
           </Card>
         ))}
       </div>
+
+      <GroupPreviewModal
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        group={selectedGroup!}
+      />
     </div>
   );
 };

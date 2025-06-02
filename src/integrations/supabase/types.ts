@@ -137,7 +137,10 @@ export type Database = {
         Row: {
           created_at: string
           discount_percentage: number
+          group_type: string
           id: string
+          is_public: boolean
+          items: Json | null
           join_code: string
           leader_id: string
           max_participants: number
@@ -149,7 +152,10 @@ export type Database = {
         Insert: {
           created_at?: string
           discount_percentage?: number
+          group_type?: string
           id?: string
+          is_public?: boolean
+          items?: Json | null
           join_code: string
           leader_id: string
           max_participants?: number
@@ -161,7 +167,10 @@ export type Database = {
         Update: {
           created_at?: string
           discount_percentage?: number
+          group_type?: string
           id?: string
+          is_public?: boolean
+          items?: Json | null
           join_code?: string
           leader_id?: string
           max_participants?: number
