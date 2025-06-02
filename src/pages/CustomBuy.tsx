@@ -9,7 +9,7 @@ import Footer from "@/components/layout/Footer";
 import ProductList from "@/components/custom-buy/ProductList";
 import CustomBuyCart from "@/components/custom-buy/CustomBuyCart";
 import CustomBuyCheckoutDialog from "@/components/custom-buy/CustomBuyCheckoutDialog";
-import { products } from "@/components/custom-buy/productsData";
+import products from "@/components/custom-buy/productsData";
 
 interface CartItem {
   id: number;
@@ -81,6 +81,10 @@ const CustomBuy = () => {
     return cart.reduce((total, item) => total + item.quantity, 0);
   };
 
+  const calculateTotal = () => {
+    return getCartTotal().toLocaleString();
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -136,11 +140,10 @@ const CustomBuy = () => {
                 <div className="sticky top-4">
                   <CustomBuyCart
                     cart={cart}
-                    onUpdateQuantity={updateQuantity}
-                    onRemoveItem={removeFromCart}
-                    onClearCart={clearCart}
-                    onCheckout={() => setShowCheckout(true)}
-                    getCartTotal={getCartTotal}
+                    products={products}
+                    onAddToCart={addToCart}
+                    onRemoveFromCart={removeFromCart}
+                    calculateTotal={calculateTotal}
                   />
                 </div>
               </div>
@@ -180,14 +183,10 @@ const CustomBuy = () => {
             <div className="overflow-y-auto max-h-[60vh]">
               <CustomBuyCart
                 cart={cart}
-                onUpdateQuantity={updateQuantity}
-                onRemoveItem={removeFromCart}
-                onClearCart={clearCart}
-                onCheckout={() => {
-                  setShowCart(false);
-                  setShowCheckout(true);
-                }}
-                getCartTotal={getCartTotal}
+                products={products}
+                onAddToCart={addToCart}
+                onRemoveFromCart={removeFromCart}
+                calculateTotal={calculateTotal}
               />
             </div>
           </div>

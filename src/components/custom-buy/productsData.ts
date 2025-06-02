@@ -1,6 +1,5 @@
-
 // Sample product data
-const products = [
+export const products = [
   // Perishable Items
   {
     id: 1,

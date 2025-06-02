@@ -47,7 +47,7 @@ const BundleCard: React.FC<BundleCardProps> = ({ bundle, onSaveBundle }) => {
         unit: 'bundle',
         items: bundle.items,
         type: 'bundle'
-      });
+      }, true); // Skip cart open for bundles
       
       toast.success(`${bundleName} added to cart!`);
       setPreviewOpen(false);
@@ -61,7 +61,7 @@ const BundleCard: React.FC<BundleCardProps> = ({ bundle, onSaveBundle }) => {
     <>
       <Card className="overflow-hidden hover:shadow-lg transition-shadow bg-white">
         {/* Image Section */}
-        <div className="aspect-square w-full bg-gray-50">
+        <div className="aspect-[4/3] w-full bg-gray-50">
           <img
             src={bundle.image}
             alt={bundleName}
