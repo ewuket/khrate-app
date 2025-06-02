@@ -27,12 +27,9 @@ const GroupPreviewModal: React.FC<GroupPreviewModalProps> = ({ isOpen, onClose, 
   const { isAuthenticated, openAuthModal } = useAuth();
   const { joinGroup } = useGroupBuying();
 
-  // Return early if no group data
-  if (!group) {
-    return null;
-  }
-
   const handleJoinGroup = async () => {
+    if (!group) return;
+    
     if (!isAuthenticated) {
       openAuthModal();
       return;
@@ -45,12 +42,16 @@ const GroupPreviewModal: React.FC<GroupPreviewModalProps> = ({ isOpen, onClose, 
     }
   };
 
+  if (!isOpen || !group) {
+    return null;
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl font-bold">{group.name}</DialogTitle>
+            <DialogTitle className="text-xl font-bold">{group.name || 'Group Preview'}</DialogTitle>
             <Button
               variant="ghost"
               size="sm"
@@ -63,22 +64,22 @@ const GroupPreviewModal: React.FC<GroupPreviewModalProps> = ({ isOpen, onClose, 
         </DialogHeader>
 
         <div className="space-y-4">
-          <p className="text-muted-foreground">{group.description}</p>
+          <p className="text-muted-foreground">{group.description || 'Join this group to enjoy bulk buying discounts!'}</p>
 
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-sm">
               <MapPin className="h-4 w-4 text-khrate-500" />
-              <span>{group.location}</span>
+              <span>{group.location || 'Location TBD'}</span>
             </div>
             
             <div className="flex items-center gap-2 text-sm">
               <Users className="h-4 w-4 text-khrate-500" />
-              <span>{group.memberCount} members</span>
+              <span>{group.memberCount || 0} members</span>
             </div>
             
             <div className="flex items-center gap-2 text-sm">
               <Clock className="h-4 w-4 text-khrate-500" />
-              <span>{group.estimatedDelivery}</span>
+              <span>{group.estimatedDelivery || 'Delivery date TBD'}</span>
             </div>
           </div>
 
@@ -88,22 +89,26 @@ const GroupPreviewModal: React.FC<GroupPreviewModalProps> = ({ isOpen, onClose, 
                 <ShoppingCart className="h-4 w-4 text-khrate-500" />
                 <span className="font-medium">Items in this group:</span>
                 <span className="text-sm bg-green-100 text-green-700 px-2 py-1 rounded ml-auto">
-                  {group.discount}
+                  {group.discount || '10% off'}
                 </span>
               </div>
               
               <div className="space-y-2">
-                {group.sampleItems.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between text-sm">
-                    <span>• {item}</span>
-                  </div>
-                ))}
+                {group.sampleItems && group.sampleItems.length > 0 ? (
+                  group.sampleItems.map((item, index) => (
+                    <div key={index} className="flex items-center justify-between text-sm">
+                      <span>• {item}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-sm text-muted-foreground">No items added yet</div>
+                )}
               </div>
               
               <div className="mt-3 pt-3 border-t">
                 <div className="flex justify-between items-center font-medium">
                   <span>Estimated Total:</span>
-                  <span className="text-khrate-600">{group.totalValue.toLocaleString()} RWF</span>
+                  <span className="text-khrate-600">{(group.totalValue || 0).toLocaleString()} RWF</span>
                 </div>
               </div>
             </CardContent>

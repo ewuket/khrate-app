@@ -9,6 +9,7 @@ import Footer from "@/components/layout/Footer";
 import ProductList from "@/components/custom-buy/ProductList";
 import CustomBuyCart from "@/components/custom-buy/CustomBuyCart";
 import CustomBuyCheckoutDialog from "@/components/custom-buy/CustomBuyCheckoutDialog";
+import FloatingGroupCartButton from "@/components/group-buy/FloatingGroupCartButton";
 import products from "@/components/custom-buy/productsData";
 
 interface CartItem {
@@ -170,6 +171,9 @@ const CustomBuy = () => {
         </Button>
       </div>
 
+      {/* Floating Group Cart Button */}
+      <FloatingGroupCartButton />
+
       {/* Mobile Cart Sheet */}
       {showCart && (
         <div className="lg:hidden fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => setShowCart(false)}>
@@ -196,7 +200,7 @@ const CustomBuy = () => {
       <Footer />
 
       <CustomBuyCheckoutDialog
-        open={showCheckout}
+        isOpen={showCheckout}
         onOpenChange={setShowCheckout}
         cart={cart}
         getCartTotal={getCartTotal}

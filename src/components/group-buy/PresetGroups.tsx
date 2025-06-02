@@ -2,184 +2,149 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, MapPin, Clock, ShoppingCart, Lock, Eye } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { Badge } from "@/components/ui/badge";
+import { Users, MapPin, Clock, Zap } from "lucide-react";
 import GroupPreviewModal from "./GroupPreviewModal";
-
-interface PresetGroup {
-  id: string;
-  name: string;
-  description: string;
-  location: string;
-  memberCount: number;
-  estimatedDelivery: string;
-  discount: string;
-  sampleItems: string[];
-  totalValue: number;
-}
-
-const presetGroups: PresetGroup[] = [
-  {
-    id: 'norrsken-apartments',
-    name: 'Norrsken Side Apartments',
-    description: 'Group buy for residents and nearby community',
-    location: 'Kigali, Gasabo',
-    memberCount: 12,
-    estimatedDelivery: 'Same day delivery',
-    discount: '15% off',
-    sampleItems: ['Rice (5kg)', 'Cooking Oil (2L)', 'Sugar (2kg)', 'Beans (3kg)'],
-    totalValue: 15000
-  },
-  {
-    id: 'gisozi-cafe',
-    name: 'Gisozi Cafe Side',
-    description: 'Local cafe community group order',
-    location: 'Gisozi, Gasabo',
-    memberCount: 8,
-    estimatedDelivery: 'Next day delivery',
-    discount: '10% off',
-    sampleItems: ['Coffee Beans (1kg)', 'Milk (3L)', 'Bread (5 loaves)', 'Eggs (2 dozen)'],
-    totalValue: 12000
-  },
-  {
-    id: 'silverback-mall',
-    name: 'Silverback Mall',
-    description: 'Shopping mall community collective',
-    location: 'Silverback Mall, Kigali',
-    memberCount: 15,
-    estimatedDelivery: 'Same day delivery',
-    discount: '20% off',
-    sampleItems: ['Fresh Vegetables Mix', 'Fruits Basket', 'Meat Package (2kg)', 'Dairy Products'],
-    totalValue: 25000
-  },
-  {
-    id: '2000-mall',
-    name: '2000 Mall',
-    description: 'Mall shoppers and nearby residents',
-    location: '2000 Mall, Kigali',
-    memberCount: 6,
-    estimatedDelivery: 'Next day delivery',
-    discount: '12% off',
-    sampleItems: ['Household Cleaning Kit', 'Personal Care Items', 'Snacks Package'],
-    totalValue: 18000
-  }
-];
 
 interface PresetGroupsProps {
   onJoinGroup: (groupId: string) => void;
 }
 
 const PresetGroups: React.FC<PresetGroupsProps> = ({ onJoinGroup }) => {
-  const { isAuthenticated, openAuthModal } = useAuth();
-  const [selectedGroup, setSelectedGroup] = useState<PresetGroup | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<any>(null);
   const [showPreview, setShowPreview] = useState(false);
 
-  const handleJoinGroup = (groupId: string) => {
-    if (!isAuthenticated) {
-      openAuthModal();
-      return;
+  const presetGroups = [
+    {
+      id: 'family-essentials',
+      name: 'Family Essentials',
+      description: 'Perfect for families looking to stock up on daily necessities',
+      memberCount: 8,
+      maxMembers: 12,
+      discount: '15% off',
+      location: 'Kigali City',
+      estimatedDelivery: 'Tomorrow by 2 PM',
+      sampleItems: ['Rice 25kg', 'Cooking Oil 5L', 'Sugar 2kg', 'Beans 5kg'],
+      totalValue: 45000,
+      tag: 'Popular'
+    },
+    {
+      id: 'office-snacks',
+      name: 'Office Snacks',
+      description: 'Keep your workplace energized with bulk office snacks',
+      memberCount: 5,
+      maxMembers: 10,
+      discount: '12% off',
+      location: 'Kigali CBD',
+      estimatedDelivery: 'Today by 6 PM',
+      sampleItems: ['Coffee packets', 'Biscuits', 'Juice boxes', 'Nuts mix'],
+      totalValue: 28000,
+      tag: 'Fast'
+    },
+    {
+      id: 'fresh-produce',
+      name: 'Fresh Produce',
+      description: 'Fresh fruits and vegetables delivered daily',
+      memberCount: 12,
+      maxMembers: 15,
+      discount: '20% off',
+      location: 'Nyarutarama',
+      estimatedDelivery: 'Daily delivery available',
+      sampleItems: ['Tomatoes 5kg', 'Onions 3kg', 'Bananas bunch', 'Avocados 2kg'],
+      totalValue: 35000,
+      tag: 'Best Deal'
     }
-    onJoinGroup(groupId);
-  };
+  ];
 
-  const handlePreviewGroup = (group: PresetGroup) => {
+  const handlePreviewGroup = (group: any) => {
     setSelectedGroup(group);
     setShowPreview(true);
   };
 
+  const handleJoinGroup = (groupId: string) => {
+    setShowPreview(false);
+    onJoinGroup(groupId);
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h2 className="text-xl sm:text-2xl font-bold mb-2">Popular Group Buys</h2>
-        <p className="text-muted-foreground text-sm sm:text-base">
-          Join existing groups in your area for instant discounts
+    <>
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold mb-2">Join Active Groups</h2>
+        <p className="text-muted-foreground mb-6">
+          Jump into these popular group buying sessions happening right now
         </p>
-        {!isAuthenticated && (
-          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-            <div className="flex items-center justify-center gap-2 text-amber-700">
-              <Lock className="h-4 w-4" />
-              <span className="text-sm font-medium">Login required to join group purchases</span>
-            </div>
-          </div>
-        )}
-      </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {presetGroups.map((group) => (
+            <Card key={group.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <CardTitle className="text-lg">{group.name}</CardTitle>
+                    <CardDescription className="mt-1">{group.description}</CardDescription>
+                  </div>
+                  <Badge variant="secondary" className="text-xs">
+                    {group.tag}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 mb-4">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Users className="h-4 w-4 text-khrate-500" />
+                    <span>{group.memberCount}/{group.maxMembers} members</span>
+                    <Badge variant="outline" className="ml-auto text-green-600 border-green-200">
+                      {group.discount}
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <MapPin className="h-4 w-4" />
+                    <span>{group.location}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Clock className="h-4 w-4" />
+                    <span>{group.estimatedDelivery}</span>
+                  </div>
+                </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-        {presetGroups.map((group) => (
-          <Card key={group.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center justify-between text-base sm:text-lg">
-                <span className="truncate pr-2">{group.name}</span>
-                <span className="text-xs sm:text-sm bg-green-100 text-green-700 px-2 py-1 rounded whitespace-nowrap">
-                  {group.discount}
-                </span>
-              </CardTitle>
-              <CardDescription className="text-sm">{group.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                  <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                  <span className="truncate">{group.location}</span>
+                <div className="mb-4">
+                  <p className="text-sm font-medium mb-2">Sample items:</p>
+                  <p className="text-sm text-muted-foreground">
+                    {group.sampleItems.slice(0, 2).join(', ')}
+                    {group.sampleItems.length > 2 && ` +${group.sampleItems.length - 2} more`}
+                  </p>
                 </div>
-                
-                <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                  <Users className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                  <span>{group.memberCount} members</span>
-                </div>
-                
-                <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                  <Clock className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                  <span>{group.estimatedDelivery}</span>
-                </div>
-              </div>
 
-              <div className="border-t pt-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 text-khrate-500 flex-shrink-0" />
-                  <span className="text-xs sm:text-sm font-medium">Popular Items:</span>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handlePreviewGroup(group)}
+                    className="flex-1"
+                  >
+                    Preview
+                  </Button>
+                  <Button 
+                    onClick={() => handleJoinGroup(group.id)}
+                    className="flex-1 bg-khrate-500 hover:bg-khrate-600"
+                  >
+                    <Zap className="mr-1 h-3 w-3" />
+                    Join Now
+                  </Button>
                 </div>
-                <div className="text-xs text-muted-foreground space-y-1">
-                  {group.sampleItems.slice(0, 3).map((item, index) => (
-                    <div key={index} className="truncate">• {item}</div>
-                  ))}
-                  {group.sampleItems.length > 3 && (
-                    <div className="text-xs text-khrate-500">+ {group.sampleItems.length - 3} more items</div>
-                  )}
-                </div>
-                <div className="mt-2 text-xs sm:text-sm font-medium text-khrate-600">
-                  Avg. Total: {group.totalValue.toLocaleString()} RWF
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline"
-                  onClick={() => handlePreviewGroup(group)}
-                  className="flex-1 text-xs sm:text-sm h-8 sm:h-9"
-                >
-                  <Eye className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                  Preview
-                </Button>
-                <Button 
-                  onClick={() => handleJoinGroup(group.id)}
-                  disabled={!isAuthenticated}
-                  className={`flex-1 text-xs sm:text-sm h-8 sm:h-9 ${isAuthenticated ? 'bg-khrate-500 hover:bg-khrate-600' : 'bg-gray-400'}`}
-                >
-                  {isAuthenticated ? 'Join Group' : 'Login to Join'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
 
       <GroupPreviewModal
         isOpen={showPreview}
         onClose={() => setShowPreview(false)}
-        group={selectedGroup!}
+        group={selectedGroup}
       />
-    </div>
+    </>
   );
 };
 

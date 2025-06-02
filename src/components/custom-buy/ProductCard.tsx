@@ -3,7 +3,6 @@ import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import GroupBuyButton from "@/components/group-buy/GroupBuyButton";
 import { toast } from "sonner";
 
 interface Product {
@@ -53,7 +52,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
           <span className="text-xs sm:text-sm text-gray-500 ml-1">per {product.unit}</span>
         </p>
         
-        <div className="space-y-2 mt-auto">
+        <div className="mt-auto">
           <Button 
             className="w-full bg-khrate-500 hover:bg-khrate-600 text-sm sm:text-base h-9 sm:h-10"
             onClick={handleAddToCart}
@@ -61,19 +60,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
             <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
             Add to Cart
           </Button>
-          
-          <GroupBuyButton 
-            item={{
-              id: product.id,
-              name: product.name,
-              price: product.price,
-              unit: product.unit,
-              type: 'product'
-            }}
-            variant="outline"
-            className="w-full text-sm sm:text-base h-9 sm:h-10"
-            size="sm"
-          />
         </div>
       </CardContent>
     </Card>
