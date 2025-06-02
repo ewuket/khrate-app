@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -200,7 +199,7 @@ const CustomBuy = () => {
       <Footer />
 
       <CustomBuyCheckoutDialog
-        isOpen={showCheckout}
+        open={showCheckout}
         onOpenChange={setShowCheckout}
         cart={cart}
         getCartTotal={getCartTotal}
