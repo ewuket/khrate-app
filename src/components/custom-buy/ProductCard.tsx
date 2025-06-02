@@ -17,7 +17,7 @@ interface Product {
 
 interface ProductCardProps {
   product: Product;
-  onAddToCart?: (product: Product) => void;
+  onAddToCart: (product: Product) => void;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
@@ -25,14 +25,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
     try {
       console.log('Adding product to custom cart:', product);
       
-      if (onAddToCart) {
-        onAddToCart(product);
-        
-        toast.success(`${product.name} added to cart`, {
-          duration: 2000,
-          position: 'bottom-right'
-        });
-      }
+      onAddToCart(product);
+      
+      toast.success(`${product.name} added to cart`, {
+        duration: 2000,
+        position: 'bottom-right'
+      });
     } catch (error) {
       console.error('Error adding to cart:', error);
       toast.error('Failed to add item to cart');

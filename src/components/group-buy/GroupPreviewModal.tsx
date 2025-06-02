@@ -20,12 +20,17 @@ interface GroupPreviewModalProps {
     discount: string;
     sampleItems: string[];
     totalValue: number;
-  };
+  } | null;
 }
 
 const GroupPreviewModal: React.FC<GroupPreviewModalProps> = ({ isOpen, onClose, group }) => {
   const { isAuthenticated, openAuthModal } = useAuth();
   const { joinGroup } = useGroupBuying();
+
+  // Return early if no group data
+  if (!group) {
+    return null;
+  }
 
   const handleJoinGroup = async () => {
     if (!isAuthenticated) {
