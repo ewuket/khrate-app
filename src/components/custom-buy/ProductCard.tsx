@@ -2,8 +2,9 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Users } from "lucide-react";
 import { toast } from "sonner";
+import GroupBuyButton from "@/components/group-buy/GroupBuyButton";
 
 interface Product {
   id: number;
@@ -37,7 +38,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
   };
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full">
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col">
       <div className="aspect-[4/3] sm:aspect-square">
         <img 
           src={product.image} 
@@ -45,14 +46,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
           className="w-full h-full object-cover"
         />
       </div>
-      <CardContent className="p-3 sm:p-4 flex flex-col h-full">
+      <CardContent className="p-3 sm:p-4 flex flex-col flex-1">
         <h3 className="font-semibold text-sm sm:text-lg mb-1 line-clamp-2">{product.name}</h3>
         <p className="text-orange-500 font-bold text-lg sm:text-xl mb-3">
           {product.price.toLocaleString()} RWF
           <span className="text-xs sm:text-sm text-gray-500 ml-1">per {product.unit}</span>
         </p>
         
-        <div className="mt-auto">
+        <div className="mt-auto space-y-2">
           <Button 
             className="w-full bg-khrate-500 hover:bg-khrate-600 text-sm sm:text-base h-9 sm:h-10"
             onClick={handleAddToCart}
@@ -60,6 +61,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
             <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
             Add to Cart
           </Button>
+          
+          <GroupBuyButton 
+            item={product} 
+            variant="outline" 
+            size="sm"
+            className="w-full"
+          />
         </div>
       </CardContent>
     </Card>

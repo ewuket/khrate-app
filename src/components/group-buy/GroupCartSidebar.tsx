@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useGroupBuying } from "@/contexts/GroupBuyingContext";
-import { Users, ShoppingCart, Plus, Minus, Trash2, Crown, Copy } from "lucide-react";
+import { Users, ShoppingCart, Plus, Minus, Trash2, Crown, Copy, DollarSign, CheckCircle, Clock } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -20,24 +19,37 @@ const GroupCartSidebar: React.FC<GroupCartSidebarProps> = ({ isOpen, onClose }) 
   const {
     currentGroup,
     groupMembers,
-    groupCartItems,
+    groupCart,
+    groupPayments,
     groupSummary,
+    groupPaymentSummary,
     updateGroupCartItemQuantity,
     removeItemFromGroupCart,
     leaveGroup,
+    completeGroupPayment,
     completeGroupOrder
   } = useGroupBuying();
 
   if (!currentGroup) return null;
 
   const isLeader = user?.id === currentGroup.leader_id;
-  const userItems = groupCartItems.filter(item => item.user_id === user?.id);
+  const userItems = groupCart.filter(item => item.user_id === user?.id);
   const memberCount = groupMembers.length;
   const progressPercentage = (memberCount / currentGroup.min_participants) * 100;
+  
+  const userPayment = groupPayments.find(payment => payment.user_id === user?.id);
+  const hasUserPaid = userPayment?.payment_status === 'completed';
 
   const copyJoinCode = () => {
     navigator.clipboard.writeText(currentGroup.join_code);
     toast.success('Join code copied to clipboard!');
+  };
+
+  const handleCompletePayment = async () => {
+    const success = await completeGroupPayment();
+    if (success) {
+      // Payment completed, keep sidebar open to show updated status
+    }
   };
 
   const handleCompleteOrder = async () => {
@@ -47,8 +59,25 @@ const GroupCartSidebar: React.FC<GroupCartSidebarProps> = ({ isOpen, onClose }) 
     }
   };
 
+  const getMemberPaymentStatus = (userId: string) => {
+    const payment = groupPayments.find(p => p.user_id === userId);
+    return payment?.payment_status || 'pending';
+  };
+
   const getMemberItemCount = (userId: string) => {
-    return groupCartItems.filter(item => item.user_id === userId).length;
+    return groupCart.filter(item => item.user_id === userId).length;
+  };
+
+  const getUserTotal = () => {
+    return userItems.reduce((total, item) => total + (item.product_price * item.quantity), 0);
+  };
+
+  const getUserFinalTotal = () => {
+    const userTotal = getUserTotal();
+    if (groupSummary?.qualifies_for_discount) {
+      return userTotal * (1 - currentGroup.discount_percentage / 100);
+    }
+    return userTotal;
   };
 
   return (
@@ -99,33 +128,71 @@ const GroupCartSidebar: React.FC<GroupCartSidebarProps> = ({ isOpen, onClose }) 
             )}
           </div>
 
-          {/* Members */}
+          {/* Payment Progress */}
+          {groupPaymentSummary && (
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Payment Status</span>
+                <span className="text-sm text-muted-foreground">
+                  {groupPaymentSummary.paid_members}/{groupPaymentSummary.total_members} paid
+                </span>
+              </div>
+              <Progress 
+                value={(groupPaymentSummary.paid_members / groupPaymentSummary.total_members) * 100} 
+                className="h-2" 
+              />
+              {groupPaymentSummary.group_ready && (
+                <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                  <CheckCircle className="h-3 w-3" />
+                  Group ready for order!
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Members with Payment Status */}
           <div>
             <h3 className="font-medium mb-3">Members ({memberCount})</h3>
             <div className="space-y-2">
-              {groupMembers.map((member) => (
-                <div key={member.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 bg-khrate-100 rounded-full flex items-center justify-center">
-                      {member.user_profile?.full_name?.[0] || member.user_profile?.email[0]?.toUpperCase()}
+              {groupMembers.map((member) => {
+                const paymentStatus = getMemberPaymentStatus(member.user_id);
+                return (
+                  <div key={member.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                    <div className="flex items-center gap-2">
+                      <div className="h-8 w-8 bg-khrate-100 rounded-full flex items-center justify-center">
+                        {member.user_profile?.full_name?.[0] || member.user_profile?.email[0]?.toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium flex items-center gap-1">
+                          {member.user_profile?.full_name || member.user_profile?.email}
+                          {member.user_id === currentGroup.leader_id && (
+                            <Crown className="h-3 w-3 text-yellow-500" />
+                          )}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {getMemberItemCount(member.user_id)} items
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium">
-                        {member.user_profile?.full_name || member.user_profile?.email}
-                        {member.user_id === currentGroup.leader_id && (
-                          <Crown className="inline h-3 w-3 ml-1 text-yellow-500" />
+                    <div className="flex items-center gap-2">
+                      {member.user_id === user?.id && (
+                        <Badge variant="secondary">You</Badge>
+                      )}
+                      <Badge 
+                        variant={paymentStatus === 'completed' ? 'default' : 'outline'}
+                        className={paymentStatus === 'completed' ? 'bg-green-100 text-green-700' : ''}
+                      >
+                        {paymentStatus === 'completed' ? (
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                        ) : (
+                          <Clock className="h-3 w-3 mr-1" />
                         )}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {getMemberItemCount(member.user_id)} items
-                      </p>
+                        {paymentStatus === 'completed' ? 'Paid' : 'Pending'}
+                      </Badge>
                     </div>
                   </div>
-                  {member.user_id === user?.id && (
-                    <Badge variant="secondary">You</Badge>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -172,14 +239,35 @@ const GroupCartSidebar: React.FC<GroupCartSidebarProps> = ({ isOpen, onClose }) 
                   </div>
                 ))}
               </div>
+
+              {/* User's Payment Summary */}
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                <h4 className="font-medium mb-2">Your Payment</h4>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span>Subtotal</span>
+                    <span>{formatCurrency(getUserTotal())}</span>
+                  </div>
+                  {groupSummary?.qualifies_for_discount && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Discount ({currentGroup.discount_percentage}%)</span>
+                      <span>-{formatCurrency(getUserTotal() - getUserFinalTotal())}</span>
+                    </div>
+                  )}
+                  <div className="border-t pt-1 flex justify-between font-medium">
+                    <span>Your Total</span>
+                    <span>{formatCurrency(getUserFinalTotal())}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
-          {/* All Group Items */}
+          {/* All Group Items Summary */}
           <div>
-            <h3 className="font-medium mb-3">All Group Items ({groupCartItems.length})</h3>
-            <div className="space-y-2">
-              {groupCartItems.map((item) => {
+            <h3 className="font-medium mb-3">All Group Items ({groupCart.length})</h3>
+            <div className="space-y-2 max-h-32 overflow-y-auto">
+              {groupCart.map((item) => {
                 const member = groupMembers.find(m => m.user_id === item.user_id);
                 return (
                   <div key={item.id} className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm">
@@ -201,13 +289,13 @@ const GroupCartSidebar: React.FC<GroupCartSidebarProps> = ({ isOpen, onClose }) 
             </div>
           </div>
 
-          {/* Summary */}
+          {/* Group Summary */}
           {groupSummary && (
             <div className="bg-white border rounded-lg p-4">
-              <h3 className="font-medium mb-3">Order Summary</h3>
+              <h3 className="font-medium mb-3">Group Order Summary</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span>Subtotal</span>
+                  <span>Group Subtotal</span>
                   <span>{formatCurrency(groupSummary.total_amount)}</span>
                 </div>
                 {groupSummary.qualifies_for_discount && (
@@ -217,7 +305,7 @@ const GroupCartSidebar: React.FC<GroupCartSidebarProps> = ({ isOpen, onClose }) 
                   </div>
                 )}
                 <div className="border-t pt-2 flex justify-between font-medium text-base">
-                  <span>Total</span>
+                  <span>Group Total</span>
                   <span>{formatCurrency(groupSummary.final_amount)}</span>
                 </div>
               </div>
@@ -226,7 +314,19 @@ const GroupCartSidebar: React.FC<GroupCartSidebarProps> = ({ isOpen, onClose }) 
         </div>
 
         <SheetFooter className="flex-col gap-2">
-          {isLeader && groupSummary?.qualifies_for_discount && (
+          {/* Payment button for user */}
+          {userItems.length > 0 && !hasUserPaid && (
+            <Button 
+              onClick={handleCompletePayment}
+              className="w-full bg-green-600 hover:bg-green-700"
+            >
+              <DollarSign className="mr-2 h-4 w-4" />
+              Complete Payment ({formatCurrency(getUserFinalTotal())})
+            </Button>
+          )}
+
+          {/* Order completion button for leader */}
+          {isLeader && groupPaymentSummary?.group_ready && (
             <Button 
               onClick={handleCompleteOrder}
               className="w-full bg-khrate-500 hover:bg-khrate-600"

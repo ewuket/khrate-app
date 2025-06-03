@@ -96,7 +96,55 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_group_cart_items_group_session"
+            columns: ["group_session_id"]
+            isOneToOne: false
+            referencedRelation: "group_sessions"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "group_cart_items_group_session_id_fkey"
+            columns: ["group_session_id"]
+            isOneToOne: false
+            referencedRelation: "group_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_member_payments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          group_session_id: string | null
+          id: string
+          payment_method: string | null
+          payment_status: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          group_session_id?: string | null
+          id?: string
+          payment_method?: string | null
+          payment_status?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          group_session_id?: string | null
+          id?: string
+          payment_method?: string | null
+          payment_status?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_member_payments_group_session_id_fkey"
             columns: ["group_session_id"]
             isOneToOne: false
             referencedRelation: "group_sessions"
@@ -125,6 +173,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_group_members_group_session"
+            columns: ["group_session_id"]
+            isOneToOne: false
+            referencedRelation: "group_sessions"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "group_members_group_session_id_fkey"
             columns: ["group_session_id"]
             isOneToOne: false
@@ -146,6 +201,7 @@ export type Database = {
           max_participants: number
           min_participants: number
           name: string | null
+          order_status: string | null
           status: string
           updated_at: string
         }
@@ -161,6 +217,7 @@ export type Database = {
           max_participants?: number
           min_participants?: number
           name?: string | null
+          order_status?: string | null
           status?: string
           updated_at?: string
         }
@@ -176,6 +233,7 @@ export type Database = {
           max_participants?: number
           min_participants?: number
           name?: string | null
+          order_status?: string | null
           status?: string
           updated_at?: string
         }
@@ -347,6 +405,16 @@ export type Database = {
       generate_join_code: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_group_payment_summary: {
+        Args: { group_id: string }
+        Returns: {
+          total_members: number
+          paid_members: number
+          pending_members: number
+          total_amount_paid: number
+          group_ready: boolean
+        }[]
       }
       get_group_summary: {
         Args: { group_id: string }
