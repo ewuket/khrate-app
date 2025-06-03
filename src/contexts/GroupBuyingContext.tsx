@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -69,6 +68,7 @@ interface GroupPaymentSummary {
 interface GroupBuyingContextType {
   currentGroup: GroupSession | null;
   groupCart: GroupCartItem[];
+  groupCartItems: GroupCartItem[]; // Keep both for backward compatibility
   groupMembers: GroupMember[];
   groupPayments: GroupPayment[];
   groupSummary: GroupSummary | null;
@@ -128,7 +128,7 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
         .from('group_members')
         .select(`
           group_session_id,
-          group_sessions (*)
+          group_sessions!group_members_group_session_id_fkey (*)
         `)
         .eq('user_id', user.id)
         .single();
@@ -275,7 +275,7 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
         .from('group_sessions')
         .select(`
           *,
-          group_members(count)
+          group_members!group_members_group_session_id_fkey(count)
         `)
         .eq('status', 'active')
         .order('created_at', { ascending: false });
@@ -607,6 +607,7 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
       value={{
         currentGroup,
         groupCart,
+        groupCartItems: groupCart, // Alias for backward compatibility
         groupMembers,
         groupPayments,
         groupSummary,

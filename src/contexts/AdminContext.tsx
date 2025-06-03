@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -104,7 +103,26 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       if (error) throw error;
 
-      setOrders(data || []);
+      // Transform the data to match AdminOrder interface
+      const transformedOrders: AdminOrder[] = (data || []).map(order => ({
+        id: order.id,
+        user_id: order.user_id,
+        items: Array.isArray(order.items) ? order.items : 
+               typeof order.items === 'string' ? JSON.parse(order.items) : [],
+        total_amount: order.total_amount,
+        status: order.status,
+        payment_status: order.payment_status,
+        delivery_address: order.delivery_address,
+        delivery_date: order.delivery_date,
+        created_at: order.created_at,
+        user_profile: order.user_profiles ? {
+          full_name: order.user_profiles.full_name,
+          email: order.user_profiles.email,
+          phone: order.user_profiles.phone
+        } : undefined
+      }));
+
+      setOrders(transformedOrders);
     } catch (error) {
       console.error('Error loading orders:', error);
       toast.error('Failed to load orders');

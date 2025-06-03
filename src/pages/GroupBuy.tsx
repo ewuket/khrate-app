@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -18,7 +19,7 @@ const GroupBuy = () => {
   const { 
     currentGroup, 
     groupMembers, 
-    groupCartItems, 
+    groupCart, 
     groupSummary,
     leaveGroup,
     joinGroup 
@@ -196,7 +197,7 @@ const GroupBuy = () => {
                         variant="outline"
                         onClick={() => setShowGroupCart(true)}
                       >
-                        View Group Cart ({groupCartItems.length})
+                        View Group Cart ({groupCart.length})
                       </Button>
                     </CardTitle>
                     <CardDescription>
@@ -210,7 +211,7 @@ const GroupBuy = () => {
                         <p className="text-sm text-muted-foreground">Members</p>
                       </div>
                       <div className="text-center p-4 bg-gray-50 rounded">
-                        <p className="text-2xl font-bold text-khrate-500">{groupCartItems.length}</p>
+                        <p className="text-2xl font-bold text-khrate-500">{groupCart.length}</p>
                         <p className="text-sm text-muted-foreground">Items</p>
                       </div>
                       <div className="text-center p-4 bg-gray-50 rounded">
