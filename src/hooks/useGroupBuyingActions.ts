@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { GroupSession } from "@/types/groupBuying";
@@ -21,38 +20,68 @@ export const useGroupBuyingActions = () => {
     }
 
     try {
+      console.log('Starting group creation process...');
+      
+      // Generate join code first
       const { data: joinCodeData, error: joinCodeError } = await supabase
         .rpc('generate_join_code');
 
-      if (joinCodeError) throw joinCodeError;
+      if (joinCodeError) {
+        console.error('Error generating join code:', joinCodeError);
+        throw new Error('Failed to generate join code');
+      }
 
-      const { data, error } = await supabase
+      console.log('Generated join code:', joinCodeData);
+
+      // Create the group session
+      const groupData = {
+        name: name || `${user.email?.split('@')[0]}'s Group`,
+        join_code: joinCodeData,
+        leader_id: user.id,
+        min_participants: minParticipants,
+        status: 'active',
+        order_status: 'collecting'
+      };
+
+      console.log('Creating group with data:', groupData);
+
+      const { data: createdGroup, error: groupError } = await supabase
         .from('group_sessions')
-        .insert({
-          name: name || `${user.email?.split('@')[0]}'s Group`,
-          join_code: joinCodeData,
-          leader_id: user.id,
-          min_participants: minParticipants,
-          status: 'active',
-          order_status: 'collecting'
-        })
+        .insert(groupData)
         .select()
         .single();
 
-      if (error) throw error;
+      if (groupError) {
+        console.error('Error creating group:', groupError);
+        throw new Error(`Failed to create group: ${groupError.message}`);
+      }
 
-      await supabase
+      console.log('Group created successfully:', createdGroup);
+
+      // Add the creator as the first member
+      const { error: memberError } = await supabase
         .from('group_members')
         .insert({
-          group_session_id: data.id,
+          group_session_id: createdGroup.id,
           user_id: user.id
         });
 
-      toast.success(`Group created! Share code: ${joinCodeData}`);
+      if (memberError) {
+        console.error('Error adding creator as member:', memberError);
+        throw new Error(`Failed to add creator as member: ${memberError.message}`);
+      }
+
+      console.log('Creator added as member successfully');
+
+      toast.success(`Group created successfully! Share code: ${joinCodeData}`, {
+        duration: 5000,
+        description: 'Share this code with others to let them join your group'
+      });
+      
       return joinCodeData;
-    } catch (error) {
-      console.error('Error creating group:', error);
-      toast.error('Failed to create group');
+    } catch (error: any) {
+      console.error('Error in createGroup:', error);
+      toast.error(error.message || 'Failed to create group');
       return null;
     }
   };
@@ -68,6 +97,9 @@ export const useGroupBuyingActions = () => {
     }
 
     try {
+      console.log('Attempting to join group with code:', joinCode);
+
+      // Find the group by join code
       const { data: groupData, error: groupError } = await supabase
         .from('group_sessions')
         .select('*')
@@ -75,8 +107,14 @@ export const useGroupBuyingActions = () => {
         .eq('status', 'active')
         .single();
 
-      if (groupError) throw new Error('Group not found');
+      if (groupError) {
+        console.error('Error finding group:', groupError);
+        throw new Error('Group not found or inactive');
+      }
 
+      console.log('Found group:', groupData);
+
+      // Check if user is already a member
       const { data: existingMember } = await supabase
         .from('group_members')
         .select('id')
@@ -89,18 +127,25 @@ export const useGroupBuyingActions = () => {
         return groupData;
       }
 
-      await supabase
+      // Add user as a member
+      const { error: memberError } = await supabase
         .from('group_members')
         .insert({
           group_session_id: groupData.id,
           user_id: user.id
         });
 
+      if (memberError) {
+        console.error('Error adding member:', memberError);
+        throw new Error(`Failed to join group: ${memberError.message}`);
+      }
+
+      console.log('Successfully joined group');
       toast.success(`Joined group "${groupData.name}"!`);
       return groupData;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error joining group:', error);
-      toast.error('Failed to join group. Please check the code.');
+      toast.error(error.message || 'Failed to join group. Please check the code.');
       return null;
     }
   };

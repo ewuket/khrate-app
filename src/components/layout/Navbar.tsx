@@ -3,20 +3,18 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Badge } from "@/components/ui/badge";
-import { Menu, ShoppingCart } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useCartContext } from "@/contexts/CartContext";
 import AuthButtons from "./AuthButtons";
+import ProfileDropdown from "./ProfileDropdown";
+import CartButton from "./CartButton";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthModal from "@/components/auth/AuthModal";
 import NavLinks from "./NavLinks";
 
 const Navbar = () => {
-  const { cart, openCart } = useCartContext();
-  const { openAuthModal } = useAuth();
+  const { openAuthModal, isAuthenticated } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  const cartItemsCount = cart.reduce((total, item) => total + item.quantity, 0);
 
   const handleAuthButtonClick = () => {
     console.log('Auth button clicked from navbar');
@@ -52,28 +50,18 @@ const Navbar = () => {
 
           {/* Desktop Auth & Cart */}
           <div className="hidden md:flex items-center space-x-4">
-            <AuthButtons onOpenAuthModal={handleAuthButtonClick} />
+            {isAuthenticated ? (
+              <ProfileDropdown />
+            ) : (
+              <AuthButtons onOpenAuthModal={handleAuthButtonClick} />
+            )}
             
-            <Button
-              variant="outline"
-              size="sm"
-              className="relative"
-              onClick={openCart}
-            >
-              <ShoppingCart className="h-4 w-4" />
-              {cartItemsCount > 0 && (
-                <Badge 
-                  variant="destructive" 
-                  className="absolute -top-2 -right-2 px-1 py-0 text-xs min-w-[1.2rem] h-5"
-                >
-                  {cartItemsCount}
-                </Badge>
-              )}
-            </Button>
+            <CartButton />
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden">
+          <div className="md:hidden flex items-center space-x-2">
+            <CartButton />
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="sm">
@@ -89,22 +77,16 @@ const Navbar = () => {
                   />
                   
                   <div className="border-t pt-4">
-                    <Button
-                      variant="outline"
-                      className="w-full mb-4 justify-start"
-                      onClick={() => {
-                        openCart();
-                        setIsMobileMenuOpen(false);
-                      }}
-                    >
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                      Cart ({cartItemsCount})
-                    </Button>
-                    
-                    <AuthButtons 
-                      layout="mobile" 
-                      onOpenAuthModal={handleAuthButtonClick}
-                    />
+                    {isAuthenticated ? (
+                      <div className="space-y-4">
+                        <ProfileDropdown />
+                      </div>
+                    ) : (
+                      <AuthButtons 
+                        layout="mobile" 
+                        onOpenAuthModal={handleAuthButtonClick}
+                      />
+                    )}
                   </div>
                 </div>
               </SheetContent>

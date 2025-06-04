@@ -14,6 +14,9 @@ interface CartButtonProps {
 const CartButton = ({ variant = "ghost", size = "icon", className = "" }: CartButtonProps) => {
   const { cart, openCart } = useCartContext();
   
+  // Calculate total quantity of all items in cart
+  const totalQuantity = cart.reduce((total, item) => total + item.quantity, 0);
+  
   return (
     <Button 
       variant={variant} 
@@ -22,7 +25,7 @@ const CartButton = ({ variant = "ghost", size = "icon", className = "" }: CartBu
       onClick={openCart}
     >
       <ShoppingCart className="h-5 w-5" />
-      <CartBadge itemCount={cart.length} />
+      <CartBadge itemCount={totalQuantity} />
     </Button>
   );
 };
