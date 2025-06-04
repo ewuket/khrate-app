@@ -2,7 +2,7 @@
 import { ShoppingCart, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartContext } from "@/contexts/CartContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Sheet, 
   SheetContent, 
@@ -26,13 +26,21 @@ const CartSidebar = () => {
     removeFromCart, 
     updateQuantity, 
     clearCart, 
-    getCartTotal 
+    getCartTotal,
+    syncCart 
   } = useCartContext();
   
   const { isAuthenticated, openAuthModal } = useAuth();
   
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [showGuestOptions, setShowGuestOptions] = useState(false);
+
+  // Sync cart when sidebar opens to ensure latest data
+  useEffect(() => {
+    if (isCartOpen) {
+      syncCart();
+    }
+  }, [isCartOpen, syncCart]);
 
   const handleCheckout = () => {
     if (cart.length === 0) {
@@ -68,41 +76,47 @@ const CartSidebar = () => {
   return (
     <>
       <Sheet open={isCartOpen} onOpenChange={closeCart}>
-        <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-          <SheetHeader className="flex flex-row justify-between items-center">
-            <SheetTitle className="flex items-center">
-              <ShoppingCart className="mr-2 h-5 w-5" />
-              Your Cart ({cart.length})
-            </SheetTitle>
-            <Button variant="ghost" size="icon" onClick={closeCart}>
-              <X className="h-5 w-5" />
-              <span className="sr-only">Close</span>
-            </Button>
-          </SheetHeader>
-          
-          {cart.length === 0 ? (
-            <EmptyCart onClose={closeCart} />
-          ) : (
-            <>
-              <div className="py-6 space-y-4">
-                {cart.map((item) => (
-                  <CartItem 
-                    key={item.id}
-                    item={{
-                      id: parseInt(item.id.split('-')[0]) || item.product_id,
-                      name: item.product_name,
-                      price: item.product_price,
-                      quantity: item.quantity,
-                      unit: item.product_unit
-                    }}
-                    formatPrice={formatPrice}
-                    onUpdateQuantity={(id, quantity) => updateQuantity(item.id, quantity)}
-                    onRemoveFromCart={() => removeFromCart(item.id)}
-                  />
-                ))}
-              </div>
-              
-              <SheetFooter>
+        <SheetContent className="w-full sm:max-w-md overflow-y-auto p-0">
+          <div className="flex flex-col h-full">
+            <SheetHeader className="flex flex-row justify-between items-center p-4 border-b">
+              <SheetTitle className="flex items-center text-lg">
+                <ShoppingCart className="mr-2 h-5 w-5" />
+                Your Cart ({cart.length})
+              </SheetTitle>
+              <Button variant="ghost" size="icon" onClick={closeCart} className="h-8 w-8">
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </Button>
+            </SheetHeader>
+            
+            <div className="flex-1 overflow-y-auto">
+              {cart.length === 0 ? (
+                <div className="p-4">
+                  <EmptyCart onClose={closeCart} />
+                </div>
+              ) : (
+                <div className="p-4 space-y-4">
+                  {cart.map((item) => (
+                    <CartItem 
+                      key={item.id}
+                      item={{
+                        id: parseInt(item.id.split('-')[0]) || item.product_id,
+                        name: item.product_name,
+                        price: item.product_price,
+                        quantity: item.quantity,
+                        unit: item.product_unit
+                      }}
+                      formatPrice={formatPrice}
+                      onUpdateQuantity={(id, quantity) => updateQuantity(item.id, quantity)}
+                      onRemoveFromCart={() => removeFromCart(item.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {cart.length > 0 && (
+              <SheetFooter className="p-4 border-t mt-auto">
                 <CartSummary 
                   getCartTotal={getCartTotal}
                   formatPrice={formatPrice}
@@ -110,8 +124,8 @@ const CartSidebar = () => {
                   onClearCart={clearCart}
                 />
               </SheetFooter>
-            </>
-          )}
+            )}
+          </div>
         </SheetContent>
       </Sheet>
 
