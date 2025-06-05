@@ -40,7 +40,8 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
 }) => {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
-  const { addToCart, getCartTotal, clearCart } = useCartContext();
+  const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
+  const { addToCart, getCartTotal, clearCart, cart } = useCartContext();
   const { isAuthenticated, openAuthModal } = useAuth();
 
   if (!bundle) return null;
@@ -96,15 +97,31 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
   };
 
   const handleProceedToCheckout = async () => {
+    if (isProcessingCheckout) return;
+    
     if (!isAuthenticated) {
       openAuthModal();
       return;
     }
 
-    // Add to cart first if not already added, then proceed to checkout
-    await handleAddToCart();
-    onOpenChange(false); // Close preview modal
-    setShowCheckout(true); // Open checkout
+    setIsProcessingCheckout(true);
+    try {
+      // Check if bundle is already in cart
+      const bundleInCart = cart.find(item => item.product_id === bundle.id);
+      
+      if (!bundleInCart) {
+        // Add to cart first if not already added
+        await handleAddToCart();
+      }
+      
+      onOpenChange(false); // Close preview modal
+      setShowCheckout(true); // Open checkout
+    } catch (error) {
+      console.error('Error proceeding to checkout:', error);
+      toast.error('Failed to proceed to checkout. Please try again.');
+    } finally {
+      setIsProcessingCheckout(false);
+    }
   };
 
   const formatPrice = (price: number) => {
@@ -172,7 +189,7 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
                 <Button 
                   onClick={handleAddToCart}
                   disabled={isAddingToCart}
-                  className="w-full bg-khrate-500 hover:bg-khrate-600"
+                  className="w-full bg-khrate-500 hover:bg-khrate-600 disabled:opacity-50"
                 >
                   <ShoppingCart className="mr-2 h-4 w-4" />
                   {isAddingToCart ? 'Adding...' : 'Add to Cart'}
@@ -180,12 +197,12 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
 
                 <Button 
                   onClick={handleProceedToCheckout}
-                  disabled={isAddingToCart}
+                  disabled={isAddingToCart || isProcessingCheckout}
                   variant="outline"
-                  className="w-full border-khrate-500 text-khrate-600 hover:bg-khrate-50"
+                  className="w-full border-khrate-500 text-khrate-600 hover:bg-khrate-50 disabled:opacity-50"
                 >
                   <CreditCard className="mr-2 h-4 w-4" />
-                  Proceed to Checkout
+                  {isProcessingCheckout ? 'Processing...' : 'Proceed to Checkout'}
                 </Button>
                 
                 <GroupBuyButton 
@@ -213,13 +230,13 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
         onOpenChange={setShowCheckout}
         getCartTotal={getCartTotal}
         formatPrice={formatPrice}
-        cartItems={[{
-          id: bundle.id,
-          name: bundleName,
-          price: bundle.price,
-          quantity: 1,
-          unit: 'bundle'
-        }]}
+        cartItems={cart.map(item => ({
+          id: item.product_id,
+          name: item.product_name,
+          price: item.product_price,
+          quantity: item.quantity,
+          unit: item.product_unit
+        }))}
         clearCart={clearCart}
         saveOrder={() => {}}
       />

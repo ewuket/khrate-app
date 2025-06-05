@@ -166,7 +166,7 @@ const BundleCard = ({ bundle, onSaveBundle }: BundleCardProps) => {
               <Button 
                 onClick={handleAddToCart}
                 disabled={isAddingToCart}
-                className="flex-1 bg-khrate-500 hover:bg-khrate-600 text-white font-medium py-2 px-4 transition-colors"
+                className="flex-1 bg-khrate-500 hover:bg-khrate-600 text-white font-medium py-2 px-4 transition-colors disabled:opacity-50"
               >
                 <ShoppingCart className="h-4 w-4 mr-2" />
                 {isAddingToCart ? 'Adding...' : 'Add to Cart'}

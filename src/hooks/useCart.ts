@@ -63,12 +63,17 @@ export const useCart = () => {
 
   const addToCart = async (item: any, skipCartOpen: boolean = false) => {
     console.log('Adding to cart with skipCartOpen:', skipCartOpen);
-    await operations.addToCart(item);
-    await syncCart(); // Refresh cart after adding
-    
-    // Only open cart if not explicitly skipped (for custom buy page)
-    if (!skipCartOpen) {
-      setIsCartOpen(true);
+    try {
+      await operations.addToCart(item);
+      await syncCart(); // Refresh cart after adding
+      
+      // Only open cart if not explicitly skipped (for custom buy page)
+      if (!skipCartOpen) {
+        setIsCartOpen(true);
+      }
+    } catch (error) {
+      console.error('Error in addToCart:', error);
+      throw error; // Re-throw to let the component handle the error
     }
   };
 
