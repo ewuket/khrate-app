@@ -1,73 +1,121 @@
 
-import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Plus, Users } from "lucide-react";
-import { toast } from "sonner";
-import GroupBuyButton from "@/components/group-buy/GroupBuyButton";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ShoppingCart, Plus, Minus } from "lucide-react";
 
 interface Product {
   id: number;
   name: string;
   price: number;
   unit: string;
-  image: string;
   category: string;
+  image: string;
+  description?: string;
 }
 
 interface ProductCardProps {
   product: Product;
-  onAddToCart: (product: Product) => void;
+  onAddToCart: (product: Product, quantity: number) => void;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
+  const [quantity, setQuantity] = useState(1);
+  const [isAdding, setIsAdding] = useState(false);
+
   const handleAddToCart = async () => {
+    if (isAdding) return;
+    
+    setIsAdding(true);
     try {
-      console.log('Adding product to custom cart:', product);
-      
-      onAddToCart(product);
-      
-      toast.success(`${product.name} added to cart`, {
-        duration: 2000,
-        position: 'bottom-right'
-      });
-    } catch (error) {
-      console.error('Error adding to cart:', error);
-      toast.error('Failed to add item to cart');
+      await onAddToCart(product, quantity);
+    } finally {
+      setIsAdding(false);
     }
   };
 
+  const incrementQuantity = () => {
+    setQuantity(prev => Math.min(prev + 1, 99));
+  };
+
+  const decrementQuantity = () => {
+    setQuantity(prev => Math.max(prev - 1, 1));
+  };
+
+  const formatPrice = (price: number) => {
+    return `RWF ${price.toLocaleString()}`;
+  };
+
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col">
-      <div className="aspect-[4/3] sm:aspect-square">
+    <Card className="group hover:shadow-lg transition-all duration-300 border-gray-200 hover:border-khrate-300 bg-white overflow-hidden h-full flex flex-col">
+      <div className="relative overflow-hidden">
         <img 
           src={product.image} 
           alt={product.name}
-          className="w-full h-full object-cover"
+          className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
         />
+        <div className="absolute top-3 left-3">
+          <Badge variant="secondary" className="bg-khrate-500 text-white font-medium px-2 py-1 text-xs">
+            {product.category}
+          </Badge>
+        </div>
       </div>
-      <CardContent className="p-3 sm:p-4 flex flex-col flex-1">
-        <h3 className="font-semibold text-sm sm:text-lg mb-1 line-clamp-2">{product.name}</h3>
-        <p className="text-orange-500 font-bold text-lg sm:text-xl mb-3">
-          {product.price.toLocaleString()} RWF
-          <span className="text-xs sm:text-sm text-gray-500 ml-1">per {product.unit}</span>
-        </p>
-        
-        <div className="mt-auto space-y-2">
+
+      <CardHeader className="p-4 pb-2 flex-grow">
+        <div className="flex justify-between items-start mb-2">
+          <CardTitle className="text-lg font-semibold text-gray-900 line-clamp-2 flex-1">
+            {product.name}
+          </CardTitle>
+        </div>
+        <div className="space-y-2">
+          <div className="text-xl font-bold text-khrate-600">
+            {formatPrice(product.price)} / {product.unit}
+          </div>
+          {product.description && (
+            <CardDescription className="text-sm text-gray-600 line-clamp-2">
+              {product.description}
+            </CardDescription>
+          )}
+        </div>
+      </CardHeader>
+
+      <CardContent className="p-4 pt-0 mt-auto">
+        <div className="space-y-3">
+          {/* Quantity Selector */}
+          <div className="flex items-center justify-center space-x-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={decrementQuantity}
+              disabled={quantity <= 1}
+              className="h-8 w-8 p-0"
+            >
+              <Minus className="h-4 w-4" />
+            </Button>
+            <span className="text-lg font-medium min-w-[3rem] text-center">
+              {quantity}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={incrementQuantity}
+              disabled={quantity >= 99}
+              className="h-8 w-8 p-0"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Add to Cart Button */}
           <Button 
-            className="w-full bg-khrate-500 hover:bg-khrate-600 text-sm sm:text-base h-9 sm:h-10"
             onClick={handleAddToCart}
+            disabled={isAdding}
+            className="w-full bg-khrate-500 hover:bg-khrate-600 text-white font-medium py-2 transition-colors"
           >
-            <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-            Add to Cart
+            <ShoppingCart className="h-4 w-4 mr-2" />
+            {isAdding ? 'Adding...' : 'Add to Cart'}
           </Button>
-          
-          <GroupBuyButton 
-            item={product} 
-            variant="outline" 
-            size="sm"
-            className="w-full"
-          />
         </div>
       </CardContent>
     </Card>

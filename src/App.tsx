@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { AdminProvider } from "@/contexts/AdminContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { GroupBuyingProvider } from "@/contexts/GroupBuyingContext";
+import CartSidebar from "@/components/cart/CartSidebar";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
@@ -55,6 +56,9 @@ function App() {
                     {/* 404 */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
+                  
+                  {/* Global CartSidebar available on all pages */}
+                  <CartSidebar />
                 </AdminProvider>
               </GroupBuyingProvider>
             </CartProvider>
