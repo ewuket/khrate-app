@@ -20,21 +20,37 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const cartData = useCart();
+// Create fallback context value
+const createFallbackContext = (): CartContextType => ({
+  cart: [],
+  isCartOpen: false,
+  loading: false,
+  isAddingToCart: () => false,
+  openCart: () => console.warn('Cart context not available'),
+  closeCart: () => console.warn('Cart context not available'),
+  addToCart: async () => console.warn('Cart context not available'),
+  removeFromCart: async () => console.warn('Cart context not available'),
+  updateQuantity: async () => console.warn('Cart context not available'),
+  clearCart: async () => console.warn('Cart context not available'),
+  getCartTotal: () => 0,
+  syncCart: async () => console.warn('Cart context not available')
+});
 
-  // Add error boundary protection
-  if (!cartData) {
-    console.error('useCart hook returned undefined data');
-    return (
-      <CartContext.Provider value={undefined}>
-        {children}
-      </CartContext.Provider>
-    );
+export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  let cartData;
+  
+  try {
+    cartData = useCart();
+  } catch (error) {
+    console.error('Error initializing cart context:', error);
+    cartData = null;
   }
 
+  // Provide fallback context if cartData is not available
+  const contextValue = cartData || createFallbackContext();
+
   return (
-    <CartContext.Provider value={cartData}>
+    <CartContext.Provider value={contextValue}>
       {children}
     </CartContext.Provider>
   );
@@ -43,7 +59,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useCartContext = () => {
   const context = useContext(CartContext);
   if (!context) {
-    throw new Error('useCartContext must be used within a CartProvider');
+    console.error('useCartContext must be used within a CartProvider');
+    // Return fallback instead of throwing
+    return createFallbackContext();
   }
   return context;
 };

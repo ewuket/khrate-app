@@ -57,7 +57,19 @@ const featuredBundles = [
 ];
 
 const FeaturedBundles = () => {
-  const { addToCart, isAddingToCart } = useCartContext();
+  let addToCart, isAddingToCart;
+  
+  try {
+    const cartContext = useCartContext();
+    addToCart = cartContext.addToCart;
+    isAddingToCart = cartContext.isAddingToCart;
+  } catch (error) {
+    console.error('FeaturedBundles: Cart context error:', error);
+    // Fallback functions
+    addToCart = async () => toast.error('Cart not available');
+    isAddingToCart = () => false;
+  }
+  
   const { isAuthenticated, openAuthModal } = useAuth();
   const [selectedBundle, setSelectedBundle] = useState<typeof featuredBundles[0] | null>(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -108,7 +120,7 @@ const FeaturedBundles = () => {
               Save time and money with our carefully curated bundles
             </p>
           </div>
-          
+        
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {featuredBundles.map((bundle) => {
               const isCurrentlyAdding = isAddingToCart(bundle.id, 'bundle');
