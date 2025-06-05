@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import GroupBuyButton from "@/components/group-buy/GroupBuyButton";
 import CheckoutDialog from "@/components/checkout/CheckoutDialog";
+import BundleAddToCartButton from "./BundleAddToCartButton";
 
 interface BundleItem {
   name: string;
@@ -29,7 +30,7 @@ interface BundlePreviewModalProps {
   bundle: Bundle;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddToCart: () => void;
+  onAddToCart: (e: React.MouseEvent) => void;
 }
 
 const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({ 
@@ -39,7 +40,6 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
   onAddToCart 
 }) => {
   const [showCheckout, setShowCheckout] = useState(false);
-  const [isLocallyAdding, setIsLocallyAdding] = useState(false);
   const [isProceedingToCheckout, setIsProceedingToCheckout] = useState(false);
   const { addToCart, getCartTotal, cart, isAddingToCart } = useCartContext();
   const { isAuthenticated, openAuthModal } = useAuth();
@@ -63,18 +63,14 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
 
   const displayItems = formatItems(bundle.items);
 
-  const handleAddToCart = async () => {
-    if (isAddingToCart || isLocallyAdding) {
-      console.log('Already adding to cart, preventing duplicate request');
-      return;
-    }
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     
     if (!isAuthenticated) {
       openAuthModal();
       return;
     }
-
-    setIsLocallyAdding(true);
 
     try {
       const bundleItem = {
@@ -90,17 +86,14 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
 
       console.log('Adding bundle to cart from modal:', bundleItem);
       await addToCart(bundleItem);
-      onAddToCart();
+      onAddToCart(e);
       
-      // Close modal after successful addition
       setTimeout(() => {
         onOpenChange(false);
       }, 1000);
     } catch (error) {
       console.error('Error adding bundle to cart:', error);
       toast.error('Failed to add bundle to cart. Please try again.');
-    } finally {
-      setIsLocallyAdding(false);
     }
   };
 
@@ -116,7 +109,7 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
       const bundleInCart = cart.find(item => item.product_id === bundle.id);
       
       if (!bundleInCart) {
-        await handleAddToCart();
+        await handleAddToCart({} as React.MouseEvent);
       }
       
       onOpenChange(false);
@@ -137,7 +130,7 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
     return `RWF ${price.toLocaleString()}`;
   };
 
-  const isCurrentlyAdding = isAddingToCart || isLocallyAdding;
+  const isCurrentlyAdding = isAddingToCart(bundle.id, 'bundle');
 
   return (
     <>
@@ -197,14 +190,11 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
               <Separator />
 
               <div className="space-y-3">
-                <Button 
-                  onClick={handleAddToCart}
-                  disabled={isCurrentlyAdding}
-                  className="w-full bg-khrate-500 hover:bg-khrate-600 disabled:opacity-50 touch-manipulation active:scale-95"
-                >
-                  <ShoppingCart className="mr-2 h-4 w-4" />
-                  {isCurrentlyAdding ? 'Adding...' : 'Add to Cart'}
-                </Button>
+                <BundleAddToCartButton
+                  onAddToCart={handleAddToCart}
+                  isAdding={isCurrentlyAdding}
+                  className="w-full"
+                />
 
                 <Button 
                   onClick={handleProceedToCheckout}

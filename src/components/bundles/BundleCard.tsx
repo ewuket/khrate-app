@@ -3,12 +3,13 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, ShoppingCart, Package, Eye } from "lucide-react";
+import { Heart, Package, Eye } from "lucide-react";
 import { useCartContext } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import GroupBuyButton from "@/components/group-buy/GroupBuyButton";
 import BundlePreviewModal from "./BundlePreviewModal";
+import BundleAddToCartButton from "./BundleAddToCartButton";
 
 interface BundleItem {
   name: string;
@@ -32,7 +33,6 @@ interface BundleCardProps {
 const BundleCard = ({ bundle, onSaveBundle }: BundleCardProps) => {
   const [isSaved, setIsSaved] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [isLocallyAdding, setIsLocallyAdding] = useState(false);
   const { addToCart, isAddingToCart } = useCartContext();
   const { isAuthenticated, openAuthModal } = useAuth();
 
@@ -42,19 +42,15 @@ const BundleCard = ({ bundle, onSaveBundle }: BundleCardProps) => {
     toast.success(isSaved ? "Bundle removed from favorites" : "Bundle saved to favorites");
   };
 
-  const handleAddToCart = async () => {
-    if (isAddingToCart || isLocallyAdding) {
-      console.log('Already adding to cart, preventing duplicate request');
-      return;
-    }
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     
     if (!isAuthenticated) {
       openAuthModal();
       return;
     }
 
-    setIsLocallyAdding(true);
-    
     try {
       const bundleItem = {
         id: bundle.id,
@@ -70,8 +66,6 @@ const BundleCard = ({ bundle, onSaveBundle }: BundleCardProps) => {
     } catch (error) {
       console.error('Error adding bundle to cart:', error);
       toast.error('Failed to add bundle to cart. Please try again.');
-    } finally {
-      setIsLocallyAdding(false);
     }
   };
 
@@ -81,7 +75,7 @@ const BundleCard = ({ bundle, onSaveBundle }: BundleCardProps) => {
 
   const displayItems = bundle.items.slice(0, 3);
   const remainingCount = bundle.items.length - displayItems.length;
-  const isCurrentlyAdding = isAddingToCart || isLocallyAdding;
+  const isCurrentlyAdding = isAddingToCart(bundle.id, 'bundle');
 
   return (
     <>
@@ -167,14 +161,11 @@ const BundleCard = ({ bundle, onSaveBundle }: BundleCardProps) => {
             </Button>
             
             <div className="flex flex-col sm:flex-row gap-2">
-              <Button 
-                onClick={handleAddToCart}
-                disabled={isCurrentlyAdding}
-                className="flex-1 bg-khrate-500 hover:bg-khrate-600 text-white font-medium py-2 px-4 transition-colors disabled:opacity-50 touch-manipulation active:scale-95"
-              >
-                <ShoppingCart className="h-4 w-4 mr-2" />
-                {isCurrentlyAdding ? 'Adding...' : 'Add to Cart'}
-              </Button>
+              <BundleAddToCartButton
+                onAddToCart={handleAddToCart}
+                isAdding={isCurrentlyAdding}
+                className="flex-1"
+              />
               
               <GroupBuyButton 
                 item={{

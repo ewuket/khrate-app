@@ -7,7 +7,7 @@ interface CartContextType {
   cart: CartItem[];
   isCartOpen: boolean;
   loading: boolean;
-  isAddingToCart: boolean;
+  isAddingToCart: (itemId: string | number, type?: string) => boolean;
   openCart: () => void;
   closeCart: () => void;
   addToCart: (item: any, skipCartOpen?: boolean) => Promise<void>;

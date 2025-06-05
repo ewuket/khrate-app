@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Eye } from "lucide-react";
@@ -8,6 +7,7 @@ import { toast } from "sonner";
 import { useState } from "react";
 import BundlePreviewModal from "@/components/bundles/BundlePreviewModal";
 import GroupBuyButton from "@/components/group-buy/GroupBuyButton";
+import BundleAddToCartButton from "@/components/bundles/BundleAddToCartButton";
 
 const featuredBundles = [
   {
@@ -61,20 +61,15 @@ const FeaturedBundles = () => {
   const { isAuthenticated, openAuthModal } = useAuth();
   const [selectedBundle, setSelectedBundle] = useState<typeof featuredBundles[0] | null>(null);
   const [showPreview, setShowPreview] = useState(false);
-  const [locallyAddingStates, setLocallyAddingStates] = useState<Record<number, boolean>>({});
 
-  const handleAddToCart = async (bundle: typeof featuredBundles[0]) => {
-    if (isAddingToCart || locallyAddingStates[bundle.id]) {
-      console.log('Already adding to cart, preventing duplicate request');
-      return;
-    }
+  const handleAddToCart = async (bundle: typeof featuredBundles[0], e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     
     if (!isAuthenticated) {
       openAuthModal();
       return;
     }
-
-    setLocallyAddingStates(prev => ({ ...prev, [bundle.id]: true }));
 
     try {
       const bundleItem = {
@@ -91,8 +86,6 @@ const FeaturedBundles = () => {
     } catch (error) {
       console.error('Error adding bundle to cart:', error);
       toast.error('Failed to add bundle to cart');
-    } finally {
-      setLocallyAddingStates(prev => ({ ...prev, [bundle.id]: false }));
     }
   };
 
@@ -118,7 +111,7 @@ const FeaturedBundles = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {featuredBundles.map((bundle) => {
-              const isCurrentlyAdding = isAddingToCart || locallyAddingStates[bundle.id];
+              const isCurrentlyAdding = isAddingToCart(bundle.id, 'bundle');
               
               return (
                 <Card key={bundle.id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
@@ -178,14 +171,11 @@ const FeaturedBundles = () => {
                       </Button>
                       
                       <div className="flex flex-col sm:flex-row gap-2">
-                        <Button 
-                          onClick={() => handleAddToCart(bundle)}
-                          disabled={isCurrentlyAdding}
-                          className="flex-1 bg-khrate-500 hover:bg-khrate-600 text-white disabled:opacity-50 touch-manipulation active:scale-95"
-                        >
-                          <ShoppingCart className="h-4 w-4 mr-2" />
-                          {isCurrentlyAdding ? 'Adding...' : 'Add to Cart'}
-                        </Button>
+                        <BundleAddToCartButton
+                          onAddToCart={(e) => handleAddToCart(bundle, e)}
+                          isAdding={isCurrentlyAdding}
+                          className="flex-1"
+                        />
                         
                         <GroupBuyButton 
                           item={{
@@ -214,7 +204,7 @@ const FeaturedBundles = () => {
           bundle={selectedBundle}
           open={showPreview}
           onOpenChange={setShowPreview}
-          onAddToCart={() => handleAddToCart(selectedBundle)}
+          onAddToCart={() => handleAddToCart(selectedBundle, {} as React.MouseEvent)}
         />
       )}
     </>

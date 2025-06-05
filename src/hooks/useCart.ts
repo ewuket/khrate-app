@@ -10,7 +10,7 @@ export const useCart = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [addingItems, setAddingItems] = useState<Set<string>>(new Set());
   const { user, isAuthenticated } = useAuth();
   const operations = useCartOperations();
 
@@ -63,24 +63,23 @@ export const useCart = () => {
   };
 
   const addToCart = async (item: any, skipCartOpen: boolean = false) => {
-    if (isAddingToCart) {
-      console.log('Already adding to cart, skipping...');
+    const itemKey = `${item.id}-${item.type || 'bundle'}`;
+    
+    if (addingItems.has(itemKey)) {
+      console.log('Already adding this item, skipping duplicate request');
       return;
     }
     
-    setIsAddingToCart(true);
+    setAddingItems(prev => new Set(prev).add(itemKey));
     
     try {
       console.log('Adding item to cart:', item);
       await operations.addToCart(item);
       
-      // Force immediate cart sync
       await syncCart();
       
-      // Show success message
       toast.success(`${item.name || item.title} added to cart!`);
       
-      // Only open cart if not explicitly skipped
       if (!skipCartOpen) {
         setIsCartOpen(true);
       }
@@ -88,8 +87,16 @@ export const useCart = () => {
       console.error('Error in addToCart:', error);
       toast.error('Failed to add item to cart');
     } finally {
-      setIsAddingToCart(false);
+      setAddingItems(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(itemKey);
+        return newSet;
+      });
     }
+  };
+
+  const isAddingToCart = (itemId: string | number, type: string = 'bundle') => {
+    return addingItems.has(`${itemId}-${type}`);
   };
 
   const removeFromCart = async (itemId: string) => {
