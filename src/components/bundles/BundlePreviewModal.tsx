@@ -39,7 +39,9 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
   onAddToCart 
 }) => {
   const [showCheckout, setShowCheckout] = useState(false);
-  const { addToCart, getCartTotal, clearCart, cart, isAddingToCart } = useCartContext();
+  const [isLocallyAdding, setIsLocallyAdding] = useState(false);
+  const [isProceedingToCheckout, setIsProceedingToCheckout] = useState(false);
+  const { addToCart, getCartTotal, cart, isAddingToCart } = useCartContext();
   const { isAuthenticated, openAuthModal } = useAuth();
 
   if (!bundle) return null;
@@ -62,12 +64,17 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
   const displayItems = formatItems(bundle.items);
 
   const handleAddToCart = async () => {
-    if (isAddingToCart) return;
+    if (isAddingToCart || isLocallyAdding) {
+      console.log('Already adding to cart, preventing duplicate request');
+      return;
+    }
     
     if (!isAuthenticated) {
       openAuthModal();
       return;
     }
+
+    setIsLocallyAdding(true);
 
     try {
       const bundleItem = {
@@ -81,11 +88,19 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
           []
       };
 
+      console.log('Adding bundle to cart from modal:', bundleItem);
       await addToCart(bundleItem);
       onAddToCart();
+      
+      // Close modal after successful addition
+      setTimeout(() => {
+        onOpenChange(false);
+      }, 1000);
     } catch (error) {
       console.error('Error adding bundle to cart:', error);
       toast.error('Failed to add bundle to cart. Please try again.');
+    } finally {
+      setIsLocallyAdding(false);
     }
   };
 
@@ -94,6 +109,8 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
       openAuthModal();
       return;
     }
+
+    setIsProceedingToCheckout(true);
 
     try {
       const bundleInCart = cart.find(item => item.product_id === bundle.id);
@@ -107,12 +124,20 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
     } catch (error) {
       console.error('Error proceeding to checkout:', error);
       toast.error('Failed to proceed to checkout. Please try again.');
+    } finally {
+      setIsProceedingToCheckout(false);
     }
+  };
+
+  const handleClose = () => {
+    onOpenChange(false);
   };
 
   const formatPrice = (price: number) => {
     return `RWF ${price.toLocaleString()}`;
   };
+
+  const isCurrentlyAdding = isAddingToCart || isLocallyAdding;
 
   return (
     <>
@@ -124,8 +149,8 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => onOpenChange(false)}
-                className="h-6 w-6 p-0 hover:bg-gray-100 absolute right-4 top-4"
+                onClick={handleClose}
+                className="h-8 w-8 p-0 hover:bg-gray-100 absolute right-4 top-4 touch-manipulation"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -174,21 +199,21 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
               <div className="space-y-3">
                 <Button 
                   onClick={handleAddToCart}
-                  disabled={isAddingToCart}
-                  className="w-full bg-khrate-500 hover:bg-khrate-600 disabled:opacity-50"
+                  disabled={isCurrentlyAdding}
+                  className="w-full bg-khrate-500 hover:bg-khrate-600 disabled:opacity-50 touch-manipulation active:scale-95"
                 >
                   <ShoppingCart className="mr-2 h-4 w-4" />
-                  {isAddingToCart ? 'Adding...' : 'Add to Cart'}
+                  {isCurrentlyAdding ? 'Adding...' : 'Add to Cart'}
                 </Button>
 
                 <Button 
                   onClick={handleProceedToCheckout}
-                  disabled={isAddingToCart}
+                  disabled={isCurrentlyAdding || isProceedingToCheckout}
                   variant="outline"
-                  className="w-full border-khrate-500 text-khrate-600 hover:bg-khrate-50 disabled:opacity-50"
+                  className="w-full border-khrate-500 text-khrate-600 hover:bg-khrate-50 disabled:opacity-50 touch-manipulation"
                 >
                   <CreditCard className="mr-2 h-4 w-4" />
-                  Proceed to Checkout
+                  {isProceedingToCheckout ? 'Processing...' : 'Proceed to Checkout'}
                 </Button>
                 
                 <GroupBuyButton 
@@ -203,7 +228,7 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
                       []
                   }}
                   variant="outline"
-                  className="w-full"
+                  className="w-full touch-manipulation"
                 />
               </div>
             </div>
@@ -223,7 +248,7 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
           quantity: item.quantity,
           unit: item.product_unit
         }))}
-        clearCart={clearCart}
+        clearCart={() => {}}
         saveOrder={() => {}}
       />
     </>

@@ -16,9 +16,10 @@ const CartButton = ({ variant = "ghost", size = "icon", className = "" }: CartBu
   
   const totalQuantity = cart.reduce((total, item) => total + item.quantity, 0);
   
-  const handleCartClick = (e: React.MouseEvent) => {
+  const handleCartClick = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    console.log('Cart button clicked/touched, opening cart...');
     openCart();
   };
   
@@ -26,9 +27,11 @@ const CartButton = ({ variant = "ghost", size = "icon", className = "" }: CartBu
     <Button 
       variant={variant} 
       size={size}
-      className={`relative text-gray-700 hover:text-khrate-500 touch-manipulation ${className}`}
+      className={`relative text-gray-700 hover:text-khrate-500 touch-manipulation active:scale-95 transition-all ${className}`}
       onClick={handleCartClick}
+      onTouchEnd={handleCartClick}
       type="button"
+      style={{ touchAction: 'manipulation' }}
     >
       <ShoppingCart className="h-5 w-5" />
       <CartBadge itemCount={totalQuantity} />

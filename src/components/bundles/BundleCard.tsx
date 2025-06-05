@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, ShoppingCart, Users, Package, Eye, X } from "lucide-react";
+import { Heart, ShoppingCart, Package, Eye } from "lucide-react";
 import { useCartContext } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -32,6 +32,7 @@ interface BundleCardProps {
 const BundleCard = ({ bundle, onSaveBundle }: BundleCardProps) => {
   const [isSaved, setIsSaved] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [isLocallyAdding, setIsLocallyAdding] = useState(false);
   const { addToCart, isAddingToCart } = useCartContext();
   const { isAuthenticated, openAuthModal } = useAuth();
 
@@ -42,13 +43,18 @@ const BundleCard = ({ bundle, onSaveBundle }: BundleCardProps) => {
   };
 
   const handleAddToCart = async () => {
-    if (isAddingToCart) return;
+    if (isAddingToCart || isLocallyAdding) {
+      console.log('Already adding to cart, preventing duplicate request');
+      return;
+    }
     
     if (!isAuthenticated) {
       openAuthModal();
       return;
     }
 
+    setIsLocallyAdding(true);
+    
     try {
       const bundleItem = {
         id: bundle.id,
@@ -59,10 +65,13 @@ const BundleCard = ({ bundle, onSaveBundle }: BundleCardProps) => {
         items: bundle.items.map(item => item.name)
       };
 
+      console.log('Adding bundle to cart:', bundleItem);
       await addToCart(bundleItem);
     } catch (error) {
       console.error('Error adding bundle to cart:', error);
       toast.error('Failed to add bundle to cart. Please try again.');
+    } finally {
+      setIsLocallyAdding(false);
     }
   };
 
@@ -72,6 +81,7 @@ const BundleCard = ({ bundle, onSaveBundle }: BundleCardProps) => {
 
   const displayItems = bundle.items.slice(0, 3);
   const remainingCount = bundle.items.length - displayItems.length;
+  const isCurrentlyAdding = isAddingToCart || isLocallyAdding;
 
   return (
     <>
@@ -87,7 +97,7 @@ const BundleCard = ({ bundle, onSaveBundle }: BundleCardProps) => {
               variant="ghost"
               size="icon"
               onClick={handleSaveBundle}
-              className={`h-8 w-8 rounded-full backdrop-blur-sm transition-colors ${
+              className={`h-8 w-8 rounded-full backdrop-blur-sm transition-colors touch-manipulation ${
                 isSaved 
                   ? 'bg-red-100 text-red-600 hover:bg-red-200' 
                   : 'bg-white/80 text-gray-600 hover:bg-white hover:text-red-600'
@@ -150,7 +160,7 @@ const BundleCard = ({ bundle, onSaveBundle }: BundleCardProps) => {
             <Button 
               onClick={() => setShowPreview(true)}
               variant="outline"
-              className="w-full border-khrate-500 text-khrate-600 hover:bg-khrate-50"
+              className="w-full border-khrate-500 text-khrate-600 hover:bg-khrate-50 touch-manipulation"
             >
               <Eye className="h-4 w-4 mr-2" />
               Preview Bundle
@@ -159,11 +169,11 @@ const BundleCard = ({ bundle, onSaveBundle }: BundleCardProps) => {
             <div className="flex flex-col sm:flex-row gap-2">
               <Button 
                 onClick={handleAddToCart}
-                disabled={isAddingToCart}
-                className="flex-1 bg-khrate-500 hover:bg-khrate-600 text-white font-medium py-2 px-4 transition-colors disabled:opacity-50"
+                disabled={isCurrentlyAdding}
+                className="flex-1 bg-khrate-500 hover:bg-khrate-600 text-white font-medium py-2 px-4 transition-colors disabled:opacity-50 touch-manipulation active:scale-95"
               >
                 <ShoppingCart className="h-4 w-4 mr-2" />
-                {isAddingToCart ? 'Adding...' : 'Add to Cart'}
+                {isCurrentlyAdding ? 'Adding...' : 'Add to Cart'}
               </Button>
               
               <GroupBuyButton 
@@ -176,7 +186,7 @@ const BundleCard = ({ bundle, onSaveBundle }: BundleCardProps) => {
                   items: bundle.items.map(item => item.name)
                 }}
                 variant="outline"
-                className="flex-1 sm:flex-initial border-khrate-500 text-khrate-600 hover:bg-khrate-50"
+                className="flex-1 sm:flex-initial border-khrate-500 text-khrate-600 hover:bg-khrate-50 touch-manipulation"
               />
             </div>
           </div>

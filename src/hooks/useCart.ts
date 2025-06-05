@@ -45,6 +45,7 @@ export const useCart = () => {
     } catch (error) {
       console.error('Error syncing cart:', error);
       setCart([]);
+      toast.error('Failed to load cart items');
     } finally {
       setLoading(false);
     }
@@ -62,13 +63,19 @@ export const useCart = () => {
   };
 
   const addToCart = async (item: any, skipCartOpen: boolean = false) => {
-    if (isAddingToCart) return; // Prevent multiple clicks
+    if (isAddingToCart) {
+      console.log('Already adding to cart, skipping...');
+      return;
+    }
     
     setIsAddingToCart(true);
     
     try {
+      console.log('Adding item to cart:', item);
       await operations.addToCart(item);
-      await syncCart(); // Refresh cart after adding
+      
+      // Force immediate cart sync
+      await syncCart();
       
       // Show success message
       toast.success(`${item.name || item.title} added to cart!`);
@@ -89,6 +96,7 @@ export const useCart = () => {
     try {
       await operations.removeFromCart(itemId);
       await syncCart();
+      toast.success('Item removed from cart');
     } catch (error) {
       console.error('Error removing from cart:', error);
       toast.error('Failed to remove item');
@@ -109,6 +117,7 @@ export const useCart = () => {
     try {
       await operations.clearCart();
       await syncCart();
+      toast.success('Cart cleared');
     } catch (error) {
       console.error('Error clearing cart:', error);
       toast.error('Failed to clear cart');
