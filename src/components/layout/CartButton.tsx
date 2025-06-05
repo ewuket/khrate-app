@@ -12,9 +12,21 @@ interface CartButtonProps {
 }
 
 const CartButton = ({ variant = "ghost", size = "icon", className = "" }: CartButtonProps) => {
-  const { cart, openCart } = useCartContext();
+  // Add try-catch for context access
+  let cart, openCart, totalQuantity;
   
-  const totalQuantity = cart.reduce((total, item) => total + item.quantity, 0);
+  try {
+    const cartContext = useCartContext();
+    cart = cartContext.cart;
+    openCart = cartContext.openCart;
+    totalQuantity = cart.reduce((total, item) => total + item.quantity, 0);
+  } catch (error) {
+    console.error('CartButton: Cart context not available:', error);
+    // Fallback values when context is not available
+    cart = [];
+    openCart = () => console.warn('Cart context not available');
+    totalQuantity = 0;
+  }
   
   const handleCartClick = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();

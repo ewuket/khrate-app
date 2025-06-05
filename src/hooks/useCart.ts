@@ -4,15 +4,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { CartItem } from '@/types/cart';
 import { useCartOperations } from './useCartOperations';
+import { useCartState } from './useCartState';
 import { toast } from 'sonner';
 
 export const useCart = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [addingItems, setAddingItems] = useState<Set<string>>(new Set());
   const { user, isAuthenticated } = useAuth();
   const operations = useCartOperations();
+  const { setAdding, isAdding, clearAdding } = useCartState();
 
   const syncCart = async () => {
     setLoading(true);
@@ -65,12 +66,12 @@ export const useCart = () => {
   const addToCart = async (item: any, skipCartOpen: boolean = false) => {
     const itemKey = `${item.id}-${item.type || 'bundle'}`;
     
-    if (addingItems.has(itemKey)) {
+    if (isAdding(itemKey)) {
       console.log('Already adding this item, skipping duplicate request');
       return;
     }
     
-    setAddingItems(prev => new Set(prev).add(itemKey));
+    setAdding(itemKey, true);
     
     try {
       console.log('Adding item to cart:', item);
@@ -87,16 +88,12 @@ export const useCart = () => {
       console.error('Error in addToCart:', error);
       toast.error('Failed to add item to cart');
     } finally {
-      setAddingItems(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(itemKey);
-        return newSet;
-      });
+      clearAdding(itemKey);
     }
   };
 
   const isAddingToCart = (itemId: string | number, type: string = 'bundle') => {
-    return addingItems.has(`${itemId}-${type}`);
+    return isAdding(`${itemId}-${type}`);
   };
 
   const removeFromCart = async (itemId: string) => {
