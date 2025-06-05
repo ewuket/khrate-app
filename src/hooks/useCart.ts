@@ -4,11 +4,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { CartItem } from '@/types/cart';
 import { useCartOperations } from './useCartOperations';
+import { toast } from 'sonner';
 
 export const useCart = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const { user, isAuthenticated } = useAuth();
   const operations = useCartOperations();
 
@@ -17,7 +19,6 @@ export const useCart = () => {
     
     try {
       if (isAuthenticated && user) {
-        // Fetch from Supabase
         const { data, error } = await supabase
           .from('cart_items')
           .select('*')
@@ -38,7 +39,6 @@ export const useCart = () => {
 
         setCart(formattedCart);
       } else {
-        // Fetch from localStorage for guests
         const guestCart = JSON.parse(localStorage.getItem('khrate_guest_cart') || '[]');
         setCart(guestCart);
       }
@@ -62,40 +62,64 @@ export const useCart = () => {
   };
 
   const addToCart = async (item: any, skipCartOpen: boolean = false) => {
-    console.log('Adding to cart with skipCartOpen:', skipCartOpen);
+    if (isAddingToCart) return; // Prevent multiple clicks
+    
+    setIsAddingToCart(true);
+    
     try {
       await operations.addToCart(item);
       await syncCart(); // Refresh cart after adding
       
-      // Only open cart if not explicitly skipped (for custom buy page)
+      // Show success message
+      toast.success(`${item.name || item.title} added to cart!`);
+      
+      // Only open cart if not explicitly skipped
       if (!skipCartOpen) {
         setIsCartOpen(true);
       }
     } catch (error) {
       console.error('Error in addToCart:', error);
-      throw error; // Re-throw to let the component handle the error
+      toast.error('Failed to add item to cart');
+    } finally {
+      setIsAddingToCart(false);
     }
   };
 
   const removeFromCart = async (itemId: string) => {
-    await operations.removeFromCart(itemId);
-    await syncCart();
+    try {
+      await operations.removeFromCart(itemId);
+      await syncCart();
+    } catch (error) {
+      console.error('Error removing from cart:', error);
+      toast.error('Failed to remove item');
+    }
   };
 
   const updateQuantity = async (itemId: string, quantity: number) => {
-    await operations.updateQuantity(itemId, quantity);
-    await syncCart();
+    try {
+      await operations.updateQuantity(itemId, quantity);
+      await syncCart();
+    } catch (error) {
+      console.error('Error updating quantity:', error);
+      toast.error('Failed to update quantity');
+    }
   };
 
   const clearCart = async () => {
-    await operations.clearCart();
-    await syncCart();
+    try {
+      await operations.clearCart();
+      await syncCart();
+    } catch (error) {
+      console.error('Error clearing cart:', error);
+      toast.error('Failed to clear cart');
+    }
   };
 
   return {
     cart,
     isCartOpen,
     loading,
+    isAddingToCart,
     openCart,
     closeCart,
     addToCart,

@@ -38,17 +38,14 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
   onOpenChange, 
   onAddToCart 
 }) => {
-  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
-  const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
-  const { addToCart, getCartTotal, clearCart, cart } = useCartContext();
+  const { addToCart, getCartTotal, clearCart, cart, isAddingToCart } = useCartContext();
   const { isAuthenticated, openAuthModal } = useAuth();
 
   if (!bundle) return null;
 
   const bundleName = bundle.title || bundle.name || 'Bundle';
 
-  // Format items for display
   const formatItems = (items: BundleItem[] | string[]) => {
     if (Array.isArray(items) && items.length > 0) {
       if (typeof items[0] === 'string') {
@@ -72,7 +69,6 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
       return;
     }
 
-    setIsAddingToCart(true);
     try {
       const bundleItem = {
         id: bundle.id,
@@ -86,41 +82,31 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
       };
 
       await addToCart(bundleItem);
-      toast.success(`${bundleName} added to cart!`);
-      onAddToCart(); // Call parent's onAddToCart for any additional logic
+      onAddToCart();
     } catch (error) {
       console.error('Error adding bundle to cart:', error);
       toast.error('Failed to add bundle to cart. Please try again.');
-    } finally {
-      setIsAddingToCart(false);
     }
   };
 
   const handleProceedToCheckout = async () => {
-    if (isProcessingCheckout) return;
-    
     if (!isAuthenticated) {
       openAuthModal();
       return;
     }
 
-    setIsProcessingCheckout(true);
     try {
-      // Check if bundle is already in cart
       const bundleInCart = cart.find(item => item.product_id === bundle.id);
       
       if (!bundleInCart) {
-        // Add to cart first if not already added
         await handleAddToCart();
       }
       
-      onOpenChange(false); // Close preview modal
-      setShowCheckout(true); // Open checkout
+      onOpenChange(false);
+      setShowCheckout(true);
     } catch (error) {
       console.error('Error proceeding to checkout:', error);
       toast.error('Failed to proceed to checkout. Please try again.');
-    } finally {
-      setIsProcessingCheckout(false);
     }
   };
 
@@ -197,12 +183,12 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
 
                 <Button 
                   onClick={handleProceedToCheckout}
-                  disabled={isAddingToCart || isProcessingCheckout}
+                  disabled={isAddingToCart}
                   variant="outline"
                   className="w-full border-khrate-500 text-khrate-600 hover:bg-khrate-50 disabled:opacity-50"
                 >
                   <CreditCard className="mr-2 h-4 w-4" />
-                  {isProcessingCheckout ? 'Processing...' : 'Proceed to Checkout'}
+                  Proceed to Checkout
                 </Button>
                 
                 <GroupBuyButton 

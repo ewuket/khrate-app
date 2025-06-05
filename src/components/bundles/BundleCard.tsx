@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, ShoppingCart, Users, Package, Eye } from "lucide-react";
+import { Heart, ShoppingCart, Users, Package, Eye, X } from "lucide-react";
 import { useCartContext } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -31,9 +31,8 @@ interface BundleCardProps {
 
 const BundleCard = ({ bundle, onSaveBundle }: BundleCardProps) => {
   const [isSaved, setIsSaved] = useState(false);
-  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const { addToCart } = useCartContext();
+  const { addToCart, isAddingToCart } = useCartContext();
   const { isAuthenticated, openAuthModal } = useAuth();
 
   const handleSaveBundle = () => {
@@ -43,14 +42,13 @@ const BundleCard = ({ bundle, onSaveBundle }: BundleCardProps) => {
   };
 
   const handleAddToCart = async () => {
-    if (isAddingToCart) return; // Prevent multiple clicks
+    if (isAddingToCart) return;
     
     if (!isAuthenticated) {
       openAuthModal();
       return;
     }
 
-    setIsAddingToCart(true);
     try {
       const bundleItem = {
         id: bundle.id,
@@ -62,12 +60,9 @@ const BundleCard = ({ bundle, onSaveBundle }: BundleCardProps) => {
       };
 
       await addToCart(bundleItem);
-      toast.success(`${bundle.title} added to cart!`);
     } catch (error) {
       console.error('Error adding bundle to cart:', error);
       toast.error('Failed to add bundle to cart. Please try again.');
-    } finally {
-      setIsAddingToCart(false);
     }
   };
 
@@ -75,7 +70,6 @@ const BundleCard = ({ bundle, onSaveBundle }: BundleCardProps) => {
     return `RWF ${price.toLocaleString()}`;
   };
 
-  // Show only first 3 items in card, rest in preview
   const displayItems = bundle.items.slice(0, 3);
   const remainingCount = bundle.items.length - displayItems.length;
 
