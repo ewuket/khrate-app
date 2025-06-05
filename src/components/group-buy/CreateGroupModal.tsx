@@ -4,12 +4,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Globe, Lock, X, Copy, Check } from "lucide-react";
 import { useGroupBuying } from "@/contexts/GroupBuyingContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { X, Users, Lock, Globe } from "lucide-react";
 import { toast } from "sonner";
 
 interface CreateGroupModalProps {
@@ -19,224 +17,163 @@ interface CreateGroupModalProps {
 }
 
 const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ isOpen, onClose, initialItem }) => {
-  const { createGroup, addItemToGroupCart } = useGroupBuying();
-  const { isAuthenticated, openAuthModal } = useAuth();
   const [groupName, setGroupName] = useState('');
-  const [minParticipants, setMinParticipants] = useState('3');
-  const [groupType, setGroupType] = useState<'open' | 'private'>('private');
-  const [isCreating, setIsCreating] = useState(false);
-  const [createdJoinCode, setCreatedJoinCode] = useState<string | null>(null);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [groupType, setGroupType] = useState<'private' | 'public'>('private');
+  const [minParticipants, setMinParticipants] = useState(3);
+  const [loading, setLoading] = useState(false);
+  
+  const { createGroup, addItemToGroupCart } = useGroupBuying();
+  const { user, isAuthenticated } = useAuth();
 
-  const handleCreateGroup = async () => {
-    if (!isAuthenticated) {
-      openAuthModal();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!isAuthenticated || !user) {
+      toast.error('Please log in to create a group');
       return;
     }
 
-    setIsCreating(true);
+    if (!groupName.trim()) {
+      toast.error('Please enter a group name');
+      return;
+    }
+
+    setLoading(true);
+    
     try {
-      const joinCode = await createGroup(groupName || undefined, parseInt(minParticipants));
+      console.log('Creating group with data:', {
+        name: groupName,
+        type: groupType,
+        minParticipants
+      });
+
+      const joinCode = await createGroup(groupName, minParticipants);
+      
       if (joinCode) {
-        setCreatedJoinCode(joinCode);
-        setShowSuccess(true);
-        
+        // If there's an initial item, add it to the group cart
         if (initialItem) {
           await addItemToGroupCart(initialItem);
         }
+        
+        toast.success(`Group created successfully! Share code: ${joinCode}`, {
+          duration: 5000
+        });
+        
+        onClose();
+        setGroupName('');
+        setGroupType('private');
+        setMinParticipants(3);
       }
+    } catch (error) {
+      console.error('Error creating group:', error);
+      toast.error('Failed to create group. Please try again.');
     } finally {
-      setIsCreating(false);
-    }
-  };
-
-  const copyJoinCode = async () => {
-    if (createdJoinCode) {
-      await navigator.clipboard.writeText(createdJoinCode);
-      setCopied(true);
-      toast.success('Join code copied to clipboard!');
-      setTimeout(() => setCopied(false), 2000);
+      setLoading(false);
     }
   };
 
   const handleClose = () => {
-    setGroupName('');
-    setMinParticipants('3');
-    setGroupType('private');
-    setCreatedJoinCode(null);
-    setShowSuccess(false);
-    setCopied(false);
-    onClose();
+    if (!loading) {
+      onClose();
+      setGroupName('');
+      setGroupType('private');
+      setMinParticipants(3);
+    }
   };
-
-  const handleContinue = () => {
-    handleClose();
-    // Trigger group cart to open
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('openGroupCart'));
-    }, 300);
-  };
-
-  if (showSuccess && createdJoinCode) {
-    return (
-      <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="text-center text-green-600">Group Created Successfully!</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-6 text-center">
-            <div className="p-6 bg-green-50 rounded-lg border border-green-200">
-              <h3 className="font-semibold text-green-800 mb-2">
-                {groupName || 'Your Group'}
-              </h3>
-              <p className="text-sm text-green-700 mb-4">
-                Share this code with others to let them join your group:
-              </p>
-              
-              <div className="flex items-center justify-center gap-2 p-3 bg-white rounded border border-green-300">
-                <code className="text-2xl font-mono font-bold text-green-800 tracking-wider">
-                  {createdJoinCode}
-                </code>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={copyJoinCode}
-                  className="text-green-600 hover:text-green-700"
-                >
-                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                </Button>
-              </div>
-            </div>
-
-            <div className="text-sm text-gray-600">
-              <p>✅ Group created with minimum {minParticipants} participants</p>
-              <p>✅ Group type: {groupType === 'private' ? 'Private (join code required)' : 'Open (public)'}</p>
-              {initialItem && <p>✅ {initialItem.name} added to group cart</p>}
-            </div>
-          </div>
-
-          <DialogFooter className="flex-col gap-2">
-            <Button 
-              onClick={handleContinue}
-              className="w-full bg-khrate-500 hover:bg-khrate-600"
-            >
-              Continue to Group Cart
-            </Button>
-            <Button variant="outline" onClick={handleClose} className="w-full">
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    );
-  }
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center justify-between">
-            <DialogTitle>Create Group Buy</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-khrate-500" />
+              Create Group Buy
+            </DialogTitle>
             <Button
               variant="ghost"
               size="sm"
               onClick={handleClose}
-              className="h-6 w-6 p-0 hover:bg-gray-100"
+              disabled={loading}
+              className="h-6 w-6 p-0"
             >
               <X className="h-4 w-4" />
             </Button>
           </div>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label className="text-base font-medium mb-3 block">Group Type</Label>
-            <RadioGroup value={groupType} onValueChange={(value: 'open' | 'private') => setGroupType(value)}>
-              <Card className={`cursor-pointer transition-colors ${groupType === 'private' ? 'border-khrate-500 bg-khrate-50' : ''}`}>
-                <CardHeader className="pb-2">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="private" id="private" />
-                    <Lock className="h-4 w-4" />
-                    <CardTitle className="text-sm">Private Group (Recommended)</CardTitle>
-                  </div>
-                  <CardDescription className="text-xs">
-                    Only people with the join code can access this group
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-
-              <Card className={`cursor-pointer transition-colors ${groupType === 'open' ? 'border-khrate-500 bg-khrate-50' : ''}`}>
-                <CardHeader className="pb-2">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="open" id="open" />
-                    <Globe className="h-4 w-4" />
-                    <CardTitle className="text-sm">Open Group</CardTitle>
-                  </div>
-                  <CardDescription className="text-xs">
-                    Anyone can discover and join this group
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </RadioGroup>
-          </div>
-
-          <div>
-            <Label htmlFor="groupName">Group Name (Optional)</Label>
+            <Label htmlFor="groupName">Group Name</Label>
             <Input
               id="groupName"
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
-              placeholder="My Group Buy"
+              placeholder="Enter group name"
+              required
+              disabled={loading}
             />
-            <p className="text-sm text-muted-foreground mt-1">
-              Leave blank to use your email as the group name
-            </p>
+          </div>
+
+          <div>
+            <Label>Group Type</Label>
+            <RadioGroup
+              value={groupType}
+              onValueChange={(value: 'private' | 'public') => setGroupType(value)}
+              disabled={loading}
+              className="mt-2"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="private" id="private" />
+                <Label htmlFor="private" className="flex items-center gap-2 cursor-pointer">
+                  <Lock className="h-4 w-4" />
+                  Private (Join by code only)
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="public" id="public" />
+                <Label htmlFor="public" className="flex items-center gap-2 cursor-pointer">
+                  <Globe className="h-4 w-4" />
+                  Public (Anyone can join)
+                </Label>
+              </div>
+            </RadioGroup>
           </div>
 
           <div>
             <Label htmlFor="minParticipants">Minimum Participants for Discount</Label>
-            <Select value={minParticipants} onValueChange={setMinParticipants}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="2">2 people</SelectItem>
-                <SelectItem value="3">3 people (Recommended)</SelectItem>
-                <SelectItem value="4">4 people</SelectItem>
-                <SelectItem value="5">5 people</SelectItem>
-                <SelectItem value="6">6 people</SelectItem>
-                <SelectItem value="8">8 people</SelectItem>
-                <SelectItem value="10">10 people</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-sm text-muted-foreground mt-1">
-              Group discount (10%) applies when this number is reached
+            <Input
+              id="minParticipants"
+              type="number"
+              min="2"
+              max="10"
+              value={minParticipants}
+              onChange={(e) => setMinParticipants(Number(e.target.value))}
+              disabled={loading}
+            />
+            <p className="text-sm text-gray-500 mt-1">
+              Group needs at least {minParticipants} members to get the discount
             </p>
           </div>
 
-          {initialItem && (
-            <div className="p-3 bg-khrate-50 rounded-lg border border-khrate-200">
-              <p className="text-sm font-medium text-khrate-700">
-                ✅ {initialItem.name} will be added to your group cart
-              </p>
-            </div>
-          )}
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleCreateGroup}
-            disabled={isCreating}
-            className="bg-khrate-500 hover:bg-khrate-600"
-          >
-            {isCreating ? 'Creating...' : 'Create Group'}
-          </Button>
-        </DialogFooter>
+          <DialogFooter className="flex gap-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={handleClose}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={loading || !groupName.trim()}
+              className="bg-khrate-500 hover:bg-khrate-600"
+            >
+              {loading ? 'Creating...' : 'Create Group'}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

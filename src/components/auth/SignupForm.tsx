@@ -29,9 +29,7 @@ const SignupForm = ({ onSwitchToLogin }: SignupFormProps) => {
       return;
     }
     
-    await signUp(formData.email, formData.password, {
-      full_name: formData.fullName
-    });
+    await signUp(formData.email, formData.password, formData.fullName);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,7 +45,7 @@ const SignupForm = ({ onSwitchToLogin }: SignupFormProps) => {
       <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
         <div className="flex items-center gap-2 text-green-700">
           <Gift className="h-5 w-5" />
-          <p className="font-medium">
+          <p className="font-medium text-green-700">
             🎉 Get 10% discount for your first 3 orders when you sign up today!
           </p>
         </div>

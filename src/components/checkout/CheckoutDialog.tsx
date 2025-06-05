@@ -114,10 +114,7 @@ const CheckoutDialog = ({
               <OrderSummary
                 total={getCartTotal()}
                 formatPrice={formatPrice}
-                deliverySchedule={{
-                  date: deliverySchedule.date,
-                  timeSlot: deliverySchedule.timeSlot
-                }}
+                deliverySchedule={deliverySchedule}
               />
 
               {(paymentMethod === "mtn" || paymentMethod === "airtel") && (

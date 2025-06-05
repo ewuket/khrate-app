@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useGroupBuying } from "@/contexts/GroupBuyingContext";
-import GroupJoinSuccessModal from './GroupJoinSuccessModal';
+import { useAuth } from "@/contexts/AuthContext";
+import { UserPlus, X } from "lucide-react";
 
 interface JoinGroupModalProps {
   isOpen: boolean;
@@ -13,88 +14,111 @@ interface JoinGroupModalProps {
 }
 
 const JoinGroupModal: React.FC<JoinGroupModalProps> = ({ isOpen, onClose }) => {
-  const { joinGroup, currentGroup, groupMembers } = useGroupBuying();
   const [joinCode, setJoinCode] = useState('');
-  const [isJoining, setIsJoining] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
+  const { joinGroup } = useGroupBuying();
+  const { isAuthenticated } = useAuth();
 
-  const handleJoinGroup = async () => {
-    if (!joinCode.trim()) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    setIsJoining(true);
+    if (!isAuthenticated) {
+      return;
+    }
+
+    if (!joinCode.trim()) {
+      return;
+    }
+
+    setLoading(true);
+    
     try {
       const success = await joinGroup(joinCode.trim().toUpperCase());
+      
       if (success) {
-        setJoinCode('');
         onClose();
-        setShowSuccessModal(true);
+        setJoinCode('');
       }
+    } catch (error) {
+      console.error('Error joining group:', error);
     } finally {
-      setIsJoining(false);
+      setLoading(false);
     }
   };
 
   const handleClose = () => {
-    setJoinCode('');
-    onClose();
-  };
-
-  const handleCheckout = () => {
-    setShowSuccessModal(false);
-    // This will trigger the group cart to open
-    window.dispatchEvent(new CustomEvent('openGroupCart'));
+    if (!loading) {
+      onClose();
+      setJoinCode('');
+    }
   };
 
   return (
-    <>
-      <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Join Group Buy</DialogTitle>
-          </DialogHeader>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5 text-khrate-500" />
+              Join Group Buy
+            </DialogTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClose}
+              disabled={loading}
+              className="h-6 w-6 p-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </DialogHeader>
 
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="joinCode">Enter Join Code</Label>
-              <Input
-                id="joinCode"
-                value={joinCode}
-                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                placeholder="ABCD12"
-                className="text-center font-mono text-lg"
-                maxLength={6}
-              />
-              <p className="text-sm text-muted-foreground mt-1">
-                Enter the 6-character code shared by your group leader
-              </p>
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="joinCode">Group Join Code</Label>
+            <Input
+              id="joinCode"
+              value={joinCode}
+              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+              placeholder="Enter 6-character code"
+              maxLength={6}
+              required
+              disabled={loading}
+              className="uppercase"
+            />
+            <p className="text-sm text-gray-500 mt-1">
+              Ask the group leader for the join code
+            </p>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={handleClose}>
+          <div className="bg-blue-50 border border-blue-200 p-3 rounded-md">
+            <p className="text-sm text-blue-700">
+              <strong>How it works:</strong> Enter the group code to join an existing group buy and get discounts when enough people participate.
+            </p>
+          </div>
+
+          <DialogFooter className="flex gap-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={handleClose}
+              disabled={loading}
+            >
               Cancel
             </Button>
             <Button 
-              onClick={handleJoinGroup}
-              disabled={isJoining || !joinCode.trim()}
+              type="submit" 
+              disabled={loading || !joinCode.trim() || joinCode.length !== 6}
               className="bg-khrate-500 hover:bg-khrate-600"
             >
-              {isJoining ? 'Joining...' : 'Join Group'}
+              {loading ? 'Joining...' : 'Join Group'}
             </Button>
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {currentGroup && (
-        <GroupJoinSuccessModal
-          isOpen={showSuccessModal}
-          onClose={() => setShowSuccessModal(false)}
-          group={currentGroup}
-          members={groupMembers}
-          onCheckout={handleCheckout}
-        />
-      )}
-    </>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 };
 
