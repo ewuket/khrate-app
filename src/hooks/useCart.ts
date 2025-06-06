@@ -39,9 +39,11 @@ export const useCart = () => {
         }));
 
         setCart(formattedCart);
+        console.log('Cart synced from Supabase:', formattedCart.length, 'items');
       } else {
         const guestCart = JSON.parse(localStorage.getItem('khrate_guest_cart') || '[]');
         setCart(guestCart);
+        console.log('Cart loaded from localStorage:', guestCart.length, 'items');
       }
     } catch (error) {
       console.error('Error syncing cart:', error);
@@ -56,11 +58,21 @@ export const useCart = () => {
     syncCart();
   }, [user, isAuthenticated]);
 
-  const openCart = () => setIsCartOpen(true);
+  const openCart = () => {
+    console.log('Opening cart with', cart.length, 'items');
+    setIsCartOpen(true);
+  };
+  
   const closeCart = () => setIsCartOpen(false);
 
   const getCartTotal = () => {
-    return cart.reduce((total, item) => total + (item.product_price * item.quantity), 0);
+    const total = cart.reduce((total, item) => {
+      const itemTotal = (item.product_price || 0) * (item.quantity || 0);
+      console.log(`Item ${item.product_name}: ${item.product_price} x ${item.quantity} = ${itemTotal}`);
+      return total + itemTotal;
+    }, 0);
+    console.log('Cart total calculated:', total, 'from', cart.length, 'items');
+    return total;
   };
 
   const addToCart = async (item: any, skipCartOpen: boolean = false) => {
@@ -88,7 +100,11 @@ export const useCart = () => {
         product_items: item.items
       };
       
-      setCart(prevCart => [...prevCart, optimisticItem]);
+      setCart(prevCart => {
+        const newCart = [...prevCart, optimisticItem];
+        console.log('Cart updated optimistically:', newCart.length, 'items');
+        return newCart;
+      });
       
       // Open cart immediately for instant feedback
       if (!skipCartOpen) {

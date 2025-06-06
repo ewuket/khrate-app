@@ -1,183 +1,179 @@
 
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import React, { useState } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Package, Eye } from "lucide-react";
-import { useCartContext } from "@/contexts/CartContext";
-import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
-import GroupBuyButton from "@/components/group-buy/GroupBuyButton";
-import BundlePreviewModal from "./BundlePreviewModal";
-import BundleAddToCartButton from "./BundleAddToCartButton";
+import { Eye } from "lucide-react";
+import BundlePreviewModal from './BundlePreviewModal';
+import BundleAddToCartButton from './BundleAddToCartButton';
+import GroupBuyButton from '../group-buy/GroupBuyButton';
+import { useCartContext } from '@/contexts/CartContext';
+import { toast } from 'sonner';
 
 interface BundleItem {
   name: string;
   quantity: number;
-}
-
-interface Bundle {
-  id: number;
-  title: string;
-  description: string;
-  price: number;
-  image: string;
-  items: BundleItem[];
+  unit: string;
 }
 
 interface BundleCardProps {
-  bundle: Bundle;
-  onSaveBundle?: (bundleId: number) => void;
+  id: number;
+  title: string;
+  price: number;
+  originalPrice: number;
+  items: BundleItem[];
+  image?: string;
+  category?: string;
+  description?: string;
 }
 
-const BundleCard = ({ bundle, onSaveBundle }: BundleCardProps) => {
-  const [isSaved, setIsSaved] = useState(false);
+const BundleCard: React.FC<BundleCardProps> = ({
+  id,
+  title,
+  price,
+  originalPrice,
+  items,
+  image,
+  category,
+  description
+}) => {
   const [showPreview, setShowPreview] = useState(false);
   const { addToCart, isAddingToCart } = useCartContext();
-  const { isAuthenticated, openAuthModal } = useAuth();
 
-  const handleSaveBundle = () => {
-    setIsSaved(!isSaved);
-    onSaveBundle?.(bundle.id);
-    toast.success(isSaved ? "Bundle removed from favorites" : "Bundle saved to favorites");
-  };
+  const savings = originalPrice - price;
+  const savingsPercentage = Math.round((savings / originalPrice) * 100);
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    if (!isAuthenticated) {
-      openAuthModal();
-      return;
-    }
-
     try {
+      console.log('Adding bundle to cart:', { id, title, price, items });
+      
       const bundleItem = {
-        id: bundle.id,
-        name: bundle.title,
-        price: bundle.price,
+        id,
+        name: title,
+        title,
+        price,
         unit: 'bundle',
-        type: 'bundle' as const,
-        items: bundle.items.map(item => item.name)
+        type: 'bundle',
+        items: items.map(item => `${item.quantity} ${item.unit} ${item.name}`)
       };
-
-      console.log('Adding bundle to cart:', bundleItem);
+      
       await addToCart(bundleItem);
+      toast.success(`${title} added to cart!`);
     } catch (error) {
       console.error('Error adding bundle to cart:', error);
       toast.error('Failed to add bundle to cart. Please try again.');
     }
   };
 
-  const formatPrice = (price: number) => {
-    return `RWF ${price.toLocaleString()}`;
+  const groupBuyItem = {
+    id,
+    name: title,
+    price,
+    unit: 'bundle',
+    type: 'bundle',
+    items: items.map(item => `${item.quantity} ${item.unit} ${item.name}`)
   };
-
-  const displayItems = bundle.items.slice(0, 3);
-  const remainingCount = bundle.items.length - displayItems.length;
-  const isCurrentlyAdding = isAddingToCart(bundle.id, 'bundle');
 
   return (
     <>
-      <Card className="group hover:shadow-lg transition-all duration-300 border-gray-200 hover:border-khrate-300 bg-white overflow-hidden">
-        <div className="relative overflow-hidden">
-          <img 
-            src={bundle.image} 
-            alt={bundle.title}
-            className="w-full h-48 sm:h-56 object-cover transition-transform duration-300 group-hover:scale-105"
-          />
-          <div className="absolute top-3 right-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleSaveBundle}
-              className={`h-8 w-8 rounded-full backdrop-blur-sm transition-colors touch-manipulation ${
-                isSaved 
-                  ? 'bg-red-100 text-red-600 hover:bg-red-200' 
-                  : 'bg-white/80 text-gray-600 hover:bg-white hover:text-red-600'
-              }`}
+      <Card className="h-full flex flex-col group hover:shadow-lg transition-all duration-300 border border-gray-200 hover:border-khrate-300">
+        <div className="relative overflow-hidden rounded-t-lg">
+          {image ? (
+            <img 
+              src={image} 
+              alt={title}
+              className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+          ) : (
+            <div className="w-full h-48 bg-gradient-to-br from-khrate-100 to-khrate-200 flex items-center justify-center">
+              <span className="text-khrate-600 font-medium">Bundle Image</span>
+            </div>
+          )}
+          
+          {category && (
+            <Badge 
+              variant="secondary" 
+              className="absolute top-3 left-3 bg-white/90 text-khrate-700"
             >
-              <Heart className={`h-4 w-4 ${isSaved ? 'fill-current' : ''}`} />
-            </Button>
-          </div>
-          <div className="absolute top-3 left-3">
-            <Badge variant="secondary" className="bg-khrate-500 text-white font-medium px-2 py-1 text-xs">
-              <Package className="h-3 w-3 mr-1" />
-              Bundle
+              {category}
             </Badge>
-          </div>
+          )}
+          
+          <Badge 
+            variant="destructive" 
+            className="absolute top-3 right-3 bg-green-500 hover:bg-green-600"
+          >
+            Save {savingsPercentage}%
+          </Badge>
+
+          <button
+            onClick={() => setShowPreview(true)}
+            className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100"
+          >
+            <div className="bg-white rounded-full p-2 shadow-lg">
+              <Eye className="h-5 w-5 text-khrate-600" />
+            </div>
+          </button>
         </div>
 
-        <CardHeader className="p-4 pb-2">
-          <div className="flex justify-between items-start mb-2">
-            <CardTitle className="text-lg font-semibold text-gray-900 line-clamp-1">
-              {bundle.title}
-            </CardTitle>
-            <div className="text-right ml-2 flex-shrink-0">
-              <div className="text-xl font-bold text-khrate-600">
-                {formatPrice(bundle.price)}
+        <CardContent className="flex-1 flex flex-col p-4">
+          <div className="flex-1">
+            <h3 className="font-semibold text-lg mb-2 text-gray-900 line-clamp-2">
+              {title}
+            </h3>
+            
+            {description && (
+              <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                {description}
+              </p>
+            )}
+
+            <div className="space-y-2 mb-4">
+              <p className="text-sm font-medium text-gray-700">
+                Includes {items.length} items:
+              </p>
+              <div className="space-y-1">
+                {items.slice(0, 3).map((item, index) => (
+                  <p key={index} className="text-xs text-gray-600">
+                    • {item.quantity} {item.unit} {item.name}
+                  </p>
+                ))}
+                {items.length > 3 && (
+                  <p className="text-xs text-khrate-600 font-medium">
+                    +{items.length - 3} more items
+                  </p>
+                )}
               </div>
             </div>
           </div>
-          <CardDescription className="text-sm text-gray-600 line-clamp-2 min-h-[2.5rem]">
-            {bundle.description}
-          </CardDescription>
-        </CardHeader>
 
-        <CardContent className="p-4 pt-0 space-y-4">
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-gray-700 flex items-center">
-              <Package className="h-4 w-4 mr-1 text-khrate-500" />
-              Items included ({bundle.items.length}):
-            </p>
-            <div className="space-y-1 text-xs text-gray-600">
-              {displayItems.map((item, index) => (
-                <div key={index} className="flex justify-between py-0.5">
-                  <span className="truncate mr-1">{item.name}</span>
-                  <span className="text-khrate-600 font-medium flex-shrink-0">
-                    {typeof item.quantity === 'number' && item.quantity < 1 
-                      ? `${item.quantity}kg` 
-                      : item.quantity
-                    }
-                  </span>
-                </div>
-              ))}
-              {remainingCount > 0 && (
-                <div className="text-center text-khrate-500 font-medium py-1">
-                  +{remainingCount} more items
-                </div>
-              )}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-2xl font-bold text-khrate-600">
+                  {price.toLocaleString()} RWF
+                </span>
+                <span className="text-sm text-gray-500 line-through ml-2">
+                  {originalPrice.toLocaleString()} RWF
+                </span>
+              </div>
             </div>
-          </div>
 
-          <div className="space-y-2 pt-2">
-            <Button 
-              onClick={() => setShowPreview(true)}
-              variant="outline"
-              className="w-full border-khrate-500 text-khrate-600 hover:bg-khrate-50 touch-manipulation"
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              Preview Bundle
-            </Button>
-            
-            <div className="flex flex-col sm:flex-row gap-2">
-              <BundleAddToCartButton
-                onAddToCart={handleAddToCart}
-                isAdding={isCurrentlyAdding}
-                className="flex-1"
-              />
-              
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <BundleAddToCartButton 
+                  onAddToCart={handleAddToCart}
+                  isAdding={isAddingToCart(id, 'bundle')}
+                  className="w-full"
+                />
+              </div>
               <GroupBuyButton 
-                item={{
-                  id: bundle.id,
-                  name: bundle.title,
-                  price: bundle.price,
-                  unit: 'bundle',
-                  type: 'bundle',
-                  items: bundle.items.map(item => item.name)
-                }}
+                item={groupBuyItem}
                 variant="outline"
-                className="flex-1 sm:flex-initial border-khrate-500 text-khrate-600 hover:bg-khrate-50 touch-manipulation"
+                size="default"
+                className="px-3"
               />
             </div>
           </div>
@@ -185,10 +181,20 @@ const BundleCard = ({ bundle, onSaveBundle }: BundleCardProps) => {
       </Card>
 
       <BundlePreviewModal
-        bundle={bundle}
-        open={showPreview}
-        onOpenChange={setShowPreview}
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        bundle={{
+          id,
+          title,
+          price,
+          originalPrice,
+          items,
+          image,
+          category,
+          description
+        }}
         onAddToCart={handleAddToCart}
+        isAdding={isAddingToCart(id, 'bundle')}
       />
     </>
   );

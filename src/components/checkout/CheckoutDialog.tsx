@@ -61,6 +61,8 @@ const CheckoutDialog = ({
   const generateOrderNumber = () => {
     return `KH${Date.now().toString().slice(-6)}`;
   };
+
+  const currentTotal = getCartTotal();
   
   return (
     <>
@@ -112,7 +114,7 @@ const CheckoutDialog = ({
               />
               
               <OrderSummary
-                total={getCartTotal()}
+                total={currentTotal}
                 formatPrice={formatPrice}
                 deliverySchedule={deliverySchedule}
               />
@@ -134,10 +136,10 @@ const CheckoutDialog = ({
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
               <Button 
                 type="submit" 
-                disabled={processingPayment || !deliverySchedule.date}
+                disabled={processingPayment || !deliverySchedule.date || currentTotal <= 0}
                 className="bg-khrate-500 hover:bg-khrate-600"
               >
-                {processingPayment ? "Processing..." : "Place Order"}
+                {processingPayment ? "Processing..." : `Place Order (${formatPrice(currentTotal)})`}
               </Button>
             </DialogFooter>
           </form>
@@ -149,7 +151,7 @@ const CheckoutDialog = ({
         onOpenChange={setShowSuccessModal}
         orderDetails={{
           orderNumber: generateOrderNumber(),
-          total: getCartTotal(),
+          total: currentTotal,
           deliveryDate: deliverySchedule.date,
           deliveryTimeSlot: deliverySchedule.timeSlot
         }}

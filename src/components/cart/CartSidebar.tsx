@@ -48,6 +48,12 @@ const CartSidebar = () => {
       return;
     }
 
+    const total = getCartTotal();
+    if (total <= 0) {
+      toast.error("Invalid cart total");
+      return;
+    }
+
     if (!isAuthenticated) {
       setShowGuestOptions(true);
       return;
@@ -72,6 +78,8 @@ const CartSidebar = () => {
   const formatPrice = (price: number) => {
     return price.toLocaleString() + " RWF";
   };
+
+  const currentTotal = getCartTotal();
 
   return (
     <>
@@ -117,7 +125,7 @@ const CartSidebar = () => {
           {cart.length > 0 && (
             <SheetFooter className="p-4 border-t flex-shrink-0">
               <CartSummary 
-                getCartTotal={getCartTotal}
+                getCartTotal={() => currentTotal}
                 formatPrice={formatPrice}
                 onCheckout={handleCheckout}
                 onClearCart={clearCart}
@@ -146,7 +154,7 @@ const CartSidebar = () => {
       <CheckoutDialog
         open={checkoutOpen}
         onOpenChange={setCheckoutOpen}
-        getCartTotal={getCartTotal}
+        getCartTotal={() => currentTotal}
         formatPrice={formatPrice}
         cartItems={cart.map(item => ({
           id: item.product_id,
