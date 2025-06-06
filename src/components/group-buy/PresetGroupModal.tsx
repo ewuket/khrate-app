@@ -69,8 +69,15 @@ const PresetGroupModal: React.FC<PresetGroupModalProps> = ({ isOpen, onClose, gr
 
     setIsJoining(true);
     try {
-      // Create a new group based on preset - only pass the group name
-      const joinCode = await createGroup(group.name);
+      // Create a new group based on preset - pass proper group object
+      const groupData = {
+        name: group.name,
+        discount_percentage: group.discount,
+        min_participants: group.minParticipants,
+        max_participants: 10
+      };
+      
+      const joinCode = await createGroup(groupData);
       
       if (joinCode) {
         // Add all preset items to the group cart

@@ -12,18 +12,19 @@ const allBundles = [
     title: "Single Bundle",
     description: "Perfect for 1 person, 7-day essentials",
     price: 32700,
+    originalPrice: 40000,
     image: "/lovable-uploads/4730e151-0c90-4bde-a3cf-7eb370e2cac1.png",
     items: [
-      { name: "Rice", quantity: 10 },
-      { name: "Beans", quantity: 2 },
-      { name: "Tomatoes", quantity: 1 },
-      { name: "Onions", quantity: 2 },
-      { name: "Green Paper", quantity: 1 },
-      { name: "Peas", quantity: 1 },
-      { name: "Oil", quantity: 1 },
-      { name: "Sugar", quantity: 1 },
-      { name: "Salt", quantity: 0.1 },
-      { name: "Eggs", quantity: 10 }
+      { name: "Rice", quantity: 10, unit: "kg" },
+      { name: "Beans", quantity: 2, unit: "kg" },
+      { name: "Tomatoes", quantity: 1, unit: "kg" },
+      { name: "Onions", quantity: 2, unit: "kg" },
+      { name: "Green Paper", quantity: 1, unit: "kg" },
+      { name: "Peas", quantity: 1, unit: "kg" },
+      { name: "Oil", quantity: 1, unit: "liter" },
+      { name: "Sugar", quantity: 1, unit: "kg" },
+      { name: "Salt", quantity: 0.1, unit: "kg" },
+      { name: "Eggs", quantity: 10, unit: "pieces" }
     ],
     category: "single"
   },
@@ -32,19 +33,20 @@ const allBundles = [
     title: "Medium Bundle",
     description: "Great for 2-3 people, weekly essentials",
     price: 69240,
+    originalPrice: 85000,
     image: "/lovable-uploads/6d22b9d7-17a9-457a-947a-9bb8301a4051.png",
     items: [
-      { name: "Rice", quantity: 15 },
-      { name: "Beans", quantity: 5 },
-      { name: "Tomatoes", quantity: 3 },
-      { name: "Onions", quantity: 3 },
-      { name: "Green Paper", quantity: 3 },
-      { name: "Oil", quantity: 3 },
-      { name: "Sugar", quantity: 3 },
-      { name: "Salt", quantity: 0.15 },
-      { name: "Eggs", quantity: 12 },
-      { name: "Slice Bread", quantity: 1 },
-      { name: "Milk", quantity: 2 }
+      { name: "Rice", quantity: 15, unit: "kg" },
+      { name: "Beans", quantity: 5, unit: "kg" },
+      { name: "Tomatoes", quantity: 3, unit: "kg" },
+      { name: "Onions", quantity: 3, unit: "kg" },
+      { name: "Green Paper", quantity: 3, unit: "kg" },
+      { name: "Oil", quantity: 3, unit: "liter" },
+      { name: "Sugar", quantity: 3, unit: "kg" },
+      { name: "Salt", quantity: 0.15, unit: "kg" },
+      { name: "Eggs", quantity: 12, unit: "pieces" },
+      { name: "Slice Bread", quantity: 1, unit: "loaf" },
+      { name: "Milk", quantity: 2, unit: "liter" }
     ],
     category: "medium"
   },
@@ -53,19 +55,20 @@ const allBundles = [
     title: "Large Bundle",
     description: "Family size, complete weekly groceries",
     price: 119000,
+    originalPrice: 150000,
     image: "/lovable-uploads/30fe686e-a6f6-469f-bb69-c889c304c4e7.png",
     items: [
-      { name: "Rice", quantity: 25 },
-      { name: "Beans", quantity: 10 },
-      { name: "Tomatoes", quantity: 5 },
-      { name: "Onions", quantity: 5 },
-      { name: "Oil", quantity: 5 },
-      { name: "Salt", quantity: 0.25 },
-      { name: "Eggs", quantity: 24 },
-      { name: "Slice Bread", quantity: 3 },
-      { name: "Milk", quantity: 4 },
-      { name: "Cassava Flour", quantity: 5 },
-      { name: "Sugar", quantity: 5 }
+      { name: "Rice", quantity: 25, unit: "kg" },
+      { name: "Beans", quantity: 10, unit: "kg" },
+      { name: "Tomatoes", quantity: 5, unit: "kg" },
+      { name: "Onions", quantity: 5, unit: "kg" },
+      { name: "Oil", quantity: 5, unit: "liter" },
+      { name: "Salt", quantity: 0.25, unit: "kg" },
+      { name: "Eggs", quantity: 24, unit: "pieces" },
+      { name: "Slice Bread", quantity: 3, unit: "loaf" },
+      { name: "Milk", quantity: 4, unit: "liter" },
+      { name: "Cassava Flour", quantity: 5, unit: "kg" },
+      { name: "Sugar", quantity: 5, unit: "kg" }
     ],
     category: "large"
   },
@@ -74,14 +77,15 @@ const allBundles = [
     title: "Vegetables Bundle",
     description: "Fresh vegetables for the week",
     price: 19999,
+    originalPrice: 25000,
     image: "/lovable-uploads/4049f27e-26db-4497-9920-9b60326fe5f7.png",
     items: [
-      { name: "Tomatoes", quantity: 1 },
-      { name: "Onions", quantity: 1 },
-      { name: "Carrots", quantity: 3 },
-      { name: "Lettuce", quantity: 2 },
-      { name: "Peppers", quantity: 4 },
-      { name: "Cucumber", quantity: 2 }
+      { name: "Tomatoes", quantity: 1, unit: "kg" },
+      { name: "Onions", quantity: 1, unit: "kg" },
+      { name: "Carrots", quantity: 3, unit: "kg" },
+      { name: "Lettuce", quantity: 2, unit: "pieces" },
+      { name: "Peppers", quantity: 4, unit: "pieces" },
+      { name: "Cucumber", quantity: 2, unit: "pieces" }
     ],
     category: "single"
   },
@@ -90,15 +94,16 @@ const allBundles = [
     title: "Breakfast Bundle",
     description: "Start your day right",
     price: 19999,
+    originalPrice: 24000,
     image: "/lovable-uploads/f54999c2-780a-4e38-9b60-7d31fd0fd9bc.png",
     items: [
-      { name: "Slice Bread", quantity: 2 },
-      { name: "Eggs", quantity: 24 },
-      { name: "Milk", quantity: 5 },
-      { name: "Breakfast Cereal", quantity: 1 },
-      { name: "Jam", quantity: 0.3 },
-      { name: "Butter", quantity: 0.5 },
-      { name: "Coffee", quantity: 0.25 }
+      { name: "Slice Bread", quantity: 2, unit: "loaf" },
+      { name: "Eggs", quantity: 24, unit: "pieces" },
+      { name: "Milk", quantity: 5, unit: "liter" },
+      { name: "Breakfast Cereal", quantity: 1, unit: "box" },
+      { name: "Jam", quantity: 0.3, unit: "kg" },
+      { name: "Butter", quantity: 0.5, unit: "kg" },
+      { name: "Coffee", quantity: 0.25, unit: "kg" }
     ],
     category: "medium"
   },
@@ -107,17 +112,18 @@ const allBundles = [
     title: "Pantry Essentials",
     description: "Stock your pantry with basics",
     price: 39999,
+    originalPrice: 48000,
     image: "/lovable-uploads/64610299-1b2e-480f-ad10-ca5f00ac3808.png",
     items: [
-      { name: "Rice", quantity: 10 },
-      { name: "Wheat Flour", quantity: 5 },
-      { name: "Sugar", quantity: 2 },
-      { name: "Oil", quantity: 3 },
-      { name: "Salt", quantity: 0.1 },
-      { name: "Pasta", quantity: 3 },
-      { name: "Beans", quantity: 3 },
-      { name: "Lentils", quantity: 2 },
-      { name: "Spices", quantity: 1 }
+      { name: "Rice", quantity: 10, unit: "kg" },
+      { name: "Wheat Flour", quantity: 5, unit: "kg" },
+      { name: "Sugar", quantity: 2, unit: "kg" },
+      { name: "Oil", quantity: 3, unit: "liter" },
+      { name: "Salt", quantity: 0.1, unit: "kg" },
+      { name: "Pasta", quantity: 3, unit: "kg" },
+      { name: "Beans", quantity: 3, unit: "kg" },
+      { name: "Lentils", quantity: 2, unit: "kg" },
+      { name: "Spices", quantity: 1, unit: "pack" }
     ],
     category: "large"
   },
@@ -126,13 +132,14 @@ const allBundles = [
     title: "Small Fruit Bundle",
     description: "Fresh seasonal fruits for 1-2 people",
     price: 8500,
+    originalPrice: 11000,
     image: "/lovable-uploads/0225ce03-0269-4b10-b603-3c14cf3e55ca.png",
     items: [
-      { name: "Oranges", quantity: 4 },
-      { name: "Apples", quantity: 4 },
-      { name: "Bananas", quantity: 6 },
-      { name: "Grapes", quantity: 1 },
-      { name: "Strawberries", quantity: 0.5 }
+      { name: "Oranges", quantity: 4, unit: "pieces" },
+      { name: "Apples", quantity: 4, unit: "pieces" },
+      { name: "Bananas", quantity: 6, unit: "pieces" },
+      { name: "Grapes", quantity: 1, unit: "kg" },
+      { name: "Strawberries", quantity: 0.5, unit: "kg" }
     ],
     category: "fruit"
   },
@@ -141,15 +148,16 @@ const allBundles = [
     title: "Medium Fruit Bundle",
     description: "Variety pack for a small family",
     price: 16000,
+    originalPrice: 20000,
     image: "/lovable-uploads/44536f37-66fe-4604-a318-5afc62c7fcdf.png",
     items: [
-      { name: "Oranges", quantity: 6 },
-      { name: "Apples", quantity: 6 },
-      { name: "Bananas", quantity: 8 },
-      { name: "Grapes", quantity: 2 },
-      { name: "Strawberries", quantity: 0.75 },
-      { name: "Pineapple", quantity: 1 },
-      { name: "Mango", quantity: 2 }
+      { name: "Oranges", quantity: 6, unit: "pieces" },
+      { name: "Apples", quantity: 6, unit: "pieces" },
+      { name: "Bananas", quantity: 8, unit: "pieces" },
+      { name: "Grapes", quantity: 2, unit: "kg" },
+      { name: "Strawberries", quantity: 0.75, unit: "kg" },
+      { name: "Pineapple", quantity: 1, unit: "piece" },
+      { name: "Mango", quantity: 2, unit: "pieces" }
     ],
     category: "fruit"
   },
@@ -158,17 +166,18 @@ const allBundles = [
     title: "Large Fruit Bundle",
     description: "Complete fruit assortment for families",
     price: 29000,
+    originalPrice: 36000,
     image: "/lovable-uploads/09c44f3e-b941-47e8-b1c7-86fee2bd1286.png",
     items: [
-      { name: "Oranges", quantity: 10 },
-      { name: "Apples", quantity: 10 },
-      { name: "Bananas", quantity: 12 },
-      { name: "Grapes", quantity: 3 },
-      { name: "Strawberries", quantity: 1 },
-      { name: "Pineapple", quantity: 2 },
-      { name: "Mango", quantity: 4 },
-      { name: "Blueberries", quantity: 0.25 },
-      { name: "Raspberries", quantity: 0.25 }
+      { name: "Oranges", quantity: 10, unit: "pieces" },
+      { name: "Apples", quantity: 10, unit: "pieces" },
+      { name: "Bananas", quantity: 12, unit: "pieces" },
+      { name: "Grapes", quantity: 3, unit: "kg" },
+      { name: "Strawberries", quantity: 1, unit: "kg" },
+      { name: "Pineapple", quantity: 2, unit: "pieces" },
+      { name: "Mango", quantity: 4, unit: "pieces" },
+      { name: "Blueberries", quantity: 0.25, unit: "kg" },
+      { name: "Raspberries", quantity: 0.25, unit: "kg" }
     ],
     category: "fruit"
   }
@@ -230,9 +239,15 @@ const Bundles = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredBundles.map(bundle => (
                   <BundleCard 
-                    key={bundle.id} 
-                    bundle={bundle} 
-                    onSaveBundle={handleSaveBundle}
+                    key={bundle.id}
+                    id={bundle.id}
+                    title={bundle.title}
+                    price={bundle.price}
+                    originalPrice={bundle.originalPrice}
+                    items={bundle.items}
+                    image={bundle.image}
+                    category={bundle.category}
+                    description={bundle.description}
                   />
                 ))}
               </div>

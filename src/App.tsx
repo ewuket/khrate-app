@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { GroupBuyingProvider } from "@/contexts/GroupBuyingContext";
+import CartSidebar from "@/components/cart/CartSidebar";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
@@ -46,6 +47,7 @@ function App() {
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
+                <CartSidebar />
               </GroupBuyingProvider>
             </CartProvider>
           </AuthProvider>
