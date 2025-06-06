@@ -1,14 +1,14 @@
 
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import React from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, ShoppingBag, FileText } from "lucide-react";
-import { Link } from "react-router-dom";
+import { CheckCircle, Package, Clock, MapPin } from "lucide-react";
 
 interface OrderSuccessModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  orderDetails?: {
-    orderNumber?: string;
+  orderDetails: {
+    orderNumber: string;
     total: number;
     deliveryDate?: string;
     deliveryTimeSlot?: string;
@@ -16,97 +16,97 @@ interface OrderSuccessModalProps {
   formatPrice: (price: number) => string;
 }
 
-const OrderSuccessModal = ({ 
-  open, 
-  onOpenChange, 
+const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
+  open,
+  onOpenChange,
   orderDetails,
-  formatPrice 
-}: OrderSuccessModalProps) => {
+  formatPrice
+}) => {
   const handleContinueShopping = () => {
     onOpenChange(false);
+    window.location.href = '/';
+  };
+
+  const handleViewOrders = () => {
+    onOpenChange(false);
+    window.location.href = '/orders';
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
-        <div className="flex flex-col items-center text-center space-y-6 py-4">
-          {/* Success Icon */}
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-            <CheckCircle className="w-10 h-10 text-green-600" />
+        <DialogHeader className="text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+            <CheckCircle className="h-6 w-6 text-green-600" />
           </div>
-
-          {/* Success Message */}
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-gray-900">
-              Order Placed Successfully!
-            </h2>
-            <p className="text-gray-600">
-              Thank you for your order. We've received your request and will process it soon.
+          <DialogTitle className="text-xl font-semibold">Order Confirmed!</DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-4 py-4">
+          <div className="text-center">
+            <p className="text-gray-600 mb-4">
+              Thank you for your order! We've received your payment and will process your delivery soon.
             </p>
           </div>
 
-          {/* Order Details */}
-          {orderDetails && (
-            <div className="w-full bg-gray-50 rounded-lg p-4 space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="font-medium text-gray-700">Order Total:</span>
-                <span className="font-bold text-lg text-khrate-600">
-                  {formatPrice(orderDetails.total)}
+          <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Order Number:</span>
+              <span className="text-khrate-600 font-mono">{orderDetails.orderNumber}</span>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Total Amount:</span>
+              <span className="text-lg font-bold text-khrate-600">
+                {formatPrice(orderDetails.total)}
+              </span>
+            </div>
+
+            {orderDetails.deliveryDate && (
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-gray-500" />
+                <span className="text-sm">
+                  Delivery: {new Date(orderDetails.deliveryDate).toLocaleDateString()}
+                  {orderDetails.deliveryTimeSlot && ` at ${orderDetails.deliveryTimeSlot}`}
                 </span>
               </div>
-              
-              {orderDetails.orderNumber && (
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Order Number:</span>
-                  <span className="font-mono text-sm font-medium">
-                    #{orderDetails.orderNumber}
-                  </span>
-                </div>
-              )}
+            )}
 
-              {orderDetails.deliveryDate && (
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Delivery Date:</span>
-                  <span className="font-medium">
-                    {orderDetails.deliveryDate}
-                    {orderDetails.deliveryTimeSlot && ` (${orderDetails.deliveryTimeSlot})`}
-                  </span>
-                </div>
-              )}
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-gray-500" />
+              <span className="text-sm text-gray-600">
+                We'll deliver to your specified address
+              </span>
             </div>
-          )}
+          </div>
 
-          {/* Next Steps */}
-          <div className="w-full bg-blue-50 rounded-lg p-4">
-            <h3 className="font-medium text-blue-900 mb-2">What's Next?</h3>
-            <ul className="text-sm text-blue-800 space-y-1">
-              <li>• You'll receive a confirmation email shortly</li>
-              <li>• We'll notify you when your order is being prepared</li>
-              <li>• Track your delivery status in your profile</li>
+          <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <Package className="h-4 w-4 text-blue-600" />
+              <span className="font-medium text-blue-800">What's Next?</span>
+            </div>
+            <ul className="text-sm text-blue-700 space-y-1">
+              <li>• You'll receive SMS confirmation shortly</li>
+              <li>• Track your order in the Orders section</li>
+              <li>• Our team will contact you before delivery</li>
             </ul>
           </div>
+        </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 w-full pt-2">
-            <Button
-              variant="outline"
-              onClick={handleContinueShopping}
-              className="flex-1 flex items-center justify-center"
-            >
-              <ShoppingBag className="w-4 h-4 mr-2" />
-              Continue Shopping
-            </Button>
-            
-            <Button
-              asChild
-              className="flex-1 bg-khrate-500 hover:bg-khrate-600"
-            >
-              <Link to="/profile" className="flex items-center justify-center">
-                <FileText className="w-4 h-4 mr-2" />
-                View Orders
-              </Link>
-            </Button>
-          </div>
+        <div className="flex flex-col gap-2 pt-4">
+          <Button 
+            onClick={handleViewOrders}
+            className="w-full bg-khrate-500 hover:bg-khrate-600"
+          >
+            View My Orders
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={handleContinueShopping}
+            className="w-full"
+          >
+            Continue Shopping
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

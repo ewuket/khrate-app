@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Users, Plus, UserPlus } from "lucide-react";
 import { useGroupBuying } from "@/contexts/GroupBuyingContext";
+import { useAuth } from "@/contexts/AuthContext";
 import CreateGroupModal from "./CreateGroupModal";
 import JoinGroupModal from "./JoinGroupModal";
+import { toast } from 'sonner';
 
 interface GroupBuyButtonProps {
   item: any;
@@ -21,20 +23,34 @@ const GroupBuyButton: React.FC<GroupBuyButtonProps> = ({
   className = "" 
 }) => {
   const { currentGroup, addItemToGroupCart } = useGroupBuying();
+  const { isAuthenticated, openAuthModal } = useAuth();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
 
   const handleAddToGroup = async () => {
+    if (!isAuthenticated) {
+      openAuthModal();
+      return;
+    }
+
     if (currentGroup) {
       await addItemToGroupCart(item);
     }
   };
 
   const handleCreateGroup = () => {
+    if (!isAuthenticated) {
+      openAuthModal();
+      return;
+    }
     setShowCreateModal(true);
   };
 
   const handleJoinGroup = () => {
+    if (!isAuthenticated) {
+      openAuthModal();
+      return;
+    }
     setShowJoinModal(true);
   };
 
@@ -44,8 +60,14 @@ const GroupBuyButton: React.FC<GroupBuyButtonProps> = ({
         <Button
           variant={variant}
           size={size}
-          className={className}
+          className={`${className} touch-manipulation active:scale-95 min-h-[44px]`}
           onClick={handleAddToGroup}
+          style={{
+            touchAction: 'manipulation',
+            WebkitUserSelect: 'none',
+            userSelect: 'none',
+            WebkitTapHighlightColor: 'transparent'
+          }}
         >
           <Users className="mr-2 h-4 w-4" />
           Add to Group
@@ -58,7 +80,17 @@ const GroupBuyButton: React.FC<GroupBuyButtonProps> = ({
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant={variant} size={size} className={className}>
+          <Button 
+            variant={variant} 
+            size={size} 
+            className={`${className} touch-manipulation active:scale-95 min-h-[44px]`}
+            style={{
+              touchAction: 'manipulation',
+              WebkitUserSelect: 'none',
+              userSelect: 'none',
+              WebkitTapHighlightColor: 'transparent'
+            }}
+          >
             <Users className="mr-2 h-4 w-4" />
             Group Buy
           </Button>

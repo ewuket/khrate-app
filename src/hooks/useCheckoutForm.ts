@@ -1,11 +1,9 @@
 
-import { useState } from "react";
-import { toast } from "sonner";
-
-interface DeliverySchedule {
-  date: string;
-  timeSlot: string;
-}
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCartContext } from '@/contexts/CartContext';
+import { toast } from 'sonner';
 
 interface UseCheckoutFormProps {
   onSuccess: () => void;
@@ -13,58 +11,88 @@ interface UseCheckoutFormProps {
 }
 
 export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProps) => {
-  const [paymentMethod, setPaymentMethod] = useState<string>("");
-  const [phoneNumber, setPhoneNumber] = useState<string>("");
+  const { user } = useAuth();
+  const { cart, getCartTotal } = useCartContext();
+  
+  const [paymentMethod, setPaymentMethod] = useState('mtn');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [processingPayment, setProcessingPayment] = useState(false);
-  const [deliverySchedule, setDeliverySchedule] = useState<DeliverySchedule>({
-    date: "",
-    timeSlot: ""
-  });
+  const [deliverySchedule, setDeliverySchedule] = useState<{
+    date: string;
+    timeSlot: string;
+  }>({ date: '', timeSlot: '' });
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  const handleDeliveryScheduleChange = (schedule: { date: Date | undefined, timeSlot: string }) => {
-    setDeliverySchedule({
-      date: schedule.date ? schedule.date.toISOString().split('T')[0] : "",
-      timeSlot: schedule.timeSlot
-    });
+  const generateOrderNumber = () => {
+    return `KH${Date.now().toString().slice(-6)}`;
   };
 
-  const handlePayment = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handlePayment = async (e: React.FormEvent) => {
+    e.preventDefault();
     
     if (!deliverySchedule.date) {
-      toast.error("Please select a delivery date");
+      toast.error('Please select a delivery date');
       return;
     }
 
-    if (!paymentMethod) {
-      toast.error("Please select a payment method");
-      return;
-    }
-
-    if ((paymentMethod === "mtn" || paymentMethod === "airtel") && !phoneNumber) {
-      toast.error("Please enter your phone number");
+    if (!deliverySchedule.timeSlot) {
+      toast.error('Please select a delivery time slot');
       return;
     }
 
     setProcessingPayment(true);
 
     try {
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Close the checkout dialog
-      onOpenChange(false);
-      
-      // Show success modal
-      setShowSuccessModal(true);
-      
-      // Call the success callback (clear cart, etc.)
+      const total = getCartTotal();
+      const orderNumber = generateOrderNumber();
+
+      // Create order in database
+      const orderData = {
+        user_id: user?.id || null,
+        items: cart.map(item => ({
+          name: item.product_name,
+          price: item.product_price,
+          quantity: item.quantity,
+          unit: item.product_unit
+        })),
+        total_amount: total,
+        original_amount: total,
+        discount_applied: 0,
+        delivery_address: 'Default Address', // This should come from user profile
+        delivery_date: deliverySchedule.date,
+        delivery_time_slot: deliverySchedule.timeSlot,
+        payment_method: paymentMethod,
+        payment_status: 'completed', // Simulate successful payment
+        status: 'confirmed',
+        phone_number: phoneNumber
+      };
+
+      const { data, error } = await supabase
+        .from('orders')
+        .insert(orderData)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Save to localStorage for guest users or as backup
+      const existingOrders = JSON.parse(localStorage.getItem(`khrate_orders_${user?.id || 'guest'}`) || '[]');
+      const newOrder = {
+        id: orderNumber,
+        ...orderData,
+        created_at: new Date().toISOString()
+      };
+      existingOrders.unshift(newOrder);
+      localStorage.setItem(`khrate_orders_${user?.id || 'guest'}`, JSON.stringify(existingOrders));
+
+      toast.success('Order placed successfully!');
       onSuccess();
-      
+      onOpenChange(false);
+      setShowSuccessModal(true);
+
     } catch (error) {
       console.error('Payment error:', error);
-      toast.error('Payment failed. Please try again.');
+      toast.error('Failed to process payment. Please try again.');
     } finally {
       setProcessingPayment(false);
     }
@@ -77,7 +105,7 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
     setPhoneNumber,
     processingPayment,
     deliverySchedule,
-    setDeliverySchedule: handleDeliveryScheduleChange,
+    setDeliverySchedule,
     showSuccessModal,
     setShowSuccessModal,
     handlePayment

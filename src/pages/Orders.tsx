@@ -11,6 +11,7 @@ import OrderRatingDialog from "@/components/orders/OrderRatingDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { supabase } from '@/integrations/supabase/client';
 
 type FilterType = "all" | "pending" | "processing" | "delivered";
 
@@ -23,43 +24,69 @@ const Orders = () => {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [ratingOpen, setRatingOpen] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
   
-  // Load user-specific orders from localStorage
+  // Load orders from Supabase and localStorage
   useEffect(() => {
-    if (isAuthenticated && user) {
-      // Use the user's unique ID to fetch their orders
-      const storageKey = `khrate_orders_${user.id}`;
-      const storedOrders = localStorage.getItem(storageKey);
-      
-      if (storedOrders) {
-        try {
-          const parsedOrders = JSON.parse(storedOrders);
-          setOrders(parsedOrders);
-        } catch (error) {
-          console.error("Failed to parse orders", error);
-          // Initialize empty orders if parsing fails
-          setOrders([]);
+    const loadOrders = async () => {
+      setLoading(true);
+      try {
+        if (isAuthenticated && user) {
+          // Load from Supabase first
+          const { data: supabaseOrders } = await supabase
+            .from('orders')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+
+          if (supabaseOrders && supabaseOrders.length > 0) {
+            const formattedOrders = supabaseOrders.map(order => ({
+              ...order,
+              status: order.status as "pending" | "processing" | "delivered"
+            }));
+            setOrders(formattedOrders);
+          } else {
+            // Fallback to localStorage if no Supabase orders
+            const storageKey = `khrate_orders_${user.id}`;
+            const storedOrders = localStorage.getItem(storageKey);
+            
+            if (storedOrders) {
+              try {
+                const parsedOrders = JSON.parse(storedOrders);
+                setOrders(parsedOrders);
+              } catch (error) {
+                console.error("Failed to parse orders", error);
+                setOrders([]);
+              }
+            } else {
+              setOrders([]);
+            }
+          }
+        } else {
+          // For guest users, load from localStorage
+          const guestOrders = localStorage.getItem('khrate_guest_orders');
+          
+          if (guestOrders) {
+            try {
+              const parsedOrders = JSON.parse(guestOrders);
+              setOrders(parsedOrders);
+            } catch (error) {
+              console.error("Failed to parse guest orders", error);
+              setOrders([]);
+            }
+          } else {
+            setOrders([]);
+          }
         }
-      } else {
-        // Initialize with an empty array if no orders found
+      } catch (error) {
+        console.error('Error loading orders:', error);
         setOrders([]);
+      } finally {
+        setLoading(false);
       }
-    } else {
-      // For guest users, try to load guest orders
-      const guestOrders = localStorage.getItem('khrate_guest_orders');
-      
-      if (guestOrders) {
-        try {
-          const parsedOrders = JSON.parse(guestOrders);
-          setOrders(parsedOrders);
-        } catch (error) {
-          console.error("Failed to parse guest orders", error);
-          setOrders([]);
-        }
-      } else {
-        setOrders([]);
-      }
-    }
+    };
+
+    loadOrders();
   }, [isAuthenticated, user]);
   
   const filteredOrders = filter === "all" 
@@ -77,20 +104,6 @@ const Orders = () => {
   };
 
   const handleRatingSubmit = (ratedOrder: Order) => {
-    if (!user && !isAuthenticated) {
-      // Handle guest user order rating
-      const updatedOrders = orders.map(order => 
-        order.id === ratedOrder.id 
-          ? { ...order, rating: { submitted: true, date: new Date().toISOString() } }
-          : order
-      );
-      
-      setOrders(updatedOrders);
-      localStorage.setItem('khrate_guest_orders', JSON.stringify(updatedOrders));
-      return;
-    }
-    
-    // Handle logged-in user order rating
     const updatedOrders = orders.map(order => 
       order.id === ratedOrder.id 
         ? { ...order, rating: { submitted: true, date: new Date().toISOString() } }
@@ -99,9 +112,11 @@ const Orders = () => {
     
     setOrders(updatedOrders);
     
-    // Save updated orders to localStorage using the user's unique ID
+    // Save updated orders to localStorage
     if (isAuthenticated && user) {
       localStorage.setItem(`khrate_orders_${user.id}`, JSON.stringify(updatedOrders));
+    } else {
+      localStorage.setItem('khrate_guest_orders', JSON.stringify(updatedOrders));
     }
   };
 
@@ -171,7 +186,12 @@ const Orders = () => {
           <div className="container mx-auto">
             <OrdersFilter filter={filter} onFilterChange={setFilter} />
             
-            {filteredOrders.length === 0 ? (
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-khrate-500 mx-auto"></div>
+                <p className="mt-4 text-gray-600">Loading your orders...</p>
+              </div>
+            ) : filteredOrders.length === 0 ? (
               <OrdersEmptyState />
             ) : (
               <div className="space-y-6">
