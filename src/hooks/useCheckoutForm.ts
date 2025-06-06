@@ -37,6 +37,8 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('handlePayment called - starting payment process');
+    
     if (!deliverySchedule.date) {
       toast.error('Please select a delivery date');
       return;
@@ -118,8 +120,15 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
       console.log('Order saved to localStorage');
 
       toast.success('Order placed successfully!');
+      
+      // Call success callback first
       onSuccess();
+      
+      // Close the checkout dialog
       onOpenChange(false);
+      
+      // Show success modal
+      console.log('Setting showSuccessModal to true');
       setShowSuccessModal(true);
 
     } catch (error) {

@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Eye } from "lucide-react";
@@ -17,6 +16,7 @@ const featuredBundles = [
     title: "Single Bundle",
     description: "Perfect for 1 person, 7-day essentials",
     price: 32700,
+    originalPrice: 40000,
     image: "/lovable-uploads/4730e151-0c90-4bde-a3cf-7eb370e2cac1.png",
     items: [
       { name: "Rice", quantity: 10 },
@@ -36,6 +36,7 @@ const featuredBundles = [
     title: "Medium Bundle",
     description: "Great for 2-3 people, weekly essentials",
     price: 69240,
+    originalPrice: 85000,
     image: "/lovable-uploads/6d22b9d7-17a9-457a-947a-9bb8301a4051.png",
     items: [
       { name: "Rice", quantity: 15 },
@@ -56,6 +57,7 @@ const featuredBundles = [
     title: "Large Bundle",
     description: "Family size, complete weekly groceries",
     price: 119000,
+    originalPrice: 150000,
     image: "/lovable-uploads/30fe686e-a6f6-469f-bb69-c889c304c4e7.png",
     items: [
       { name: "Rice", quantity: 25 },
@@ -220,9 +222,10 @@ const FeaturedBundles = () => {
       {selectedBundle && (
         <BundlePreviewModal
           bundle={selectedBundle}
-          open={showPreview}
-          onOpenChange={setShowPreview}
+          isOpen={showPreview}
+          onClose={() => setShowPreview(false)}
           onAddToCart={() => handleAddToCart(selectedBundle, {} as React.MouseEvent)}
+          isAdding={isAddingToCart(selectedBundle.id, 'bundle')}
         />
       )}
     </>

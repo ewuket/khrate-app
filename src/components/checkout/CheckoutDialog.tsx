@@ -52,6 +52,7 @@ const CheckoutDialog = ({
     handlePayment
   } = useCheckoutForm({
     onSuccess: () => {
+      console.log('Payment success callback triggered');
       saveOrder();
       clearCart();
     },
@@ -63,6 +64,8 @@ const CheckoutDialog = ({
   };
 
   const currentTotal = getCartTotal();
+  
+  console.log('CheckoutDialog render - showSuccessModal:', showSuccessModal, 'currentTotal:', currentTotal);
   
   return (
     <>
