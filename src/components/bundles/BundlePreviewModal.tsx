@@ -25,7 +25,7 @@ interface BundlePreviewModalProps {
   bundle: Bundle;
   isOpen: boolean;
   onClose: () => void;
-  onAddToCart: () => void;
+  onAddToCart: (e: React.MouseEvent) => Promise<void>;
   isAdding: boolean;
 }
 
@@ -41,6 +41,10 @@ const BundlePreviewModal = ({
 
   const formatPrice = (price: number) => {
     return `RWF ${price.toLocaleString()}`;
+  };
+
+  const handleAddToCartClick = (e: React.MouseEvent) => {
+    onAddToCart(e);
   };
 
   return (
@@ -112,7 +116,7 @@ const BundlePreviewModal = ({
             </div>
             
             <Button 
-              onClick={onAddToCart}
+              onClick={handleAddToCartClick}
               disabled={isAdding}
               className="w-full bg-khrate-500 hover:bg-khrate-600"
               size="lg"
