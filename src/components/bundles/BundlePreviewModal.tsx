@@ -14,6 +14,7 @@ import BundleAddToCartButton from "./BundleAddToCartButton";
 interface BundleItem {
   name: string;
   quantity: number;
+  unit: string;
 }
 
 interface Bundle {
@@ -22,31 +23,37 @@ interface Bundle {
   name?: string;
   description: string;
   price: number;
+  originalPrice: number;
   image: string;
   items: BundleItem[] | string[];
+  category?: string;
 }
 
 interface BundlePreviewModalProps {
   bundle: Bundle;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  isOpen: boolean;
+  onClose: () => void;
   onAddToCart: (e: React.MouseEvent) => void;
+  isAdding: boolean;
 }
 
 const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({ 
   bundle, 
-  open, 
-  onOpenChange, 
-  onAddToCart 
+  isOpen, 
+  onClose, 
+  onAddToCart,
+  isAdding
 }) => {
   const [showCheckout, setShowCheckout] = useState(false);
   const [isProceedingToCheckout, setIsProceedingToCheckout] = useState(false);
-  const { addToCart, getCartTotal, cart, isAddingToCart } = useCartContext();
+  const { addToCart, getCartTotal, cart } = useCartContext();
   const { isAuthenticated, openAuthModal } = useAuth();
 
   if (!bundle) return null;
 
   const bundleName = bundle.title || bundle.name || 'Bundle';
+  const savings = bundle.originalPrice - bundle.price;
+  const savingsPercentage = Math.round((savings / bundle.originalPrice) * 100);
 
   const formatItems = (items: BundleItem[] | string[]) => {
     if (Array.isArray(items) && items.length > 0) {
@@ -54,7 +61,7 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
         return items as string[];
       } else {
         return (items as BundleItem[]).map(item => 
-          `${item.name} (${item.quantity}${typeof item.quantity === 'number' && item.quantity < 1 ? 'kg' : 'pcs'})`
+          `${item.quantity} ${item.unit} ${item.name}`
         );
       }
     }
@@ -89,7 +96,7 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
       onAddToCart(e);
       
       setTimeout(() => {
-        onOpenChange(false);
+        onClose();
       }, 1000);
     } catch (error) {
       console.error('Error adding bundle to cart:', error);
@@ -112,7 +119,7 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
         await handleAddToCart({} as React.MouseEvent);
       }
       
-      onOpenChange(false);
+      onClose();
       setShowCheckout(true);
     } catch (error) {
       console.error('Error proceeding to checkout:', error);
@@ -122,19 +129,13 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
     }
   };
 
-  const handleClose = () => {
-    onOpenChange(false);
-  };
-
   const formatPrice = (price: number) => {
     return `RWF ${price.toLocaleString()}`;
   };
 
-  const isCurrentlyAdding = isAddingToCart(bundle.id, 'bundle');
-
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center justify-between">
@@ -142,7 +143,7 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={handleClose}
+                onClick={onClose}
                 className="h-8 w-8 p-0 hover:bg-gray-100 absolute right-4 top-4 touch-manipulation"
               >
                 <X className="h-4 w-4" />
@@ -170,7 +171,17 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
                   <span className="text-2xl font-bold text-khrate-600">
                     {formatPrice(bundle.price)}
                   </span>
+                  {bundle.originalPrice && bundle.originalPrice > bundle.price && (
+                    <span className="text-sm text-gray-500 line-through">
+                      {formatPrice(bundle.originalPrice)}
+                    </span>
+                  )}
                 </div>
+                {savingsPercentage > 0 && (
+                  <div className="text-sm text-green-600 font-medium">
+                    Save {savingsPercentage}% ({formatPrice(savings)})
+                  </div>
+                )}
               </div>
 
               <Separator />
@@ -192,13 +203,13 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
               <div className="space-y-3">
                 <BundleAddToCartButton
                   onAddToCart={handleAddToCart}
-                  isAdding={isCurrentlyAdding}
+                  isAdding={isAdding}
                   className="w-full"
                 />
 
                 <Button 
                   onClick={handleProceedToCheckout}
-                  disabled={isCurrentlyAdding || isProceedingToCheckout}
+                  disabled={isAdding || isProceedingToCheckout}
                   variant="outline"
                   className="w-full border-khrate-500 text-khrate-600 hover:bg-khrate-50 disabled:opacity-50 touch-manipulation"
                 >
