@@ -9,6 +9,7 @@ interface GroupBuyingContextType {
   currentGroup: GroupSession | null;
   groupMembers: GroupMember[];
   groupCart: GroupCartItem[];
+  groupCartItems: GroupCartItem[];
   groupSummary: GroupSummary | null;
   groupPayments: any[];
   isLoading: boolean;
@@ -47,13 +48,10 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
     if (!currentGroup || !user) return;
 
     try {
-      // Fetch group members
+      // Fetch group members - simplified query without join
       const { data: members } = await supabase
         .from('group_members')
-        .select(`
-          *,
-          user_profile:user_profiles(*)
-        `)
+        .select('*')
         .eq('group_session_id', currentGroup.id);
 
       // Fetch group cart items
@@ -68,13 +66,37 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
         .select('*')
         .eq('group_session_id', currentGroup.id);
 
-      setGroupMembers(members || []);
-      setGroupCart(cartItems || []);
+      // Transform members to match interface
+      const transformedMembers: GroupMember[] = (members || []).map(member => ({
+        id: member.id,
+        user_id: member.user_id,
+        group_session_id: member.group_session_id || '',
+        joined_at: member.joined_at
+      }));
+
+      // Transform cart items to match interface
+      const transformedCartItems: GroupCartItem[] = (cartItems || []).map(item => ({
+        id: item.id,
+        user_id: item.user_id,
+        group_session_id: item.group_session_id || '',
+        product_id: item.product_id,
+        product_name: item.product_name,
+        product_price: item.product_price,
+        quantity: item.quantity,
+        product_unit: item.product_unit || 'item',
+        product_type: item.product_type,
+        product_items: Array.isArray(item.product_items) ? item.product_items : (item.product_items ? [item.product_items] : []),
+        created_at: item.created_at,
+        updated_at: item.updated_at
+      }));
+
+      setGroupMembers(transformedMembers);
+      setGroupCart(transformedCartItems);
       setGroupPayments(payments || []);
 
       // Calculate group summary
-      const total = (cartItems || []).reduce((sum, item) => sum + (item.product_price * item.quantity), 0);
-      const memberCount = (members || []).length + 1; // +1 for leader
+      const total = transformedCartItems.reduce((sum, item) => sum + (item.product_price * item.quantity), 0);
+      const memberCount = transformedMembers.length + 1; // +1 for leader
       const qualifiesForDiscount = memberCount >= currentGroup.min_participants;
       const discountAmount = qualifiesForDiscount ? total * (currentGroup.discount_percentage / 100) : 0;
 
@@ -364,16 +386,24 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
           return;
         }
 
-        // Check if user is a member of any active group
-        const { data: memberGroup } = await supabase
+        // Check if user is a member of any active group - simplified query
+        const { data: memberRecord } = await supabase
           .from('group_members')
-          .select('group_sessions(*)')
+          .select('group_session_id')
           .eq('user_id', user.id)
           .single();
 
-        if (memberGroup?.group_sessions) {
-          setCurrentGroup(memberGroup.group_sessions as GroupSession);
-          await syncGroupData();
+        if (memberRecord?.group_session_id) {
+          const { data: groupData } = await supabase
+            .from('group_sessions')
+            .select('*')
+            .eq('id', memberRecord.group_session_id)
+            .single();
+
+          if (groupData) {
+            setCurrentGroup(groupData);
+            await syncGroupData();
+          }
         }
 
       } catch (error) {
@@ -414,6 +444,7 @@ export const GroupBuyingProvider: React.FC<{ children: React.ReactNode }> = ({ c
       currentGroup,
       groupMembers,
       groupCart,
+      groupCartItems: groupCart, // Alias for backward compatibility
       groupSummary,
       groupPayments,
       isLoading,

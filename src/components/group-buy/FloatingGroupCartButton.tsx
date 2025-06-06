@@ -2,17 +2,17 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, ShoppingCart } from "lucide-react";
+import { Users } from "lucide-react";
 import { useGroupBuying } from "@/contexts/GroupBuyingContext";
 import GroupCartSidebar from "./GroupCartSidebar";
 
 const FloatingGroupCartButton: React.FC = () => {
-  const { currentGroup, groupCartItems, groupMembers } = useGroupBuying();
+  const { currentGroup, groupCart, groupMembers } = useGroupBuying();
   const [isOpen, setIsOpen] = useState(false);
 
   if (!currentGroup) return null;
 
-  const itemCount = groupCartItems.length;
+  const itemCount = groupCart.length;
   const memberCount = groupMembers.length;
 
   return (

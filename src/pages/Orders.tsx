@@ -40,9 +40,24 @@ const Orders = () => {
             .order('created_at', { ascending: false });
 
           if (supabaseOrders && supabaseOrders.length > 0) {
-            const formattedOrders = supabaseOrders.map(order => ({
-              ...order,
-              status: order.status as "pending" | "processing" | "delivered"
+            // Transform orders to match Order interface
+            const formattedOrders: Order[] = supabaseOrders.map(order => ({
+              id: order.id,
+              user_id: order.user_id || undefined,
+              items: Array.isArray(order.items) ? order.items : (order.items ? [order.items] : []),
+              total_amount: order.total_amount,
+              original_amount: order.original_amount,
+              discount_applied: order.discount_applied || 0,
+              discount_percentage: order.discount_percentage || 0,
+              status: order.status as "pending" | "processing" | "delivered",
+              delivery_address: order.delivery_address,
+              delivery_date: order.delivery_date || undefined,
+              delivery_time_slot: order.delivery_time_slot || undefined,
+              payment_method: order.payment_method,
+              payment_status: order.payment_status as "pending" | "completed" | "failed",
+              phone_number: order.phone_number || undefined,
+              created_at: order.created_at || undefined,
+              updated_at: order.updated_at || undefined
             }));
             setOrders(formattedOrders);
           } else {

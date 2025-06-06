@@ -10,6 +10,10 @@ export interface GroupSession {
   status: string;
   order_status: string;
   created_at: string;
+  updated_at: string;
+  group_type: string;
+  is_public: boolean;
+  items?: any;
   member_count?: number;
 }
 
@@ -27,18 +31,22 @@ export interface GroupMember {
 export interface GroupCartItem {
   id: string;
   user_id: string;
+  group_session_id?: string;
   product_id: number;
   product_name: string;
   product_price: number;
   quantity: number;
   product_unit: string;
   product_type: string;
-  product_items?: string[];
+  product_items?: any;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface GroupPayment {
   id: string;
   user_id: string;
+  group_session_id: string;
   amount: number;
   payment_status: string;
   payment_method?: string;
@@ -59,27 +67,4 @@ export interface GroupPaymentSummary {
   pending_members: number;
   total_amount_paid: number;
   group_ready: boolean;
-}
-
-export interface GroupBuyingContextType {
-  currentGroup: GroupSession | null;
-  groupCart: GroupCartItem[];
-  groupCartItems: GroupCartItem[]; // Keep both for backward compatibility
-  groupMembers: GroupMember[];
-  groupPayments: GroupPayment[];
-  groupSummary: GroupSummary | null;
-  groupPaymentSummary: GroupPaymentSummary | null;
-  availableGroups: GroupSession[];
-  loading: boolean;
-  createGroup: (name?: string, minParticipants?: number) => Promise<string | null>;
-  joinGroup: (joinCode: string) => Promise<boolean>;
-  leaveGroup: () => Promise<void>;
-  addItemToGroupCart: (item: any) => Promise<void>;
-  removeItemFromGroupCart: (id: string) => Promise<void>;
-  updateGroupCartItemQuantity: (id: string, quantity: number) => Promise<void>;
-  clearGroupCart: () => Promise<void>;
-  getGroupTotal: () => number;
-  loadAvailableGroups: () => Promise<void>;
-  completeGroupPayment: () => Promise<boolean>;
-  completeGroupOrder: () => Promise<boolean>;
 }

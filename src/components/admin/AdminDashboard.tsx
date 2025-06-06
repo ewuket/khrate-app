@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bell, Users, ShoppingCart, TrendingUp, Package, CreditCard, Clock, CheckCircle, AlertTriangle } from "lucide-react";
+import { Bell, Users, ShoppingCart, TrendingUp, Package, CreditCard, Clock, CheckCircle } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
@@ -21,7 +21,7 @@ interface AdminStats {
 interface RealtimeOrder {
   id: string;
   user_id: string;
-  items: any[];
+  items: any;
   total_amount: number;
   status: string;
   payment_status: string;
@@ -74,10 +74,7 @@ const AdminDashboard: React.FC = () => {
       // Load group sessions with member counts
       const { data: groups } = await supabase
         .from('group_sessions')
-        .select(`
-          *,
-          group_members(count)
-        `)
+        .select('*')
         .eq('status', 'active')
         .order('created_at', { ascending: false });
 
@@ -100,10 +97,25 @@ const AdminDashboard: React.FC = () => {
         completedPayments
       });
 
-      setRecentOrders(orders || []);
+      // Transform orders to match RealtimeOrder interface
+      const transformedOrders: RealtimeOrder[] = (orders || []).map(order => ({
+        id: order.id,
+        user_id: order.user_id || '',
+        items: Array.isArray(order.items) ? order.items : (order.items ? [order.items] : []),
+        total_amount: order.total_amount,
+        status: order.status,
+        payment_status: order.payment_status,
+        created_at: order.created_at || '',
+        user_profiles: order.user_profiles ? {
+          full_name: order.user_profiles.full_name || '',
+          email: order.user_profiles.email || ''
+        } : undefined
+      }));
+
+      setRecentOrders(transformedOrders);
       setActiveGroups(groups?.map(group => ({
         ...group,
-        member_count: group.group_members?.[0]?.count || 0,
+        member_count: 0,
         total_amount: 0
       })) || []);
 
