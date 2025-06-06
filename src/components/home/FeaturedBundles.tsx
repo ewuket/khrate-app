@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Eye } from "lucide-react";
@@ -9,67 +10,71 @@ import BundlePreviewModal from "@/components/bundles/BundlePreviewModal";
 import GroupBuyButton from "@/components/group-buy/GroupBuyButton";
 import BundleAddToCartButton from "@/components/bundles/BundleAddToCartButton";
 
+// Use the actual bundles from the Bundles page
 const featuredBundles = [
   {
     id: 1,
-    title: "Single Breakfast Bundle",
-    description: "Perfect for one person - eggs, bread, milk, and fresh fruits",
-    price: 3500,
-    image: "https://images.unsplash.com/photo-1551024506-0bccd828d307?q=80&w=800&auto=format&fit=crop",
+    title: "Single Bundle",
+    description: "Perfect for 1 person, 7-day essentials",
+    price: 32700,
+    image: "/lovable-uploads/4730e151-0c90-4bde-a3cf-7eb370e2cac1.png",
     items: [
-      { name: "Eggs", quantity: 6 },
-      { name: "Bread", quantity: 1 },
-      { name: "Milk", quantity: 1 },
-      { name: "Bananas", quantity: 3 }
+      { name: "Rice", quantity: 10 },
+      { name: "Beans", quantity: 2 },
+      { name: "Tomatoes", quantity: 1 },
+      { name: "Onions", quantity: 2 },
+      { name: "Green Paper", quantity: 1 },
+      { name: "Peas", quantity: 1 },
+      { name: "Oil", quantity: 1 },
+      { name: "Sugar", quantity: 1 },
+      { name: "Salt", quantity: 0.1 },
+      { name: "Eggs", quantity: 10 }
     ]
   },
   {
     id: 2,
-    title: "Medium Family Bundle",
-    description: "Great for small families - rice, beans, vegetables, and meat",
-    price: 8500,
-    image: "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=800&auto=format&fit=crop",
+    title: "Medium Bundle",
+    description: "Great for 2-3 people, weekly essentials",
+    price: 69240,
+    image: "/lovable-uploads/6d22b9d7-17a9-457a-947a-9bb8301a4051.png",
     items: [
-      { name: "Rice", quantity: 2 },
-      { name: "Beans", quantity: 1 },
-      { name: "Chicken", quantity: 1 },
-      { name: "Tomatoes", quantity: 0.5 },
-      { name: "Onions", quantity: 0.5 }
+      { name: "Rice", quantity: 15 },
+      { name: "Beans", quantity: 5 },
+      { name: "Tomatoes", quantity: 3 },
+      { name: "Onions", quantity: 3 },
+      { name: "Green Paper", quantity: 3 },
+      { name: "Oil", quantity: 3 },
+      { name: "Sugar", quantity: 3 },
+      { name: "Salt", quantity: 0.15 },
+      { name: "Eggs", quantity: 12 },
+      { name: "Slice Bread", quantity: 1 },
+      { name: "Milk", quantity: 2 }
     ]
   },
   {
     id: 3,
-    title: "Large Weekly Bundle",
-    description: "Complete weekly groceries for large families",
-    price: 15000,
-    image: "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=800&auto=format&fit=crop",
+    title: "Large Bundle",
+    description: "Family size, complete weekly groceries",
+    price: 119000,
+    image: "/lovable-uploads/30fe686e-a6f6-469f-bb69-c889c304c4e7.png",
     items: [
-      { name: "Rice", quantity: 5 },
-      { name: "Beans", quantity: 2 },
-      { name: "Cooking Oil", quantity: 1 },
-      { name: "Sugar", quantity: 1 },
-      { name: "Salt", quantity: 1 },
-      { name: "Tomatoes", quantity: 2 },
-      { name: "Onions", quantity: 1 },
-      { name: "Potatoes", quantity: 2 }
+      { name: "Rice", quantity: 25 },
+      { name: "Beans", quantity: 10 },
+      { name: "Tomatoes", quantity: 5 },
+      { name: "Onions", quantity: 5 },
+      { name: "Oil", quantity: 5 },
+      { name: "Salt", quantity: 0.25 },
+      { name: "Eggs", quantity: 24 },
+      { name: "Slice Bread", quantity: 3 },
+      { name: "Milk", quantity: 4 },
+      { name: "Cassava Flour", quantity: 5 },
+      { name: "Sugar", quantity: 5 }
     ]
   }
 ];
 
 const FeaturedBundles = () => {
-  let addToCart, isAddingToCart;
-  
-  try {
-    const cartContext = useCartContext();
-    addToCart = cartContext.addToCart;
-    isAddingToCart = cartContext.isAddingToCart;
-  } catch (error) {
-    console.error('FeaturedBundles: Cart context error:', error);
-    // Fallback functions
-    addToCart = async () => toast.error('Cart not available');
-    isAddingToCart = () => false;
-  }
-  
+  const { addToCart, isAddingToCart } = useCartContext();
   const { isAuthenticated, openAuthModal } = useAuth();
   const [selectedBundle, setSelectedBundle] = useState<typeof featuredBundles[0] | null>(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -95,6 +100,7 @@ const FeaturedBundles = () => {
 
       console.log('Adding featured bundle to cart:', bundleItem);
       await addToCart(bundleItem);
+      toast.success(`${bundle.title} added to cart!`);
     } catch (error) {
       console.error('Error adding bundle to cart:', error);
       toast.error('Failed to add bundle to cart');

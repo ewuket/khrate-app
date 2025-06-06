@@ -27,14 +27,15 @@ const CartButton = ({ variant = "ghost", size = "icon", className = "" }: CartBu
     <Button 
       variant={variant} 
       size={size}
-      className={`relative text-gray-700 hover:text-khrate-500 touch-manipulation active:scale-95 transition-all select-none ${className}`}
+      className={`relative text-gray-700 hover:text-khrate-500 touch-manipulation active:scale-95 transition-all select-none min-h-[44px] min-w-[44px] ${className}`}
       onClick={handleCartClick}
       onTouchStart={handleCartClick}
       type="button"
       style={{ 
         touchAction: 'manipulation',
         WebkitUserSelect: 'none',
-        userSelect: 'none'
+        userSelect: 'none',
+        WebkitTapHighlightColor: 'transparent'
       }}
     >
       <ShoppingCart className="h-5 w-5" />
