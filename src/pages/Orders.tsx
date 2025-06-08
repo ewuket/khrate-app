@@ -98,16 +98,6 @@ const Orders = () => {
     setShowDetailsDialog(true);
   };
 
-  const handleReorder = async (order: Order) => {
-    try {
-      // Implementation for reordering
-      toast.success('Items added to cart for reorder');
-    } catch (error) {
-      console.error('Error reordering:', error);
-      toast.error('Failed to reorder items');
-    }
-  };
-
   if (!isAuthenticated) {
     return (
       <div className="flex flex-col min-h-screen">
@@ -146,14 +136,8 @@ const Orders = () => {
             <>
               <div className="mb-6">
                 <OrdersFilter 
-                  currentFilter={statusFilter}
+                  filter={statusFilter}
                   onFilterChange={setStatusFilter}
-                  orderCounts={{
-                    all: orders.length,
-                    pending: orders.filter(o => o.status === 'pending').length,
-                    processing: orders.filter(o => o.status === 'processing').length,
-                    delivered: orders.filter(o => o.status === 'delivered').length,
-                  }}
                 />
               </div>
               
@@ -163,7 +147,6 @@ const Orders = () => {
                     key={order.id}
                     order={order}
                     onViewDetails={handleViewDetails}
-                    onReorder={handleReorder}
                   />
                 ))}
               </div>
@@ -177,7 +160,7 @@ const Orders = () => {
       {selectedOrder && (
         <OrderDetailsDialog
           order={selectedOrder}
-          isOpen={showDetailsDialog}
+          open={showDetailsDialog}
           onClose={() => {
             setShowDetailsDialog(false);
             setSelectedOrder(null);

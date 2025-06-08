@@ -40,7 +40,6 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   const { createGroup, addItemToGroupCart } = useGroupBuying();
   const [formData, setFormData] = useState({
     name: '',
-    description: '',
     minParticipants: 3,
     maxParticipants: 10,
     isPublic: false
@@ -91,7 +90,6 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
     try {
       const group = await createGroup({
         name: formData.name,
-        description: formData.description,
         min_participants: formData.minParticipants,
         max_participants: formData.maxParticipants,
         discount_percentage: 10, // Fixed admin-controlled discount
@@ -124,7 +122,6 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
       onClose();
       setFormData({
         name: '',
-        description: '',
         minParticipants: 3,
         maxParticipants: 10,
         isPublic: false
@@ -154,17 +151,6 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               placeholder="e.g., Neighborhood Group"
               required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description (Optional)</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Brief description of your group..."
-              rows={2}
             />
           </div>
 

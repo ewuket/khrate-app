@@ -19,13 +19,46 @@ const JoinGroupModal: React.FC<JoinGroupModalProps> = ({
   isOpen,
   onClose
 }) => {
-  const { joinGroup, findGroupByCode } = useGroupBuying();
+  const { joinGroup } = useGroupBuying();
   const { isAuthenticated } = useAuth();
   const [joinCode, setJoinCode] = useState('');
   const [isJoining, setIsJoining] = useState(false);
   const [foundGroup, setFoundGroup] = useState<any>(null);
   const [showGroupPreview, setShowGroupPreview] = useState(false);
   const [groupMembers, setGroupMembers] = useState<any[]>([]);
+
+  // Mock function to simulate finding a group by code
+  const findGroupByCode = async (code: string) => {
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Mock group data
+    const mockGroups = [
+      {
+        id: 'group1',
+        name: 'Nyamirambo Shopping Group',
+        join_code: 'ABC123',
+        max_participants: 10,
+        items: [
+          { name: 'Rice', quantity: 2, unit: 'kg' },
+          { name: 'Beans', quantity: 1, unit: 'kg' },
+          { name: 'Oil', quantity: 1, unit: 'L' }
+        ]
+      },
+      {
+        id: 'group2',
+        name: 'Kigali Central Group',
+        join_code: 'XYZ789',
+        max_participants: 8,
+        items: [
+          { name: 'Tomatoes', quantity: 3, unit: 'kg' },
+          { name: 'Potatoes', quantity: 2, unit: 'kg' }
+        ]
+      }
+    ];
+    
+    return mockGroups.find(group => group.join_code === code) || null;
+  };
 
   const handleSearchGroup = async () => {
     if (!joinCode.trim()) {
@@ -146,10 +179,6 @@ const JoinGroupModal: React.FC<JoinGroupModalProps> = ({
                   Code: {foundGroup.join_code}
                 </Badge>
               </div>
-              
-              {foundGroup.description && (
-                <p className="text-sm text-gray-600">{foundGroup.description}</p>
-              )}
 
               <div className="flex items-center gap-4 text-sm text-gray-600">
                 <div className="flex items-center gap-1">

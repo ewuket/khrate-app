@@ -9,11 +9,12 @@ import ChatAssistant from "@/components/chat/ChatAssistant";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
-  const { loadUserProfile } = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
-    loadUserProfile();
-  }, [loadUserProfile]);
+    // Load any initial data if needed
+    console.log('Index page loaded, user:', user?.id);
+  }, [user]);
 
   return (
     <div className="flex flex-col min-h-screen">
