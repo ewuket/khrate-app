@@ -76,7 +76,7 @@ const ChatAssistant: React.FC = () => {
       "I can help you navigate our platform, explain our services, or guide you through placing an order. What do you need help with?"
     ] : [
       "Ndi hano kugira ngo nkugirire ubufasha mu bibazo byose bijyanye no gutumiza, kugura muri rusange, gutwariza, cyangwa serivisi zacu. Ni iki wifuza kumenya?",
-      "Ushobora kunbaza ku mapaki yacu, uburyo wo gutumiza, igishoro cyo kugura muri rusange, gahunda zo gutwariza, cyangwa uburyo bwo kwishyura. Ese nakugirira ubufasha nte?",
+      "Ushobora kunbaza ku mapaki yacu, uburyo bwo gutumiza, igishoro cyo kugura muri rusange, gahunda zo gutwariza, cyangwa uburyo bwo kwishyura. Ese nakugirira ubufasha nte?",
       "Nshobora kukugirira ubufasha mu kuyobora urubuga rwacu, gusobanura serivisi zacu, cyangwa nkugane mu gutumiza. Ni iki ukeneye ubufasha bwako?"
     ];
     
@@ -182,9 +182,7 @@ const ChatAssistant: React.FC = () => {
                 {messages.map((message) => (
                   <ChatMessage
                     key={message.id}
-                    message={message.text}
-                    isBot={message.sender === 'bot'}
-                    timestamp={message.timestamp}
+                    message={message}
                   />
                 ))}
                 {isTyping && (
