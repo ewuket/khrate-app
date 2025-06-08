@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bell, Users, ShoppingCart, TrendingUp, Package, CreditCard, Clock, CheckCircle } from "lucide-react";
+import { Bell, Users, ShoppingCart, TrendingUp, Package, CreditCard, Clock, CheckCircle, UserPlus, AlertCircle } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
@@ -39,7 +39,17 @@ interface RealtimeGroup {
   status: string;
   member_count: number;
   total_amount: number;
+  join_code: string;
   created_at: string;
+}
+
+interface AdminNotification {
+  id: string;
+  type: 'new_order' | 'new_group' | 'group_full' | 'payment_received';
+  message: string;
+  timestamp: string;
+  read: boolean;
+  data?: any;
 }
 
 const AdminDashboard: React.FC = () => {
@@ -54,7 +64,7 @@ const AdminDashboard: React.FC = () => {
   
   const [recentOrders, setRecentOrders] = useState<RealtimeOrder[]>([]);
   const [activeGroups, setActiveGroups] = useState<RealtimeGroup[]>([]);
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<AdminNotification[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadDashboardData = async () => {
@@ -113,11 +123,20 @@ const AdminDashboard: React.FC = () => {
       }));
 
       setRecentOrders(transformedOrders);
-      setActiveGroups(groups?.map(group => ({
-        ...group,
-        member_count: 0,
-        total_amount: 0
-      })) || []);
+      
+      // Transform groups
+      const transformedGroups: RealtimeGroup[] = (groups || []).map(group => ({
+        id: group.id,
+        name: group.name || 'Unnamed Group',
+        leader_id: group.leader_id,
+        status: group.status,
+        member_count: 0, // Will be calculated separately
+        total_amount: 0, // Will be calculated separately
+        join_code: group.join_code,
+        created_at: group.created_at
+      }));
+
+      setActiveGroups(transformedGroups);
 
     } catch (error) {
       console.error('Error loading dashboard data:', error);
@@ -138,6 +157,17 @@ const AdminDashboard: React.FC = () => {
 
       toast.success(`Order status updated to ${newStatus}`);
       loadDashboardData();
+      
+      // Add notification
+      const newNotification: AdminNotification = {
+        id: Date.now().toString(),
+        type: 'new_order',
+        message: `Order ${orderId.slice(0, 8)} status updated to ${newStatus}`,
+        timestamp: new Date().toISOString(),
+        read: false
+      };
+      setNotifications(prev => [newNotification, ...prev.slice(0, 9)]);
+      
     } catch (error) {
       console.error('Error updating order status:', error);
       toast.error('Failed to update order status');
@@ -155,10 +185,35 @@ const AdminDashboard: React.FC = () => {
 
       toast.success(`Payment status updated to ${newStatus}`);
       loadDashboardData();
+      
+      // Add notification
+      const newNotification: AdminNotification = {
+        id: Date.now().toString(),
+        type: 'payment_received',
+        message: `Payment ${newStatus} for order ${orderId.slice(0, 8)}`,
+        timestamp: new Date().toISOString(),
+        read: false
+      };
+      setNotifications(prev => [newNotification, ...prev.slice(0, 9)]);
+      
     } catch (error) {
       console.error('Error updating payment status:', error);
       toast.error('Failed to update payment status');
     }
+  };
+
+  const markNotificationAsRead = (notificationId: string) => {
+    setNotifications(prev => 
+      prev.map(notif => 
+        notif.id === notificationId 
+          ? { ...notif, read: true }
+          : notif
+      )
+    );
+  };
+
+  const clearAllNotifications = () => {
+    setNotifications([]);
   };
 
   useEffect(() => {
@@ -174,18 +229,38 @@ const AdminDashboard: React.FC = () => {
           loadDashboardData();
           
           if (payload.eventType === 'INSERT') {
-            setNotifications(prev => [...prev, {
-              id: Date.now(),
+            const newNotification: AdminNotification = {
+              id: Date.now().toString(),
               type: 'new_order',
-              message: 'New order received',
-              timestamp: new Date().toISOString()
-            }]);
+              message: `New order received - ${formatCurrency(payload.new?.total_amount || 0)}`,
+              timestamp: new Date().toISOString(),
+              read: false,
+              data: payload.new
+            };
+            setNotifications(prev => [newNotification, ...prev.slice(0, 9)]);
+            toast.success('New order received!');
           }
         }
       )
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'group_sessions' },
-        () => loadDashboardData()
+        (payload) => {
+          console.log('Group activity:', payload);
+          loadDashboardData();
+          
+          if (payload.eventType === 'INSERT') {
+            const newNotification: AdminNotification = {
+              id: Date.now().toString(),
+              type: 'new_group',
+              message: `New group created: ${payload.new?.name || 'Unnamed Group'}`,
+              timestamp: new Date().toISOString(),
+              read: false,
+              data: payload.new
+            };
+            setNotifications(prev => [newNotification, ...prev.slice(0, 9)]);
+            toast.success('New group created!');
+          }
+        }
       )
       .subscribe();
 
@@ -220,6 +295,8 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const unreadNotifications = notifications.filter(n => !n.read).length;
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -239,14 +316,52 @@ const AdminDashboard: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
             <div className="flex items-center gap-4">
               <div className="relative">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => setNotifications([])}>
                   <Bell className="h-4 w-4" />
-                  {notifications.length > 0 && (
+                  {unreadNotifications > 0 && (
                     <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs">
-                      {notifications.length}
+                      {unreadNotifications}
                     </Badge>
                   )}
                 </Button>
+                
+                {/* Notifications Dropdown */}
+                {notifications.length > 0 && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white border rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+                    <div className="p-3 border-b">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-medium">Notifications</h3>
+                        <Button variant="ghost" size="sm" onClick={clearAllNotifications}>
+                          Clear All
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      {notifications.slice(0, 10).map((notification) => (
+                        <div 
+                          key={notification.id}
+                          className={`p-3 hover:bg-gray-50 cursor-pointer ${!notification.read ? 'bg-blue-50' : ''}`}
+                          onClick={() => markNotificationAsRead(notification.id)}
+                        >
+                          <div className="flex items-start gap-2">
+                            {notification.type === 'new_order' && <ShoppingCart className="h-4 w-4 text-blue-500 mt-0.5" />}
+                            {notification.type === 'new_group' && <Users className="h-4 w-4 text-green-500 mt-0.5" />}
+                            {notification.type === 'payment_received' && <CreditCard className="h-4 w-4 text-purple-500 mt-0.5" />}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium">{notification.message}</p>
+                              <p className="text-xs text-gray-500">
+                                {new Date(notification.timestamp).toLocaleTimeString()}
+                              </p>
+                            </div>
+                            {!notification.read && (
+                              <div className="w-2 h-2 bg-blue-500 rounded-full mt-1"></div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               <Button variant="outline" size="sm">
                 Admin Panel
@@ -318,6 +433,7 @@ const AdminDashboard: React.FC = () => {
             <TabsTrigger value="orders">Recent Orders</TabsTrigger>
             <TabsTrigger value="groups">Active Groups</TabsTrigger>
             <TabsTrigger value="users">User Management</TabsTrigger>
+            <TabsTrigger value="inventory">Inventory</TabsTrigger>
           </TabsList>
 
           <TabsContent value="orders" className="space-y-6">
@@ -390,6 +506,9 @@ const AdminDashboard: React.FC = () => {
                         <div className="flex items-center gap-4 mb-2">
                           <p className="font-medium">{group.name}</p>
                           <Badge variant="outline">{group.status}</Badge>
+                          <Badge variant="secondary" className="font-mono text-xs">
+                            {group.join_code}
+                          </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">
                           {group.member_count} members • Created {new Date(group.created_at).toLocaleDateString()}
@@ -398,6 +517,9 @@ const AdminDashboard: React.FC = () => {
                       <div className="flex gap-2">
                         <Button size="sm" variant="outline">
                           View Details
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          Manage
                         </Button>
                       </div>
                     </div>
@@ -417,7 +539,27 @@ const AdminDashboard: React.FC = () => {
                 <CardDescription>Manage customer accounts and activity</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-center text-muted-foreground py-8">User management features coming soon</p>
+                <div className="text-center py-8">
+                  <UserPlus className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-muted-foreground">User management features</p>
+                  <p className="text-sm text-muted-foreground">View user profiles, order history, and account details</p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="inventory" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Inventory Management</CardTitle>
+                <CardDescription>Manage bundles, products, and stock levels</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-muted-foreground">Inventory management features</p>
+                  <p className="text-sm text-muted-foreground">Add/remove bundles, update prices, and manage stock</p>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

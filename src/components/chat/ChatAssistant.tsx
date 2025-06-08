@@ -1,248 +1,227 @@
-import { useState, useEffect, useRef } from 'react';
+
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Avatar } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageCircle, X } from "lucide-react";
-import { toast } from "sonner";
-import { Message, initialMessage } from "@/types/chat";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MessageCircle, X, Send, Minimize2, Maximize2 } from "lucide-react";
 import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
-import SupportTab from "./SupportTab";
-import TypingIndicator from "./TypingIndicator";
+import { toast } from "sonner";
 
-const ChatAssistant = () => {
-  const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([initialMessage]);
-  const [language, setLanguage] = useState<'en' | 'rw'>('en');
+interface Message {
+  id: string;
+  text: string;
+  sender: 'user' | 'bot';
+  timestamp: Date;
+}
+
+const ChatAssistant: React.FC = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: '1',
+      text: "Hi! I'm Bob, your shopping assistant. How can I help you today?",
+      sender: 'bot',
+      timestamp: new Date()
+    }
+  ]);
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when new messages arrive
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isTyping]);
+  }, [messages]);
 
-  const handleSendMessage = (input: string) => {
+  const getBotResponse = (userMessage: string): string => {
+    const message = userMessage.toLowerCase();
+    
+    // Order-related queries
+    if (message.includes('order') || message.includes('track')) {
+      return "You can track your orders by clicking on your profile icon and selecting 'Order History'. There you'll see all your past and current orders with their delivery status.";
+    }
+    
+    // Group buying queries
+    if (message.includes('group') || message.includes('bulk')) {
+      return "Group buying lets you save money by purchasing with others! Click 'Group Buy' in the menu to create a new group or join an existing one. You'll get 10% discount when your group reaches minimum participants.";
+    }
+    
+    // Bundle queries
+    if (message.includes('bundle')) {
+      return "Our bundles are pre-curated collections of groceries at discounted prices. Check out our Featured Bundles on the homepage - perfect for families and individuals looking to save time and money!";
+    }
+    
+    // Delivery queries
+    if (message.includes('deliver') || message.includes('shipping')) {
+      return "We offer scheduled delivery across Kigali. During checkout, you can choose your preferred delivery date and time slot (8AM-11AM, 11AM-2PM, 2PM-5PM, or 5PM-8PM). Delivery is free for orders above RWF 10,000.";
+    }
+    
+    // Payment queries
+    if (message.includes('pay') || message.includes('payment')) {
+      return "We accept MTN Mobile Money and Airtel Money. During checkout, you'll receive payment instructions. Send payment to 0795754391 and your order will be confirmed once payment is received.";
+    }
+    
+    // Support queries
+    if (message.includes('support') || message.includes('help') || message.includes('contact')) {
+      return "For additional support, you can reach us at support@khrate.com or call +250 795 754 391. Our team is available Monday-Saturday, 8AM-6PM. You can also use this chat for immediate assistance!";
+    }
+    
+    // Account queries
+    if (message.includes('account') || message.includes('profile') || message.includes('sign')) {
+      return "To create an account or sign in, click the profile icon in the top right corner. Having an account lets you track orders, save addresses, and get personalized recommendations!";
+    }
+
+    // Custom buy queries
+    if (message.includes('custom') || message.includes('individual')) {
+      return "Want to shop individual items? Check out our 'Custom Buy' section where you can select specific quantities of fruits, vegetables, and groceries to create your own custom order.";
+    }
+
+    // Discount queries
+    if (message.includes('discount') || message.includes('save')) {
+      return "New customers get 10% off their first 3 orders! You can also save through group buying (10% discount) or by purchasing our pre-made bundles which are already discounted.";
+    }
+
+    // Location queries
+    if (message.includes('location') || message.includes('area') || message.includes('deliver')) {
+      return "We currently deliver throughout Kigali and surrounding areas. During checkout, you can specify your delivery address. If you're unsure about delivery to your area, contact our support team!";
+    }
+    
+    // Default responses
+    const defaultResponses = [
+      "I'm here to help with any questions about ordering, group buying, deliveries, or our services. What would you like to know?",
+      "You can ask me about our bundles, how to place orders, group buying discounts, delivery schedules, or payment methods. How can I assist you?",
+      "I can help you navigate our platform, explain our services, or guide you through placing an order. What do you need help with?"
+    ];
+    
+    return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+  };
+
+  const handleSendMessage = async (text: string) => {
+    if (!text.trim()) return;
+
+    // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
-      text: input,
+      text: text.trim(),
       sender: 'user',
-      timestamp: new Date(),
+      timestamp: new Date()
     };
     
     setMessages(prev => [...prev, userMessage]);
     setIsTyping(true);
-    
+
+    // Simulate bot response delay
     setTimeout(() => {
-      const botResponse = generateIntelligentResponse(input, language);
-      
-      const botMessage: Message = {
+      const botResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: botResponse,
+        text: getBotResponse(text),
         sender: 'bot',
-        timestamp: new Date(),
+        timestamp: new Date()
       };
       
+      setMessages(prev => [...prev, botResponse]);
       setIsTyping(false);
-      setMessages(prev => [...prev, botMessage]);
     }, 1000 + Math.random() * 1000);
   };
 
-  const generateIntelligentResponse = (input: string, lang: 'en' | 'rw'): string => {
-    const lowerInput = input.toLowerCase();
-    
-    // Greetings
-    if (lowerInput.match(/\b(hello|hi|hey|good morning|good afternoon|good evening|greetings)\b/)) {
-      return lang === 'en' 
-        ? "Hello! I'm BOB, your KHRATE assistant. I'm here to help you with anything you need - from shopping and orders to delivery scheduling and account questions. How can I assist you today?"
-        : "Muraho! Ndi BOB, umufasha wawe wa KHRATE. Ndi hano kugira ngo ngufashe mu bintu byose ukeneye - kuva mu kugura no gutumiza ibicuruzwa kugeza ku guteganya ubwikorezi n'ibibazo by'konti yawe. Ese nashobora kugufasha iki uyu munsi?";
+  const toggleChat = () => {
+    setIsOpen(!isOpen);
+    if (!isOpen) {
+      setIsMinimized(false);
     }
-
-    // Product and Bundle queries
-    if (lowerInput.match(/\b(bundle|product|item|grocery|food|price|cost|available|stock)\b/)) {
-      return lang === 'en' 
-        ? "Our bundles are carefully curated to save you money! We offer fresh produce bundles, essential groceries, household items, and seasonal specials. Each bundle is designed to give you maximum value. Would you like to know about specific products or see our current deals?"
-        : "Ibikoresho byacu bishyizwe hamwe kugira ngo bikugabanyirize amafaranga! Dutanga ibikoresho by'imbuto n'imboga bishyashya, ibikoresho by'ibanze, ibikoresho byo mu rugo, n'ibyihariye by'igihe. Buri kikoresho cyashyizwe kugira ngo uhabwe agaciro kenshi. Wifuza kumenya ibikoresho byihariye cyangwa kureba amasoko yacu y'ubu?";
-    }
-
-    // Delivery and shipping
-    if (lowerInput.match(/\b(delivery|shipping|when|arrive|schedule|time|fast|quick)\b/)) {
-      return lang === 'en'
-        ? "We offer FREE delivery for all orders! Your items typically arrive within 24 hours. You can schedule delivery for a convenient time, and we'll send you updates along the way. Would you like to schedule a delivery or track an existing order?"
-        : "Dutanga serivisi y'ubwikorezi ku buntu ku byo ushaka byose! Ibyo wasabye bishobora kugera mu masaha 24. Ushobora guteganya ubwikorezi mu gihe cyiza, kandi tuzakwohereza amakuru ku nzira. Wifuza guteganya ubwikorezi cyangwa gukurikirana ibyo wasabye?";
-    }
-
-    // Payment methods
-    if (lowerInput.match(/\b(payment|pay|momo|mtn|money|cash|card|bank)\b/)) {
-      return lang === 'en' 
-        ? "We accept MTN MoMo payments for your convenience! Our payment number is 0795754391. Payment is secure and you'll receive confirmation immediately. You can also pay on delivery. Need help with payment or have payment issues?"
-        : "Twakira ubwishyu bwa MTN MoMo kugira ngo bikorosheje! Numero yacu yo kwishyura ni 0795754391. Ubwishyu burafite umutekano kandi uzabona ubutumwa bw'iyemeza ako kanya. Urashobora no kwishyura igihe bitanzwe. Ukeneye ubufasha mu kwishyura cyangwa ufite ibibazo byo kwishyura?";
-    }
-
-    // Group buy and discounts
-    if (lowerInput.match(/\b(group buy|discount|save|cheaper|deal|offer|promotion)\b/)) {
-      return lang === 'en'
-        ? "Group Buy is amazing for bigger savings! Join with others to unlock discounts up to 30% off regular prices. The more people who join, the bigger the discount. I can help you find active group buys or notify you when new ones start!"
-        : "Group Buy ni byiza cyane kubera kugabanya ibiciro! Fatanya n'abandi kugira ngo ubone igabanyuka ry'ibiciro kugeza ku 30% ku biciro bisanzwe. Abantu benshi bafatanyije, niko igabanyuka rigenda rikura. Nshobora kugufasha kubona Group Buy zikora cyangwa nkakumenyesha igihe zishya zitangira!";
-    }
-
-    // Order tracking and history
-    if (lowerInput.match(/\b(order|track|status|history|where|my order|ordered)\b/)) {
-      return lang === 'en'
-        ? "I can help you track your orders! You can view your order history, check delivery status, and get updates on current orders. Would you like me to help you check on a specific order or show you how to track orders yourself?"
-        : "Nshobora kugufasha gukurikirana ibyo wasabye! Urashobora kureba amateka y'ibyo wasabye, kugenzura uko ubwikorezi bujya, no kubona amakuru y'ibyo wasabye ubu. Wifuza ko ngufasha kugenzura ikintu cyihariye wasabye cyangwa nkerekanye uburyo bwo gukurikirana ibyo wasabye wenyine?";
-    }
-
-    // Account and profile issues
-    if (lowerInput.match(/\b(account|profile|login|password|email|phone|address|update|change)\b/)) {
-      return lang === 'en'
-        ? "I can help with account issues! Whether you need to update your profile, change your address, reset your password, or modify contact information, I'm here to guide you. What specific account help do you need?"
-        : "Nshobora gufasha mu bibazo by'konti! Haba ukeneye kuvugurura profil yawe, guhindura aderesi yawe, kugarura ijambo ry'ibanga, cyangwa guhindura amakuru y'itumanaho, ndi hano kugira ngo nkuyobore. Ni ubufasha bwihariye bwehe bukeneye ku konti yawe?";
-    }
-
-    // Customer service and complaints
-    if (lowerInput.match(/\b(problem|issue|complaint|help|support|wrong|error|refund|return)\b/)) {
-      return lang === 'en'
-        ? "I'm sorry to hear you're having an issue! I'm here to help resolve any problems with your orders, deliveries, or account. Can you tell me more about what's happening so I can assist you better, or would you prefer to speak with our human support team?"
-        : "Ndababaye ko ufite ikibazo! Ndi hano kugira ngo ngufashe gukemura ibibazo byose bijyanye n'ibyo wasabye, ubwikorezi, cyangwa konti yawe. Ushobora kumbwira byinshi ku bibazo uri guhura nabyo kugira ngo nkufashe neza, cyangwa wifuza kuvugana n'ikipe yacu ya serivisi?";
-    }
-
-    // FAQ topics
-    if (lowerInput.match(/\b(faq|question|how|what|when|why|where)\b/)) {
-      return lang === 'en'
-        ? "I'm here to answer your questions! I can help with information about our products, ordering process, delivery options, payment methods, group buying, account management, and much more. What would you like to know?"
-        : "Ndi hano kugira ngo nsubize ibibazo byawe! Nshobora gufasha mu makuru ajyanye n'ibicuruzwa byacu, uburyo bwo gutumiza, amahitamo y'ubwikorezi, uburyo bwo kwishyura, kugura mu itsinda, gucunga konti, n'ibindi byinshi. Ni iki wifuza kumenya?";
-    }
-
-    // Business hours and contact
-    if (lowerInput.match(/\b(hours|open|closed|contact|call|email|time|available)\b/)) {
-      return lang === 'en'
-        ? "We're available to help you! Our support team works Monday to Saturday, 8:00 AM to 6:00 PM. You can reach us by email at bamlak.mulugeta@khrate.com or robert.katabarwa@khrate.com, or call us at 0795754391 or 0789843707. I'm here 24/7 for basic assistance!"
-        : "Turi hano kugira ngo tugufashe! Ikipe yacu ya serivisi ikora kuva ku wa mbere kugeza ku wa gatandatu, saa mbiri z'igitondo kugeza saa kumi n'ebyiri z'umugoroba. Urashobora kuduhamagara kuri imeyili bamlak.mulugeta@khrate.com cyangwa robert.katabarwa@khrate.com, cyangwa kuduhamagara kuri 0795754391 cyangwa 0789843707. Ndi hano masaha 24/7 kubufasha bw'ibanze!";
-    }
-
-    // Thank you and positive feedback
-    if (lowerInput.match(/\b(thank|thanks|appreciate|good|great|excellent|awesome)\b/)) {
-      return lang === 'en'
-        ? "You're very welcome! I'm so glad I could help. Remember, I'm always here whenever you need assistance with KHRATE. Is there anything else I can help you with today?"
-        : "Weze ! Nishimye cyane ko nshoboye kugufasha. Wibuke, ndi hano buri gihe igihe ukeneye ubufasha na KHRATE. Hari ikindi nshobora kugufasha muri uyu munsi?";
-    }
-
-    // Goodbye
-    if (lowerInput.match(/\b(bye|goodbye|see you|later|exit|quit)\b/)) {
-      return lang === 'en'
-        ? "Goodbye! Thank you for choosing KHRATE. Feel free to come back anytime if you need help. Have a wonderful day!"
-        : "Muraho neza! Urakoze guhitamo KHRATE. Wifuze gusubira igihe icyo ari cyo cyose ukeneye ubufasha. Mugire umunsi mwiza!";
-    }
-
-    // Default intelligent response
-    return lang === 'en'
-      ? "I understand you're asking about something specific! While I can help with most things related to KHRATE - like products, orders, delivery, payments, and account issues - I want to make sure I give you the best answer. Could you tell me a bit more about what you're looking for, or would you prefer to speak with our human support team?"
-      : "Ndumva ubaza ikintu cyihariye! Nubwo nshobora gufasha mu bintu byinshi bijyanye na KHRATE - nk'ibicuruzwa, ibyo gutumiza, ubwikorezi, ubwishyu, n'ibibazo by'konti - ndashaka kwisuzuma ko nkaguha igisubizo cyiza. Urashobora kumbwira byinshi ku bintu ushaka, cyangwa wifuza kuvugana n'ikipe yacu ya serivisi?";
   };
 
-  const toggleLanguage = () => {
-    const newLanguage = language === 'en' ? 'rw' : 'en';
-    setLanguage(newLanguage);
-    
-    const systemMessage: Message = {
-      id: Date.now().toString(),
-      text: newLanguage === 'en' 
-        ? "Language switched to English" 
-        : "Ururimi rwahinduwe mu Kinyarwanda",
-      sender: 'system',
-      timestamp: new Date(),
-    };
-    
-    setMessages(prev => [...prev, systemMessage]);
-  };
-
-  const handleContactSupport = (type: 'email' | 'phone', value: string) => {
-    if (type === 'email') {
-      window.location.href = `mailto:${value}`;
-    } else {
-      window.location.href = `tel:${value}`;
-    }
-    
-    toast.success(`Contacting support via ${type === 'email' ? 'email' : 'phone'}`);
+  const toggleMinimize = () => {
+    setIsMinimized(!isMinimized);
   };
 
   return (
     <>
       {/* Chat Button */}
-      <Button
-        onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-khrate-500 hover:bg-khrate-600 shadow-lg z-50"
-        size="icon"
-      >
-        <MessageCircle className="h-6 w-6 text-white" />
-      </Button>
-      
-      {/* Chat Panel */}
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent className="sm:max-w-md p-0 flex flex-col h-full">
-          <SheetHeader className="px-4 py-4 border-b bg-khrate-500 text-white flex-shrink-0">
+      {!isOpen && (
+        <Button
+          onClick={toggleChat}
+          className="fixed bottom-4 right-4 z-50 h-14 w-14 rounded-full bg-khrate-500 hover:bg-khrate-600 shadow-lg"
+          size="icon"
+        >
+          <MessageCircle className="h-6 w-6" />
+        </Button>
+      )}
+
+      {/* Chat Window */}
+      {isOpen && (
+        <Card className="fixed bottom-4 right-4 z-50 w-80 sm:w-96 shadow-xl border-0">
+          <CardHeader className="pb-2 bg-khrate-500 text-white rounded-t-lg">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Avatar className="h-8 w-8 bg-white text-khrate-500">
-                  <img src="/lovable-uploads/206fd2ee-0377-47a0-8083-70118088988f.png" alt="BOB" />
-                </Avatar>
-                <SheetTitle className="text-white">Chat with BOB</SheetTitle>
-              </div>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => setOpen(false)}
-                className="text-white hover:bg-khrate-600"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </SheetHeader>
-          
-          <Tabs defaultValue="chat" className="flex-1 flex flex-col min-h-0">
-            <TabsList className="grid grid-cols-2 mx-4 my-2 flex-shrink-0">
-              <TabsTrigger value="chat">Chat</TabsTrigger>
-              <TabsTrigger value="support">Human Support</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="chat" className="flex-1 flex flex-col min-h-0 px-4">
-              {/* Messages Container with proper scrolling */}
-              <ScrollArea className="flex-1 w-full">
-                <div className="space-y-4 pb-4 pr-4">
-                  {messages.map((message) => (
-                    <ChatMessage key={message.id} message={message} />
-                  ))}
-                  
-                  {isTyping && <TypingIndicator />}
-                  
-                  {/* Invisible div to scroll to */}
-                  <div ref={messagesEndRef} />
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+                  <span className="text-khrate-500 font-bold text-sm">B</span>
                 </div>
-              </ScrollArea>
-              
-              {/* Input Area */}
-              <div className="pt-4 border-t flex-shrink-0">
-                <ChatInput 
-                  onSendMessage={handleSendMessage}
-                  toggleLanguage={toggleLanguage}
-                  language={language}
-                />
+                Bob - Shopping Assistant
+              </CardTitle>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleMinimize}
+                  className="h-8 w-8 p-0 text-white hover:bg-khrate-600"
+                >
+                  {isMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleChat}
+                  className="h-8 w-8 p-0 text-white hover:bg-khrate-600"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
-            </TabsContent>
-            
-            <TabsContent value="support" className="flex-1">
-              <SupportTab handleContactSupport={handleContactSupport} />
-            </TabsContent>
-          </Tabs>
-        </SheetContent>
-      </Sheet>
+            </div>
+            <div className="flex items-center gap-1 text-sm opacity-90">
+              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+              Online now
+            </div>
+          </CardHeader>
+
+          {!isMinimized && (
+            <CardContent className="p-0">
+              {/* Messages */}
+              <div className="h-80 overflow-y-auto p-4 space-y-4 bg-gray-50">
+                {messages.map((message) => (
+                  <ChatMessage
+                    key={message.id}
+                    message={message.text}
+                    isBot={message.sender === 'bot'}
+                    timestamp={message.timestamp}
+                  />
+                ))}
+                {isTyping && (
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <div className="w-8 h-8 bg-khrate-100 rounded-full flex items-center justify-center">
+                      <span className="text-khrate-600 font-bold text-xs">B</span>
+                    </div>
+                    <div className="flex gap-1">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Input */}
+              <div className="p-4 border-t bg-white rounded-b-lg">
+                <ChatInput onSendMessage={handleSendMessage} />
+              </div>
+            </CardContent>
+          )}
+        </Card>
+      )}
     </>
   );
 };

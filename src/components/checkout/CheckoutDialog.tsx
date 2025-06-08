@@ -49,6 +49,7 @@ const CheckoutDialog = ({
     setDeliverySchedule,
     showSuccessModal,
     setShowSuccessModal,
+    orderDetails,
     handlePayment
   } = useCheckoutForm({
     onSuccess: () => {
@@ -58,10 +59,6 @@ const CheckoutDialog = ({
     },
     onOpenChange
   });
-
-  const generateOrderNumber = () => {
-    return `KH${Date.now().toString().slice(-6)}`;
-  };
 
   const currentTotal = getCartTotal();
   
@@ -149,17 +146,14 @@ const CheckoutDialog = ({
         </DialogContent>
       </Dialog>
 
-      <OrderSuccessModal
-        open={showSuccessModal}
-        onOpenChange={setShowSuccessModal}
-        orderDetails={{
-          orderNumber: generateOrderNumber(),
-          total: currentTotal,
-          deliveryDate: deliverySchedule.date,
-          deliveryTimeSlot: deliverySchedule.timeSlot
-        }}
-        formatPrice={formatPrice}
-      />
+      {orderDetails && (
+        <OrderSuccessModal
+          open={showSuccessModal}
+          onOpenChange={setShowSuccessModal}
+          orderDetails={orderDetails}
+          formatPrice={formatPrice}
+        />
+      )}
     </>
   );
 };

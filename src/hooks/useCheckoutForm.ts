@@ -22,6 +22,12 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
     timeSlot: string;
   }>({ date: '', timeSlot: '' });
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [orderDetails, setOrderDetails] = useState<{
+    orderNumber: string;
+    total: number;
+    deliveryDate: string;
+    deliveryTimeSlot: string;
+  } | null>(null);
 
   const generateOrderNumber = () => {
     return `KH${Date.now().toString().slice(-6)}`;
@@ -110,7 +116,8 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
       // Save to localStorage for guest users or as backup
       const existingOrders = JSON.parse(localStorage.getItem(`khrate_orders_${user?.id || 'guest'}`) || '[]');
       const newOrder = {
-        id: orderNumber,
+        id: data.id,
+        order_number: orderNumber,
         ...orderData,
         created_at: new Date().toISOString()
       };
@@ -118,6 +125,14 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
       localStorage.setItem(`khrate_orders_${user?.id || 'guest'}`, JSON.stringify(existingOrders));
 
       console.log('Order saved to localStorage');
+
+      // Set order details for success modal
+      setOrderDetails({
+        orderNumber,
+        total,
+        deliveryDate: deliverySchedule.date,
+        deliveryTimeSlot: deliverySchedule.timeSlot
+      });
 
       toast.success('Order placed successfully!');
       
@@ -149,6 +164,7 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
     setDeliverySchedule: handleDeliveryScheduleChange,
     showSuccessModal,
     setShowSuccessModal,
+    orderDetails,
     handlePayment
   };
 };
