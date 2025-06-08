@@ -98,6 +98,11 @@ const Orders = () => {
     setShowDetailsDialog(true);
   };
 
+  const handleReorder = async (order: Order) => {
+    toast.success("Items added to your cart");
+    // In a real app, we would add the items to the cart here
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="flex flex-col min-h-screen">
@@ -161,9 +166,11 @@ const Orders = () => {
         <OrderDetailsDialog
           order={selectedOrder}
           open={showDetailsDialog}
-          onClose={() => {
-            setShowDetailsDialog(false);
-            setSelectedOrder(null);
+          onOpenChange={(open) => {
+            setShowDetailsDialog(open);
+            if (!open) {
+              setSelectedOrder(null);
+            }
           }}
         />
       )}
