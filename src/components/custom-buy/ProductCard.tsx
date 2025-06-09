@@ -1,9 +1,11 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Plus, Minus } from "lucide-react";
+import { Plus, Minus } from "lucide-react";
+import { useCart } from "@/hooks/useCart";
+import GroupBuyButton from "@/components/group-buy/GroupBuyButton";
+import { toast } from "sonner";
 
 interface Product {
   id: number;
@@ -12,113 +14,129 @@ interface Product {
   unit: string;
   category: string;
   image: string;
+  inStock: boolean;
   description?: string;
 }
 
 interface ProductCardProps {
   product: Product;
-  onAddToCart: (product: Product, quantity: number) => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+  const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
-  const [isAdding, setIsAdding] = useState(false);
 
-  const handleAddToCart = async () => {
-    if (isAdding) return;
-    
-    setIsAdding(true);
-    try {
-      await onAddToCart(product, quantity);
-    } finally {
-      setIsAdding(false);
+  const handleQuantityChange = (newQuantity: number) => {
+    if (newQuantity >= 1) {
+      setQuantity(newQuantity);
     }
   };
 
-  const incrementQuantity = () => {
-    setQuantity(prev => Math.min(prev + 1, 99));
-  };
-
-  const decrementQuantity = () => {
-    setQuantity(prev => Math.max(prev - 1, 1));
-  };
-
-  const formatPrice = (price: number) => {
-    return `RWF ${price.toLocaleString()}`;
+  const handleAddToCart = () => {
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: quantity,
+      unit: product.unit,
+      type: 'product',
+      image: product.image
+    });
+    
+    toast.success(`${quantity} ${product.unit} of ${product.name} added to cart`);
+    
+    // Reset quantity to 1 after adding to cart
+    setQuantity(1);
   };
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 border-gray-200 hover:border-khrate-300 bg-white overflow-hidden h-full flex flex-col">
-      <div className="relative overflow-hidden">
-        <img 
-          src={product.image} 
+    <div className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
+      <div className="aspect-square relative overflow-hidden rounded-t-lg">
+        <img
+          src={product.image}
           alt={product.name}
-          className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+          className="w-full h-full object-cover"
+          loading="lazy"
         />
-        <div className="absolute top-3 left-3">
-          <Badge variant="secondary" className="bg-khrate-500 text-white font-medium px-2 py-1 text-xs">
-            {product.category}
-          </Badge>
-        </div>
+        {!product.inStock && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <Badge variant="destructive">Out of Stock</Badge>
+          </div>
+        )}
       </div>
-
-      <CardHeader className="p-4 pb-2 flex-grow">
-        <div className="flex justify-between items-start mb-2">
-          <CardTitle className="text-lg font-semibold text-gray-900 line-clamp-2 flex-1">
-            {product.name}
-          </CardTitle>
-        </div>
-        <div className="space-y-2">
-          <div className="text-xl font-bold text-khrate-600">
-            {formatPrice(product.price)} / {product.unit}
-          </div>
+      
+      <div className="p-4">
+        <div className="mb-3">
+          <h3 className="font-semibold text-gray-900 mb-1">{product.name}</h3>
           {product.description && (
-            <CardDescription className="text-sm text-gray-600 line-clamp-2">
-              {product.description}
-            </CardDescription>
+            <p className="text-sm text-gray-600 mb-2">{product.description}</p>
           )}
-        </div>
-      </CardHeader>
-
-      <CardContent className="p-4 pt-0 mt-auto">
-        <div className="space-y-3">
-          {/* Quantity Selector */}
-          <div className="flex items-center justify-center space-x-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={decrementQuantity}
-              disabled={quantity <= 1}
-              className="h-8 w-8 p-0"
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
-            <span className="text-lg font-medium min-w-[3rem] text-center">
-              {quantity}
+          <div className="flex items-center justify-between">
+            <span className="text-lg font-bold text-khrate-600">
+              RWF {product.price.toLocaleString()}
             </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={incrementQuantity}
-              disabled={quantity >= 99}
-              className="h-8 w-8 p-0"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
+            <Badge variant="outline" className="text-xs">
+              per {product.unit}
+            </Badge>
           </div>
-
-          {/* Add to Cart Button */}
-          <Button 
-            onClick={handleAddToCart}
-            disabled={isAdding}
-            className="w-full bg-khrate-500 hover:bg-khrate-600 text-white font-medium py-2 transition-colors"
-          >
-            <ShoppingCart className="h-4 w-4 mr-2" />
-            {isAdding ? 'Adding...' : 'Add to Cart'}
-          </Button>
         </div>
-      </CardContent>
-    </Card>
+
+        {product.inStock && (
+          <div className="space-y-3">
+            {/* Quantity Selector */}
+            <div className="flex items-center justify-center space-x-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleQuantityChange(quantity - 1)}
+                disabled={quantity <= 1}
+                className="h-8 w-8 p-0"
+              >
+                <Minus className="h-3 w-3" />
+              </Button>
+              
+              <span className="font-medium text-center min-w-[3rem]">
+                {quantity} {product.unit}
+              </span>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleQuantityChange(quantity + 1)}
+                className="h-8 w-8 p-0"
+              >
+                <Plus className="h-3 w-3" />
+              </Button>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-2">
+              <Button
+                onClick={handleAddToCart}
+                className="w-full bg-khrate-500 hover:bg-khrate-600"
+                size="sm"
+              >
+                Add to Cart
+              </Button>
+              
+              <GroupBuyButton
+                item={{
+                  id: product.id,
+                  name: product.name,
+                  price: product.price,
+                  unit: product.unit,
+                  type: 'product',
+                  image: product.image
+                }}
+                variant="outline"
+                size="sm"
+                className="w-full"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 

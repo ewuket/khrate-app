@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { X, Plus } from "lucide-react";
 import { useGroupBuying } from "@/contexts/GroupBuyingContext";
@@ -40,8 +39,6 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   const { createGroup, addItemToGroupCart } = useGroupBuying();
   const [formData, setFormData] = useState({
     name: '',
-    minParticipants: 3,
-    maxParticipants: 10,
     isPublic: false
   });
   const [selectedItems, setSelectedItems] = useState<Array<{name: string, quantity: number, unit: string}>>([]);
@@ -81,18 +78,10 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
       return;
     }
 
-    if (selectedItems.length === 0 && !initialItem) {
-      toast.error('Please select at least one item for the group');
-      return;
-    }
-
     setIsCreating(true);
     try {
       const group = await createGroup({
         name: formData.name,
-        min_participants: formData.minParticipants,
-        max_participants: formData.maxParticipants,
-        discount_percentage: 10, // Fixed admin-controlled discount
         is_public: formData.isPublic,
         group_type: formData.isPublic ? 'public' : 'private',
         items: selectedItems.length > 0 ? selectedItems : (initialItem ? [initialItem] : [])
@@ -117,16 +106,15 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         }
 
         toast.success(`Group "${formData.name}" created successfully!`);
+        
+        // Reset form and close modal
+        onClose();
+        setFormData({
+          name: '',
+          isPublic: false
+        });
+        setSelectedItems([]);
       }
-
-      onClose();
-      setFormData({
-        name: '',
-        minParticipants: 3,
-        maxParticipants: 10,
-        isPublic: false
-      });
-      setSelectedItems([]);
     } catch (error) {
       console.error('Error creating group:', error);
       toast.error('Failed to create group. Please try again.');
@@ -154,29 +142,14 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="minParticipants">Min. Participants</Label>
-              <Input
-                id="minParticipants"
-                type="number"
-                min="2"
-                max="20"
-                value={formData.minParticipants}
-                onChange={(e) => setFormData(prev => ({ ...prev, minParticipants: Number(e.target.value) }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="maxParticipants">Max. Participants</Label>
-              <Input
-                id="maxParticipants"
-                type="number"
-                min="3"
-                max="50"
-                value={formData.maxParticipants}
-                onChange={(e) => setFormData(prev => ({ ...prev, maxParticipants: Number(e.target.value) }))}
-              />
-            </div>
+          {/* Fixed participant info - no longer editable */}
+          <div className="p-3 bg-gray-50 rounded-lg">
+            <p className="text-sm text-gray-600">
+              <strong>Group Settings:</strong>
+            </p>
+            <p className="text-sm text-gray-500">• Minimum participants: 3 (required for discount)</p>
+            <p className="text-sm text-gray-500">• Maximum participants: 10</p>
+            <p className="text-sm text-gray-500">• Group discount: 10% (automatic when minimum reached)</p>
           </div>
 
           <div className="space-y-3">
@@ -270,10 +243,6 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
               onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isPublic: checked }))}
             />
             <Label htmlFor="isPublic">Make group public (others can find and join)</Label>
-          </div>
-
-          <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
-            <strong>Note:</strong> Group discount (10%) is automatically applied when minimum participants join.
           </div>
 
           <DialogFooter className="flex gap-2">

@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { GroupSession } from "@/types/groupBuying";
@@ -11,9 +12,16 @@ export const useGroupBuyingActions = () => {
   const createGroup = async (
     user: User | null,
     isAuthenticated: boolean,
-    name?: string, 
-    minParticipants: number = 3
-  ): Promise<string | null> => {
+    groupData: {
+      name: string;
+      min_participants?: number;
+      max_participants?: number;
+      discount_percentage?: number;
+      is_public?: boolean;
+      group_type?: string;
+      items?: any[];
+    }
+  ): Promise<GroupSession | null> => {
     if (!isAuthenticated || !user) {
       toast.error('Please log in to create a group');
       return null;
@@ -33,21 +41,26 @@ export const useGroupBuyingActions = () => {
 
       console.log('Generated join code:', joinCodeData);
 
-      // Create the group session
-      const groupData = {
-        name: name || `${user.email?.split('@')[0]}'s Group`,
+      // Create the group session with fixed constraints
+      const groupInsertData = {
+        name: groupData.name || `${user.email?.split('@')[0]}'s Group`,
         join_code: joinCodeData,
         leader_id: user.id,
-        min_participants: minParticipants,
+        min_participants: 3, // Fixed to 3 as per requirements
+        max_participants: 10, // Fixed to 10 as per requirements
+        discount_percentage: 10, // Fixed admin-controlled discount
         status: 'active',
-        order_status: 'collecting'
+        order_status: 'collecting',
+        is_public: groupData.is_public || false,
+        group_type: groupData.group_type || 'private',
+        items: groupData.items || []
       };
 
-      console.log('Creating group with data:', groupData);
+      console.log('Creating group with data:', groupInsertData);
 
       const { data: createdGroup, error: groupError } = await supabase
         .from('group_sessions')
-        .insert(groupData)
+        .insert(groupInsertData)
         .select()
         .single();
 
@@ -78,7 +91,7 @@ export const useGroupBuyingActions = () => {
         description: 'Share this code with others to let them join your group'
       });
       
-      return joinCodeData;
+      return createdGroup;
     } catch (error: any) {
       console.error('Error in createGroup:', error);
       toast.error(error.message || 'Failed to create group');

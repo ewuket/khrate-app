@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Clock, Package, CheckCircle } from "lucide-react";
 import { useGroupBuying } from "@/contexts/GroupBuyingContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 interface JoinGroupModalProps {
   isOpen: boolean;
@@ -21,43 +22,44 @@ const JoinGroupModal: React.FC<JoinGroupModalProps> = ({
 }) => {
   const { joinGroup } = useGroupBuying();
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [joinCode, setJoinCode] = useState('');
   const [isJoining, setIsJoining] = useState(false);
   const [foundGroup, setFoundGroup] = useState<any>(null);
   const [showGroupPreview, setShowGroupPreview] = useState(false);
   const [groupMembers, setGroupMembers] = useState<any[]>([]);
 
-  // Mock function to simulate finding a group by code
+  // Function to find a group by code using Supabase
   const findGroupByCode = async (code: string) => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Mock group data
-    const mockGroups = [
-      {
-        id: 'group1',
-        name: 'Nyamirambo Shopping Group',
-        join_code: 'ABC123',
-        max_participants: 10,
-        items: [
-          { name: 'Rice', quantity: 2, unit: 'kg' },
-          { name: 'Beans', quantity: 1, unit: 'kg' },
-          { name: 'Oil', quantity: 1, unit: 'L' }
-        ]
-      },
-      {
-        id: 'group2',
-        name: 'Kigali Central Group',
-        join_code: 'XYZ789',
-        max_participants: 8,
-        items: [
-          { name: 'Tomatoes', quantity: 3, unit: 'kg' },
-          { name: 'Potatoes', quantity: 2, unit: 'kg' }
-        ]
+    try {
+      const { data: groupData, error: groupError } = await supabase
+        .from('group_sessions')
+        .select(`
+          *,
+          group_members!group_members_group_session_id_fkey(
+            id,
+            user_id,
+            joined_at,
+            user_profiles!group_members_user_id_fkey(
+              full_name,
+              email
+            )
+          )
+        `)
+        .eq('join_code', code.toUpperCase())
+        .eq('status', 'active')
+        .single();
+
+      if (groupError) {
+        console.error('Group not found:', groupError);
+        return null;
       }
-    ];
-    
-    return mockGroups.find(group => group.join_code === code) || null;
+
+      return groupData;
+    } catch (error) {
+      console.error('Error finding group:', error);
+      return null;
+    }
   };
 
   const handleSearchGroup = async () => {
@@ -74,12 +76,15 @@ const JoinGroupModal: React.FC<JoinGroupModalProps> = ({
         setFoundGroup(group);
         setShowGroupPreview(true);
         
-        // Mock group members for preview
-        setGroupMembers([
-          { id: 1, name: 'Group Leader', status: 'paid', joinedAt: '2024-01-15' },
-          { id: 2, name: 'Member 2', status: 'pending', joinedAt: '2024-01-16' },
-          { id: 3, name: 'Member 3', status: 'paid', joinedAt: '2024-01-17' }
-        ]);
+        // Set group members from the fetched data
+        const members = group.group_members?.map((member: any) => ({
+          id: member.id,
+          name: member.user_profiles?.full_name || member.user_profiles?.email || 'Unknown User',
+          status: 'pending', // Default status, could be enhanced with payment data
+          joinedAt: member.joined_at
+        })) || [];
+        
+        setGroupMembers(members);
       } else {
         toast.error('Group not found. Please check the code and try again.');
       }
@@ -96,26 +101,26 @@ const JoinGroupModal: React.FC<JoinGroupModalProps> = ({
 
     try {
       setIsJoining(true);
-      await joinGroup(foundGroup.id);
+      const joinedGroup = await joinGroup(foundGroup.join_code);
       
-      toast.success(`Successfully joined "${foundGroup.name}"!`);
-      
-      // Close modal and redirect to group checkout
-      onClose();
-      setFoundGroup(null);
-      setShowGroupPreview(false);
-      setJoinCode('');
-      
+      if (joinedGroup) {
+        toast.success(`Successfully joined "${foundGroup.name}"!`);
+        
+        // Close modal and navigate to group buy page
+        onClose();
+        setFoundGroup(null);
+        setShowGroupPreview(false);
+        setJoinCode('');
+        
+        // Navigate to group buy page to show the active group
+        navigate('/group-buy');
+      }
     } catch (error) {
       console.error('Error joining group:', error);
       toast.error('Failed to join group. Please try again.');
     } finally {
       setIsJoining(false);
     }
-  };
-
-  const formatPrice = (price: number) => {
-    return `RWF ${price.toLocaleString()}`;
   };
 
   const getStatusColor = (status: string) => {
@@ -187,7 +192,7 @@ const JoinGroupModal: React.FC<JoinGroupModalProps> = ({
                 </div>
                 <div className="flex items-center gap-1">
                   <Package className="h-4 w-4" />
-                  <span>10% group discount</span>
+                  <span>{foundGroup.discount_percentage}% group discount</span>
                 </div>
               </div>
             </div>
@@ -244,11 +249,11 @@ const JoinGroupModal: React.FC<JoinGroupModalProps> = ({
               </div>
             )}
 
-            {/* Payment Status */}
+            {/* Next Steps */}
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-sm text-blue-800">
-                <strong>Next step:</strong> Join this group and proceed to checkout. 
-                Your order will be confirmed once all members have paid.
+                <strong>Next step:</strong> Join this group and start adding items to your group cart. 
+                You can proceed to checkout once you've selected your items.
               </p>
             </div>
 
@@ -267,7 +272,7 @@ const JoinGroupModal: React.FC<JoinGroupModalProps> = ({
                 disabled={isJoining}
                 className="bg-khrate-500 hover:bg-khrate-600"
               >
-                {isJoining ? 'Joining...' : 'Join Group & Checkout'}
+                {isJoining ? 'Joining...' : 'Join Group'}
               </Button>
             </DialogFooter>
           </div>
