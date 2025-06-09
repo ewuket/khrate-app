@@ -1,116 +1,75 @@
 
-import React, { useState } from "react";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader,
-  DialogTitle
-} from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginForm from "./login/LoginForm";
 import SignupForm from "./signup/SignupForm";
-import PasswordResetForm from "./password-reset/PasswordResetForm";
-import ResetEmailSent from "./password-reset/ResetEmailSent";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const AuthModal: React.FC = () => {
+const AuthModal = () => {
   const { isAuthModalOpen, closeAuthModal } = useAuth();
-  const [activeTab, setActiveTab] = useState("login");
-  const [showResetPassword, setShowResetPassword] = useState(false);
-  const [resetSent, setResetSent] = useState(false);
-  const [resetEmail, setResetEmail] = useState("");
-  
-  const handleResetSent = (email: string) => {
-    setResetEmail(email);
-    setResetSent(true);
+  const [currentTab, setCurrentTab] = useState("login");
+
+  const handleSwitchToLogin = () => {
+    setCurrentTab("login");
   };
-  
-  const handleGuestCheckout = () => {
-    toast.success("Continuing as guest");
+
+  const handleSwitchToSignup = () => {
+    setCurrentTab("signup");
+  };
+
+  const handleSuccess = () => {
     closeAuthModal();
   };
-  
-  const handleCloseModal = () => {
-    setShowResetPassword(false);
-    setResetSent(false);
-    setResetEmail("");
-    setActiveTab("login");
-    closeAuthModal();
-  };
-  
+
   return (
-    <Dialog open={isAuthModalOpen} onOpenChange={handleCloseModal}>
-      <DialogContent className="sm:max-w-[425px]">
-        {!showResetPassword ? (
-          <>
-            <DialogHeader>
-              <DialogTitle>Welcome to KHRATE</DialogTitle>
-              <DialogDescription>
-                Sign in to your account or create a new one to get started.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="login" className="space-y-4 py-4">
+    <Dialog open={isAuthModalOpen} onOpenChange={closeAuthModal}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Welcome to KHRATE</DialogTitle>
+        </DialogHeader>
+        
+        <Tabs value={currentTab} onValueChange={setCurrentTab}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="login">Login</TabsTrigger>
+            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="login">
+            <Card>
+              <CardHeader>
+                <CardTitle>Login</CardTitle>
+                <CardDescription>
+                  Welcome back! Sign in to your account.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
                 <LoginForm 
-                  onSwitchToSignup={() => setActiveTab("signup")}
-                  onSwitchToReset={() => setShowResetPassword(true)} 
+                  onSuccess={handleSuccess}
+                  onSwitchToSignup={handleSwitchToSignup}
                 />
-              </TabsContent>
-              
-              <TabsContent value="signup" className="space-y-4 py-4">
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="signup">
+            <Card>
+              <CardHeader>
+                <CardTitle>Create Account</CardTitle>
+                <CardDescription>
+                  Join KHRATE and start saving on groceries today!
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
                 <SignupForm 
-                  onSwitchToLogin={() => setActiveTab("login")}
+                  onSuccess={handleSuccess}
+                  onSwitchToLogin={handleSwitchToLogin}
                 />
-              </TabsContent>
-            </Tabs>
-            
-            <div className="mt-4 pt-4 border-t">
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={handleGuestCheckout}
-              >
-                Continue as Guest
-              </Button>
-            </div>
-          </>
-        ) : (
-          <>
-            <DialogHeader>
-              <DialogTitle>Reset Password</DialogTitle>
-              <DialogDescription>
-                {!resetSent ? 
-                  "Enter your email address and we'll send you a link to reset your password." : 
-                  "Check your email for a password reset link. Follow the instructions to create a new password."
-                }
-              </DialogDescription>
-            </DialogHeader>
-            
-            {!resetSent ? (
-              <PasswordResetForm 
-                onBackToLogin={() => setShowResetPassword(false)} 
-                onResetSent={handleResetSent}
-              />
-            ) : (
-              <ResetEmailSent 
-                email={resetEmail} 
-                onBackToLogin={() => {
-                  setShowResetPassword(false);
-                  setResetSent(false);
-                }}
-              />
-            )}
-          </>
-        )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

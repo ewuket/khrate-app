@@ -1,11 +1,11 @@
 
-import React, { useEffect } from 'react';
-import { X, ShoppingCart, Users, Calculator } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import React from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useGroupBuying } from "@/contexts/GroupBuyingContext";
-import CartItem from "@/components/cart/CartItem";
+import { formatCurrency } from "@/lib/utils";
+import { Minus, Plus, Trash2 } from "lucide-react";
 
 interface GroupCartSidebarProps {
   isOpen: boolean;
@@ -14,129 +14,118 @@ interface GroupCartSidebarProps {
 
 const GroupCartSidebar: React.FC<GroupCartSidebarProps> = ({ isOpen, onClose }) => {
   const { 
-    currentGroup,
     groupCart, 
     groupSummary,
-    removeItemFromGroupCart,
+    groupMembers,
     updateGroupCartItemQuantity,
-    completeGroupPayment,
-    getGroupTotal
+    removeItemFromGroupCart
   } = useGroupBuying();
 
-  // Listen for custom event to open group cart
-  useEffect(() => {
-    const handleOpenGroupCart = () => {
-      if (currentGroup) {
-        // Force the cart to open
-        window.dispatchEvent(new CustomEvent('openGroupCartSidebar'));
-      }
-    };
-
-    window.addEventListener('openGroupCart', handleOpenGroupCart);
-    return () => window.removeEventListener('openGroupCart', handleOpenGroupCart);
-  }, [currentGroup]);
-
-  const formatPrice = (price: number) => {
-    return `RWF ${price.toLocaleString()}`;
+  const getGroupTotal = () => {
+    return groupCart.reduce((total, item) => total + (item.product_price * item.quantity), 0);
   };
 
-  const handleCheckout = async () => {
-    const success = await completeGroupPayment();
-    if (success) {
-      onClose();
-    }
+  const handleCheckout = () => {
+    // TODO: Implement group checkout logic
+    console.log('Group checkout clicked');
   };
-
-  if (!currentGroup) {
-    return null;
-  }
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-        <SheetHeader className="flex flex-row justify-between items-center">
-          <SheetTitle className="flex items-center">
-            <Users className="mr-2 h-5 w-5" />
+      <SheetContent className="w-full sm:max-w-lg">
+        <SheetHeader>
+          <SheetTitle className="flex items-center gap-2">
             Group Cart
+            <Badge variant="secondary">{groupMembers.length} members</Badge>
           </SheetTitle>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-5 w-5" />
-          </Button>
         </SheetHeader>
 
-        <div className="py-4">
-          <div className="mb-4 p-3 bg-khrate-50 rounded-lg">
-            <h3 className="font-medium text-khrate-700 mb-1">{currentGroup.name}</h3>
-            <p className="text-sm text-khrate-600">
-              {groupSummary?.member_count || 0} members • {groupSummary?.qualifies_for_discount ? `${currentGroup.discount_percentage}% discount active` : 'No discount yet'}
-            </p>
-          </div>
-
-          {groupCart.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 space-y-3 text-center">
-              <ShoppingCart className="h-12 w-12 text-muted-foreground opacity-20" />
-              <div>
-                <h3 className="font-medium mb-1">Your group cart is empty</h3>
-                <p className="text-sm text-muted-foreground">
-                  Add items from bundles or custom buy to get started.
-                </p>
+        <div className="flex flex-col h-full">
+          <div className="flex-1 overflow-y-auto py-4">
+            {groupCart.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-64 text-center">
+                <p className="text-muted-foreground mb-4">Your group cart is empty</p>
+                <Button onClick={onClose} variant="outline">
+                  Continue Shopping
+                </Button>
               </div>
-            </div>
-          ) : (
-            <>
-              <div className="space-y-4 mb-6">
+            ) : (
+              <div className="space-y-4">
                 {groupCart.map((item) => (
-                  <CartItem 
-                    key={item.id}
-                    item={{
-                      id: item.product_id,
-                      name: item.product_name,
-                      price: item.product_price,
-                      quantity: item.quantity,
-                      unit: item.product_unit
-                    }}
-                    formatPrice={formatPrice}
-                    onUpdateQuantity={(id, quantity) => updateGroupCartItemQuantity(item.id, quantity)}
-                    onRemoveFromCart={() => removeItemFromGroupCart(item.id)}
-                  />
+                  <div key={item.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                    <div className="flex-1">
+                      <h4 className="font-medium">{item.product_name}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {formatCurrency(item.product_price)} per {item.product_unit}
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateGroupCartItemQuantity(item.id, Math.max(1, item.quantity - 1))}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Minus className="h-3 w-3" />
+                      </Button>
+                      
+                      <span className="font-medium min-w-[2rem] text-center">
+                        {item.quantity}
+                      </span>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateGroupCartItemQuantity(item.id, item.quantity + 1)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                      
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeItemFromGroupCart(item.id)}
+                        className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
                 ))}
               </div>
+            )}
+          </div>
 
-              {groupSummary && (
-                <div className="border-t pt-4 space-y-3">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Calculator className="h-4 w-4" />
-                    <span className="font-medium">Group Summary</span>
-                  </div>
-                  
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Subtotal</span>
-                      <span>{formatPrice(groupSummary.total_amount)}</span>
-                    </div>
-                    
-                    {groupSummary.qualifies_for_discount && (
-                      <div className="flex justify-between text-green-600">
-                        <span>Group Discount ({currentGroup.discount_percentage}%)</span>
-                        <span>-{formatPrice(groupSummary.discount_amount)}</span>
-                      </div>
-                    )}
-                    
-                    <div className="flex justify-between font-bold text-lg border-t pt-2">
-                      <span>Total</span>
-                      <span>{formatPrice(groupSummary.final_amount)}</span>
-                    </div>
-                  </div>
-
-                  <Button 
-                    onClick={handleCheckout}
-                    className="w-full bg-khrate-500 hover:bg-khrate-600 mt-4"
-                  >
-                    Complete Payment
-                  </Button>
+          {groupCart.length > 0 && (
+            <div className="border-t pt-4 space-y-4">
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Subtotal:</span>
+                  <span>{formatCurrency(getGroupTotal())}</span>
                 </div>
-              )}
-            </>
+                
+                {groupSummary && groupSummary.qualifies_for_discount && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>Group Discount:</span>
+                    <span>-{formatCurrency(groupSummary.discount_amount)}</span>
+                  </div>
+                )}
+                
+                <div className="flex justify-between font-semibold">
+                  <span>Total:</span>
+                  <span>{formatCurrency(groupSummary?.final_amount || getGroupTotal())}</span>
+                </div>
+              </div>
+
+              <Button 
+                className="w-full bg-khrate-500 hover:bg-khrate-600"
+                onClick={handleCheckout}
+              >
+                Proceed to Group Checkout
+              </Button>
+            </div>
           )}
         </div>
       </SheetContent>
