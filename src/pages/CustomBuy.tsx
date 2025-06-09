@@ -1,10 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import ProductList from "@/components/custom-buy/ProductList";
 import CustomBuyCart from "@/components/custom-buy/CustomBuyCart";
 import CustomBuyCheckoutDialog from "@/components/custom-buy/CustomBuyCheckoutDialog";
@@ -87,70 +86,66 @@ const CustomBuy = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar />
-      
-      <main className="flex-1">
-        <section className="bg-gradient-to-r from-khrate-500 to-khrate-600 py-8 sm:py-12 text-white">
-          <div className="container mx-auto px-4">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">Custom Buy</h1>
-            <p className="mt-2 max-w-lg text-sm sm:text-base">
-              Choose your own items and create your perfect shopping list
-            </p>
-          </div>
-        </section>
+      <section className="bg-gradient-to-r from-khrate-500 to-khrate-600 py-8 sm:py-12 text-white">
+        <div className="container mx-auto px-4">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">Custom Buy</h1>
+          <p className="mt-2 max-w-lg text-sm sm:text-base">
+            Choose your own items and create your perfect shopping list
+          </p>
+        </div>
+      </section>
 
-        <section className="py-6 sm:py-8">
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col lg:flex-row gap-6">
-              {/* Main Content */}
-              <div className="flex-1">
-                {/* Search and Filter */}
-                <div className="mb-6 space-y-4">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input
-                      placeholder="Search products..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-
-                  <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <TabsList className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 w-full">
-                      {categories.map(category => (
-                        <TabsTrigger 
-                          key={category} 
-                          value={category} 
-                          className="text-xs sm:text-sm capitalize truncate"
-                        >
-                          {category === "all" ? "All" : category}
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-                  </Tabs>
-                </div>
-
-                {/* Products Grid */}
-                <ProductList products={filteredProducts} onAddToCart={addToCart} />
-              </div>
-
-              {/* Cart Sidebar - Hidden on mobile, use floating button instead */}
-              <div className="hidden lg:block lg:w-80 xl:w-96">
-                <div className="sticky top-4">
-                  <CustomBuyCart
-                    cart={cart}
-                    products={products}
-                    onAddToCart={addToCart}
-                    onRemoveFromCart={removeFromCart}
-                    calculateTotal={calculateTotal}
+      <section className="py-6 sm:py-8">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Main Content */}
+            <div className="flex-1">
+              {/* Search and Filter */}
+              <div className="mb-6 space-y-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Search products..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
                   />
                 </div>
+
+                <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <TabsList className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 w-full">
+                    {categories.map(category => (
+                      <TabsTrigger 
+                        key={category} 
+                        value={category} 
+                        className="text-xs sm:text-sm capitalize truncate"
+                      >
+                        {category === "all" ? "All" : category}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </Tabs>
+              </div>
+
+              {/* Products Grid */}
+              <ProductList products={filteredProducts} onAddToCart={addToCart} />
+            </div>
+
+            {/* Cart Sidebar - Hidden on mobile, use floating button instead */}
+            <div className="hidden lg:block lg:w-80 xl:w-96">
+              <div className="sticky top-4">
+                <CustomBuyCart
+                  cart={cart}
+                  products={products}
+                  onAddToCart={addToCart}
+                  onRemoveFromCart={removeFromCart}
+                  calculateTotal={calculateTotal}
+                />
               </div>
             </div>
           </div>
-        </section>
-      </main>
+        </div>
+      </section>
 
       {/* Mobile Cart Button */}
       <div className="lg:hidden fixed bottom-4 right-4 z-50">
@@ -195,8 +190,6 @@ const CustomBuy = () => {
           </div>
         </div>
       )}
-
-      <Footer />
 
       <CustomBuyCheckoutDialog
         open={showCheckout}

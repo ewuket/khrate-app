@@ -30,7 +30,7 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
+    <nav className="bg-background shadow-sm border-b sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -67,7 +67,7 @@ const Navbar = () => {
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[280px] sm:w-[320px]">
+              <SheetContent side="right" className="w-[280px] sm:w-[320px] z-50">
                 <div className="flex flex-col space-y-6 mt-6">
                   <NavLinks 
                     links={navLinks} 

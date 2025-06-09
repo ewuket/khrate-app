@@ -1,112 +1,117 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, Clock, MapPin, Package } from "lucide-react";
+import { Users, Eye, Clock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGroupBuying } from "@/contexts/GroupBuyingContext";
-import JoinGroupModal from "@/components/group-buy/JoinGroupModal";
 import { toast } from "sonner";
+import BundlePreviewModal from "@/components/bundles/BundlePreviewModal";
+
+const popularGroups = [
+  {
+    id: 1,
+    name: "Weekend Groceries Group",
+    description: "Fresh produce and essentials for the weekend",
+    memberCount: 5,
+    maxMembers: 8,
+    discountPercentage: 10,
+    timeLeft: "2 days",
+    bundle: {
+      id: 101,
+      title: "Weekend Bundle",
+      price: 45000,
+      originalPrice: 50000,
+      image: "/lovable-uploads/4730e151-0c90-4bde-a3cf-7eb370e2cac1.png",
+      items: [
+        { name: "Fresh Vegetables", quantity: 3 },
+        { name: "Fruits", quantity: 2 },
+        { name: "Bread", quantity: 2 },
+        { name: "Milk", quantity: 2 },
+        { name: "Eggs", quantity: 12 }
+      ]
+    }
+  },
+  {
+    id: 2,
+    name: "Family Essentials Group",
+    description: "Complete family grocery package",
+    memberCount: 7,
+    maxMembers: 10,
+    discountPercentage: 15,
+    timeLeft: "1 day",
+    bundle: {
+      id: 102,
+      title: "Family Bundle",
+      price: 85000,
+      originalPrice: 100000,
+      image: "/lovable-uploads/6d22b9d7-17a9-457a-947a-9bb8301a4051.png",
+      items: [
+        { name: "Rice", quantity: 15 },
+        { name: "Beans", quantity: 5 },
+        { name: "Oil", quantity: 3 },
+        { name: "Sugar", quantity: 3 },
+        { name: "Vegetables", quantity: 5 },
+        { name: "Meat", quantity: 2 }
+      ]
+    }
+  },
+  {
+    id: 3,
+    name: "Office Lunch Group",
+    description: "Quick lunch solutions for busy professionals",
+    memberCount: 3,
+    maxMembers: 6,
+    discountPercentage: 10,
+    timeLeft: "3 days",
+    bundle: {
+      id: 103,
+      title: "Lunch Bundle",
+      price: 25000,
+      originalPrice: 28000,
+      image: "/lovable-uploads/30fe686e-a6f6-469f-bb69-c889c304c4e7.png",
+      items: [
+        { name: "Sandwich Bread", quantity: 3 },
+        { name: "Cold Cuts", quantity: 1 },
+        { name: "Cheese", quantity: 1 },
+        { name: "Snacks", quantity: 5 },
+        { name: "Drinks", quantity: 6 }
+      ]
+    }
+  }
+];
 
 const PopularGroupBuys = () => {
   const { isAuthenticated, openAuthModal } = useAuth();
   const { joinGroup } = useGroupBuying();
-  const [showJoinModal, setShowJoinModal] = useState(false);
-  const [groups, setGroups] = useState([
-    {
-      id: 'group-1',
-      name: 'Nyamirambo Neighborhood',
-      description: 'Weekly groceries for families in Nyamirambo area',
-      join_code: 'NYA123',
-      location: 'Nyamirambo',
-      members: 8,
-      max_participants: 12,
-      min_participants: 3,
-      discount_percentage: 10,
-      status: 'active',
-      items: [
-        { name: 'Rice', quantity: 25, unit: 'kg' },
-        { name: 'Beans', quantity: 10, unit: 'kg' },
-        { name: 'Oil', quantity: 5, unit: 'L' },
-        { name: 'Sugar', quantity: 5, unit: 'kg' }
-      ],
-      estimated_total: 45000,
-      time_remaining: '2 days',
-      created_at: new Date().toISOString()
-    },
-    {
-      id: 'group-2',
-      name: 'Kigali City Bulk Buy',
-      description: 'Monthly bulk purchase for office workers',
-      join_code: 'KGL456',
-      location: 'City Center',
-      members: 15,
-      max_participants: 20,
-      min_participants: 3,
-      discount_percentage: 10,
-      status: 'active',
-      items: [
-        { name: 'Coffee', quantity: 10, unit: 'kg' },
-        { name: 'Tea', quantity: 5, unit: 'kg' },
-        { name: 'Sugar', quantity: 15, unit: 'kg' },
-        { name: 'Milk Powder', quantity: 8, unit: 'kg' }
-      ],
-      estimated_total: 65000,
-      time_remaining: '5 days',
-      created_at: new Date().toISOString()
-    },
-    {
-      id: 'group-3',
-      name: 'Student Housing Group',
-      description: 'Affordable groceries for students near university',
-      join_code: 'STU789',
-      location: 'Remera',
-      members: 6,
-      max_participants: 15,
-      min_participants: 3,
-      discount_percentage: 10,
-      status: 'active',
-      items: [
-        { name: 'Rice', quantity: 20, unit: 'kg' },
-        { name: 'Cooking Oil', quantity: 3, unit: 'L' },
-        { name: 'Tomatoes', quantity: 10, unit: 'kg' },
-        { name: 'Onions', quantity: 8, unit: 'kg' }
-      ],
-      estimated_total: 32000,
-      time_remaining: '1 day',
-      created_at: new Date().toISOString()
-    }
-  ]);
+  const [selectedBundle, setSelectedBundle] = useState<any>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
-  const formatPrice = (price: number) => {
-    return `RWF ${price.toLocaleString()}`;
-  };
-
-  const handleJoinGroup = async (groupId: string) => {
+  const handleJoinGroup = async (group: typeof popularGroups[0]) => {
     if (!isAuthenticated) {
       openAuthModal();
       return;
     }
 
     try {
-      await joinGroup(groupId);
-      toast.success('Successfully joined the group!');
+      // Simulate joining with a mock join code
+      const mockJoinCode = `GROUP${group.id}`;
+      await joinGroup(mockJoinCode);
+      toast.success(`Successfully joined ${group.name}!`);
     } catch (error) {
       console.error('Error joining group:', error);
       toast.error('Failed to join group. Please try again.');
     }
   };
 
-  const getStatusColor = (members: number, minParticipants: number) => {
-    if (members >= minParticipants) {
-      return 'bg-green-100 text-green-800';
-    }
-    return 'bg-yellow-100 text-yellow-800';
+  const handlePreview = (group: typeof popularGroups[0]) => {
+    setSelectedBundle(group.bundle);
+    setShowPreview(true);
   };
 
-  const getProgressPercentage = (members: number, maxParticipants: number) => {
-    return Math.min((members / maxParticipants) * 100, 100);
+  const formatPrice = (price: number) => {
+    return `RWF ${price.toLocaleString()}`;
   };
 
   return (
@@ -116,143 +121,98 @@ const PopularGroupBuys = () => {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Popular Group Buys</h2>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              Join active groups in your area and save money on bulk purchases
+              Join active groups and save money together with your neighbors
             </p>
           </div>
-        
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {groups.map((group) => {
-              const qualifiesForDiscount = group.members >= group.min_participants;
-              const progressPercentage = getProgressPercentage(group.members, group.max_participants);
-              
-              return (
-                <Card key={group.id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
-                  <CardHeader className="pb-3">
-                    <div className="flex justify-between items-start mb-2">
-                      <CardTitle className="text-lg font-semibold line-clamp-2">
-                        {group.name}
-                      </CardTitle>
-                      <Badge className={getStatusColor(group.members, group.min_participants)}>
-                        {qualifiesForDiscount ? 'Ready' : 'Collecting'}
-                      </Badge>
-                    </div>
-                    <CardDescription className="text-sm line-clamp-2">
-                      {group.description}
-                    </CardDescription>
-                  </CardHeader>
-                  
-                  <CardContent className="space-y-4">
-                    {/* Location and Code */}
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-1 text-gray-600">
-                        <MapPin className="h-3 w-3" />
-                        <span>{group.location}</span>
-                      </div>
-                      <div className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
-                        {group.join_code}
-                      </div>
-                    </div>
+            {popularGroups.map((group) => (
+              <Card key={group.id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden bg-white border">
+                <div className="relative overflow-hidden">
+                  <img 
+                    src={group.bundle.image} 
+                    alt={group.bundle.title}
+                    className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                  <Badge 
+                    variant="destructive" 
+                    className="absolute top-3 right-3 bg-green-500 hover:bg-green-600"
+                  >
+                    {group.discountPercentage}% OFF
+                  </Badge>
+                </div>
 
-                    {/* Progress */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-1">
-                          <Users className="h-4 w-4 text-gray-500" />
-                          <span>{group.members}/{group.max_participants} members</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-gray-600">
-                          <Clock className="h-3 w-3" />
-                          <span>{group.time_remaining}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-khrate-500 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${progressPercentage}%` }}
-                        ></div>
-                      </div>
-                    </div>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg font-semibold text-foreground">
+                    {group.name}
+                  </CardTitle>
+                  <CardDescription className="text-sm text-muted-foreground">
+                    {group.description}
+                  </CardDescription>
+                </CardHeader>
 
-                    {/* Items Preview */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-1 text-sm font-medium">
-                        <Package className="h-3 w-3" />
-                        <span>Items ({group.items.length})</span>
-                      </div>
-                      <div className="text-xs text-gray-600 space-y-1">
-                        {group.items.slice(0, 3).map((item, index) => (
-                          <div key={index} className="flex justify-between">
-                            <span>{item.name}</span>
-                            <span>{item.quantity} {item.unit}</span>
-                          </div>
-                        ))}
-                        {group.items.length > 3 && (
-                          <div className="text-center text-khrate-500">
-                            +{group.items.length - 3} more items
-                          </div>
-                        )}
-                      </div>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center space-x-1 text-muted-foreground">
+                      <Users className="h-4 w-4" />
+                      <span>{group.memberCount}/{group.maxMembers} members</span>
                     </div>
+                    <div className="flex items-center space-x-1 text-muted-foreground">
+                      <Clock className="h-4 w-4" />
+                      <span>{group.timeLeft} left</span>
+                    </div>
+                  </div>
 
-                    {/* Price and Discount */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">Estimated Total:</span>
-                        <div className="text-right">
-                          {qualifiesForDiscount ? (
-                            <div>
-                              <span className="text-lg font-bold text-khrate-600">
-                                {formatPrice(group.estimated_total * 0.9)}
-                              </span>
-                              <span className="text-sm text-gray-500 line-through ml-2">
-                                {formatPrice(group.estimated_total)}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-lg font-bold text-gray-600">
-                              {formatPrice(group.estimated_total)}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {qualifiesForDiscount && (
-                        <div className="text-xs text-green-600 text-right">
-                          🎉 10% discount applied!
-                        </div>
-                      )}
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-khrate-600">
+                      {formatPrice(group.bundle.price)}
                     </div>
+                    <div className="text-sm text-gray-500 line-through">
+                      {formatPrice(group.bundle.originalPrice)}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Button 
+                      onClick={() => handlePreview(group)}
+                      variant="outline"
+                      className="w-full border-khrate-500 text-khrate-600 hover:bg-khrate-50"
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      Preview Bundle
+                    </Button>
                     
                     <Button 
-                      onClick={() => handleJoinGroup(group.id)}
-                      className="w-full bg-khrate-500 hover:bg-khrate-600"
-                      size="sm"
+                      onClick={() => handleJoinGroup(group)}
+                      className="w-full bg-khrate-500 hover:bg-khrate-600 text-white"
                     >
+                      <Users className="h-4 w-4 mr-2" />
                       Join Group
                     </Button>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+                  </div>
 
-          <div className="text-center mt-8">
-            <Button 
-              variant="outline"
-              onClick={() => setShowJoinModal(true)}
-              className="border-khrate-500 text-khrate-600 hover:bg-khrate-50"
-            >
-              Join with Code
-            </Button>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-khrate-500 h-2 rounded-full" 
+                      style={{ width: `${(group.memberCount / group.maxMembers) * 100}%` }}
+                    ></div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
 
-      <JoinGroupModal
-        isOpen={showJoinModal}
-        onClose={() => setShowJoinModal(false)}
-      />
+      {selectedBundle && (
+        <BundlePreviewModal
+          bundle={selectedBundle}
+          isOpen={showPreview}
+          onClose={() => setShowPreview(false)}
+          onAddToCart={() => {}}
+          isAdding={false}
+        />
+      )}
     </>
   );
 };

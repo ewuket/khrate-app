@@ -23,7 +23,7 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminDashboardPage from "./pages/AdminDashboard";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import AuthModal from "@/components/auth/AuthModal";
+import CartSidebar from "@/components/cart/CartSidebar";
 import "./App.css";
 
 const queryClient = new QueryClient();
@@ -58,7 +58,7 @@ function App() {
                         </Routes>
                       </main>
                       <Footer />
-                      <AuthModal />
+                      <CartSidebar />
                     </div>
                     <Toaster />
                   </GroupBuyingProvider>

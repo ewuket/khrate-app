@@ -1,89 +1,53 @@
 
-import React, { createContext, useContext, useEffect } from "react";
-import { useAdminAuth } from "@/hooks/useAdminAuth";
-import { useAdminData } from "@/hooks/useAdminData";
-import { useAdminOperations } from "@/hooks/useAdminOperations";
-import { AdminUser, AdminOrder, AdminGroupSession, AdminStats } from "@/types/admin";
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 interface AdminContextType {
-  adminUser: AdminUser | null;
-  orders: AdminOrder[];
-  groupSessions: AdminGroupSession[];
-  stats: AdminStats | null;
-  loading: boolean;
-  loginAsAdmin: (email: string, password: string) => Promise<boolean>;
-  logoutAdmin: () => Promise<void>;
-  loadOrders: () => Promise<void>;
-  loadGroupSessions: () => Promise<void>;
-  loadStats: () => Promise<void>;
-  updateOrderStatus: (orderId: string, status: string) => Promise<boolean>;
-  updatePaymentStatus: (orderId: string, paymentStatus: string) => Promise<boolean>;
+  isAdminAuthenticated: boolean;
+  adminUser: any | null;
+  adminLogin: (credentials: any) => Promise<boolean>;
+  adminLogout: () => void;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
-export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const auth = useAdminAuth();
-  const data = useAdminData();
-  const operations = useAdminOperations();
+interface AdminProviderProps {
+  children: ReactNode;
+}
 
-  const loadDashboardData = async () => {
-    await Promise.all([
-      data.loadOrders(),
-      data.loadGroupSessions(),
-      data.loadStats()
-    ]);
+export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+  const [adminUser, setAdminUser] = useState(null);
+
+  const adminLogin = async (credentials: any): Promise<boolean> => {
+    // Implement admin login logic here
+    // For now, just return true for demo purposes
+    setIsAdminAuthenticated(true);
+    setAdminUser({ email: credentials.email });
+    return true;
   };
 
-  useEffect(() => {
-    if (auth.adminUser) {
-      loadDashboardData();
-    }
-  }, [auth.adminUser]);
-
-  const enhancedUpdateOrderStatus = async (orderId: string, status: string): Promise<boolean> => {
-    const result = await operations.updateOrderStatus(orderId, status);
-    if (result) {
-      await data.loadOrders();
-      await data.loadStats();
-    }
-    return result;
+  const adminLogout = () => {
+    setIsAdminAuthenticated(false);
+    setAdminUser(null);
   };
 
-  const enhancedUpdatePaymentStatus = async (orderId: string, paymentStatus: string): Promise<boolean> => {
-    const result = await operations.updatePaymentStatus(orderId, paymentStatus);
-    if (result) {
-      await data.loadOrders();
-      await data.loadStats();
-    }
-    return result;
+  const value: AdminContextType = {
+    isAdminAuthenticated,
+    adminUser,
+    adminLogin,
+    adminLogout
   };
 
   return (
-    <AdminContext.Provider
-      value={{
-        adminUser: auth.adminUser,
-        orders: data.orders,
-        groupSessions: data.groupSessions,
-        stats: data.stats,
-        loading: auth.loading,
-        loginAsAdmin: auth.loginAsAdmin,
-        logoutAdmin: auth.logoutAdmin,
-        loadOrders: data.loadOrders,
-        loadGroupSessions: data.loadGroupSessions,
-        loadStats: data.loadStats,
-        updateOrderStatus: enhancedUpdateOrderStatus,
-        updatePaymentStatus: enhancedUpdatePaymentStatus
-      }}
-    >
+    <AdminContext.Provider value={value}>
       {children}
     </AdminContext.Provider>
   );
 };
 
-export const useAdmin = () => {
+export const useAdmin = (): AdminContextType => {
   const context = useContext(AdminContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAdmin must be used within an AdminProvider');
   }
   return context;

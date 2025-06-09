@@ -84,9 +84,9 @@ const CartSidebar = () => {
   return (
     <>
       <Sheet open={isCartOpen} onOpenChange={closeCart}>
-        <SheetContent className="w-full sm:max-w-md overflow-y-auto p-0 flex flex-col h-full">
-          <SheetHeader className="flex flex-row justify-between items-center p-4 border-b flex-shrink-0">
-            <SheetTitle className="flex items-center text-lg">
+        <SheetContent className="w-full sm:max-w-md overflow-y-auto p-0 flex flex-col h-full z-50">
+          <SheetHeader className="flex flex-row justify-between items-center p-4 border-b flex-shrink-0 bg-background">
+            <SheetTitle className="flex items-center text-lg font-semibold">
               <ShoppingCart className="mr-2 h-5 w-5" />
               Your Cart ({cart.length})
             </SheetTitle>
@@ -96,7 +96,7 @@ const CartSidebar = () => {
             </Button>
           </SheetHeader>
           
-          <div className="flex-1 overflow-y-auto min-h-0">
+          <div className="flex-1 overflow-y-auto min-h-0 bg-background">
             {cart.length === 0 ? (
               <div className="p-4 h-full flex items-center justify-center">
                 <EmptyCart onClose={closeCart} />
@@ -123,7 +123,7 @@ const CartSidebar = () => {
           </div>
           
           {cart.length > 0 && (
-            <SheetFooter className="p-4 border-t flex-shrink-0">
+            <SheetFooter className="p-4 border-t flex-shrink-0 bg-background">
               <CartSummary 
                 getCartTotal={() => currentTotal}
                 formatPrice={formatPrice}
@@ -137,7 +137,7 @@ const CartSidebar = () => {
 
       {/* Guest Checkout Options */}
       <Sheet open={showGuestOptions} onOpenChange={setShowGuestOptions}>
-        <SheetContent className="w-full sm:max-w-md">
+        <SheetContent className="w-full sm:max-w-md z-50">
           <SheetHeader>
             <SheetTitle>Checkout Options</SheetTitle>
           </SheetHeader>

@@ -1,7 +1,5 @@
 
 import { useState } from "react";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import { useGroupBuying } from "@/contexts/GroupBuyingContext";
 import { useAuth } from "@/contexts/AuthContext";
 import CreateGroupModal from "@/components/group-buy/CreateGroupModal";
@@ -54,37 +52,31 @@ const GroupBuy = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar />
+      <GroupBuyHero 
+        onCreateGroup={handleCreateGroup}
+        onJoinGroup={handleJoinGroup}
+      />
       
-      <main className="flex-1">
-        <GroupBuyHero 
-          onCreateGroup={handleCreateGroup}
-          onJoinGroup={handleJoinGroup}
-        />
-        
-        <section className="py-12">
-          <div className="container mx-auto">
-            {!currentGroup ? (
-              <NoGroupView
-                onCreateGroup={handleCreateGroup}
-                onJoinGroup={handleJoinGroup}
-                onJoinPresetGroup={handleJoinPresetGroup}
-              />
-            ) : (
-              <ActiveGroupView
-                currentGroup={currentGroup}
-                groupMembers={groupMembers}
-                groupCart={groupCart}
-                groupSummary={groupSummary}
-                onViewGroupCart={() => setShowGroupCart(true)}
-                onLeaveGroup={leaveGroup}
-              />
-            )}
-          </div>
-        </section>
-      </main>
-      
-      <Footer />
+      <section className="py-12">
+        <div className="container mx-auto">
+          {!currentGroup ? (
+            <NoGroupView
+              onCreateGroup={handleCreateGroup}
+              onJoinGroup={handleJoinGroup}
+              onJoinPresetGroup={handleJoinPresetGroup}
+            />
+          ) : (
+            <ActiveGroupView
+              currentGroup={currentGroup}
+              groupMembers={groupMembers}
+              groupCart={groupCart}
+              groupSummary={groupSummary}
+              onViewGroupCart={() => setShowGroupCart(true)}
+              onLeaveGroup={leaveGroup}
+            />
+          )}
+        </div>
+      </section>
 
       <CreateGroupModal
         isOpen={showCreateModal}

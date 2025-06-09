@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Eye } from "lucide-react";
@@ -101,7 +102,7 @@ const FeaturedBundles = () => {
       };
 
       console.log('Adding featured bundle to cart:', bundleItem);
-      await addToCart(bundleItem);
+      await addToCart(bundleItem, false); // Don't skip cart open
       toast.success(`${bundle.title} added to cart!`);
     } catch (error) {
       console.error('Error adding bundle to cart:', error);
@@ -134,7 +135,7 @@ const FeaturedBundles = () => {
               const isCurrentlyAdding = isAddingToCart(bundle.id, 'bundle');
               
               return (
-                <Card key={bundle.id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
+                <Card key={bundle.id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden bg-white">
                   <div className="relative overflow-hidden">
                     <img 
                       src={bundle.image} 
@@ -145,22 +146,22 @@ const FeaturedBundles = () => {
                   
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-start mb-2">
-                      <CardTitle className="text-lg font-semibold">
+                      <CardTitle className="text-lg font-semibold text-foreground">
                         {bundle.title}
                       </CardTitle>
                       <div className="text-xl font-bold text-khrate-600">
                         {formatPrice(bundle.price)}
                       </div>
                     </div>
-                    <CardDescription className="text-sm">
+                    <CardDescription className="text-sm text-muted-foreground">
                       {bundle.description}
                     </CardDescription>
                   </CardHeader>
                   
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <p className="text-sm font-medium">Items included:</p>
-                      <div className="text-xs text-gray-600 space-y-1">
+                      <p className="text-sm font-medium text-foreground">Items included:</p>
+                      <div className="text-xs text-muted-foreground space-y-1">
                         {bundle.items.slice(0, 3).map((item, index) => (
                           <div key={index} className="flex justify-between">
                             <span>{item.name}</span>
@@ -224,7 +225,7 @@ const FeaturedBundles = () => {
           bundle={selectedBundle}
           isOpen={showPreview}
           onClose={() => setShowPreview(false)}
-          onAddToCart={() => handleAddToCart(selectedBundle, {} as React.MouseEvent)}
+          onAddToCart={(e) => handleAddToCart(selectedBundle, e)}
           isAdding={isAddingToCart(selectedBundle.id, 'bundle')}
         />
       )}
