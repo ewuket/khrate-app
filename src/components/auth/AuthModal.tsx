@@ -46,7 +46,6 @@ const AuthModal = () => {
               </CardHeader>
               <CardContent>
                 <LoginForm 
-                  onSuccess={handleSuccess}
                   onSwitchToSignup={handleSwitchToSignup}
                 />
               </CardContent>
