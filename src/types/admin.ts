@@ -45,3 +45,11 @@ export interface AdminNotification {
   read: boolean;
   created_at: string;
 }
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  role: string;
+  created_at: string;
+  last_login: string;
+}

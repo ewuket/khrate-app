@@ -6,6 +6,8 @@ interface AdminContextType {
   adminUser: any | null;
   adminLogin: (credentials: any) => Promise<boolean>;
   adminLogout: () => void;
+  loginAsAdmin: (email: string, password: string) => Promise<boolean>;
+  loading: boolean;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
@@ -17,13 +19,34 @@ interface AdminProviderProps {
 export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [adminUser, setAdminUser] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const adminLogin = async (credentials: any): Promise<boolean> => {
-    // Implement admin login logic here
-    // For now, just return true for demo purposes
-    setIsAdminAuthenticated(true);
-    setAdminUser({ email: credentials.email });
-    return true;
+    setLoading(true);
+    try {
+      // Implement admin login logic here
+      // For now, just return true for demo purposes
+      setIsAdminAuthenticated(true);
+      setAdminUser({ email: credentials.email });
+      return true;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loginAsAdmin = async (email: string, password: string): Promise<boolean> => {
+    setLoading(true);
+    try {
+      // For demo purposes, simple validation
+      if (email === 'admin@khrate.com' && password === 'admin123') {
+        setIsAdminAuthenticated(true);
+        setAdminUser({ email, role: 'admin' });
+        return true;
+      }
+      return false;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const adminLogout = () => {
@@ -35,7 +58,9 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
     isAdminAuthenticated,
     adminUser,
     adminLogin,
-    adminLogout
+    adminLogout,
+    loginAsAdmin,
+    loading
   };
 
   return (

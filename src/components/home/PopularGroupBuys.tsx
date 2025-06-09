@@ -114,6 +114,13 @@ const PopularGroupBuys = () => {
     return `RWF ${price.toLocaleString()}`;
   };
 
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    // Mock cart functionality - just close the modal
+    setShowPreview(false);
+    toast.success('Item added to cart!');
+  };
+
   return (
     <>
       <section className="py-16 bg-white">
@@ -209,7 +216,7 @@ const PopularGroupBuys = () => {
           bundle={selectedBundle}
           isOpen={showPreview}
           onClose={() => setShowPreview(false)}
-          onAddToCart={() => {}}
+          onAddToCart={handleAddToCart}
           isAdding={false}
         />
       )}

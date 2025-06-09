@@ -51,20 +51,20 @@ const AdminDashboard = () => {
     const variants = {
       'pending': 'outline',
       'confirmed': 'default',
-      'delivered': 'success',
+      'delivered': 'default',
       'cancelled': 'destructive',
       'active': 'default',
-      'completed': 'success',
+      'completed': 'default',
       'collecting': 'outline'
     } as const;
 
     const colors = {
       'pending': 'text-yellow-600',
       'confirmed': 'text-blue-600',
-      'delivered': 'text-green-600',
+      'delivered': 'text-green-600 bg-green-100',
       'cancelled': 'text-red-600',
       'active': 'text-blue-600',
-      'completed': 'text-green-600',
+      'completed': 'text-green-600 bg-green-100',
       'collecting': 'text-orange-600'
     } as const;
 
