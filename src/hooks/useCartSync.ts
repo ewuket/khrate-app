@@ -1,24 +1,22 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { CartItem } from "@/types/cart";
 
 export const useCartSync = () => {
-  const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
   const { user, isAuthenticated } = useAuth();
 
-  const syncCart = async () => {
+  const syncCart = async (): Promise<CartItem[]> => {
     if (!isAuthenticated || !user) {
-      setCart([]);
-      return;
+      return [];
     }
 
     setLoading(true);
     try {
-      console.log('Syncing cart for user with security validation:', user.id);
+      console.log('Syncing cart for user:', user.id);
       
       const { data, error } = await supabase
         .from('cart_items')
@@ -28,14 +26,8 @@ export const useCartSync = () => {
 
       if (error) {
         console.error('Error syncing cart:', error);
-        if (error.message.includes('row-level security')) {
-          console.error('RLS policy blocked cart sync - this should not happen for authenticated users');
-          toast.error('Security error: Unable to load cart');
-        } else {
-          toast.error('Failed to load cart items');
-        }
-        setCart([]);
-        return;
+        toast.error('Failed to load cart items');
+        return [];
       }
       
       const formattedCart: CartItem[] = (data || []).map(item => ({
@@ -49,25 +41,16 @@ export const useCartSync = () => {
         product_items: Array.isArray(item.product_items) ? item.product_items as string[] : undefined
       }));
 
-      setCart(formattedCart);
       console.log('Cart synced successfully:', formattedCart.length, 'items');
+      return formattedCart;
     } catch (error) {
       console.error('Error syncing cart:', error);
       toast.error('Failed to load cart items');
-      setCart([]);
+      return [];
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      syncCart();
-    } else {
-      setCart([]);
-      setLoading(false);
-    }
-  }, [user, isAuthenticated]);
-
-  return { cart, setCart, loading, syncCart };
+  return { syncCart, loading };
 };

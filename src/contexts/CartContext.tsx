@@ -29,15 +29,16 @@ interface CartProviderProps {
 
 export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const { user, isAuthenticated } = useAuth();
-  const { cart, setCart, isCartOpen, setIsCartOpen } = useCartState();
-  const [addingItems, setAddingItems] = useState<Set<string>>(new Set());
+  const { cart, setCart, isCartOpen, setIsCartOpen, isAdding, setAdding, clearAdding } = useCartState();
   const operations = useCartOperations();
   const { syncCart: performSync } = useCartSync();
 
   // Sync cart when user changes or app loads
   useEffect(() => {
     if (isAuthenticated && user) {
-      performSync(user, setCart);
+      performSync().then(() => {
+        console.log('Cart synced for authenticated user');
+      });
     } else {
       // Load guest cart from localStorage
       const guestCart = localStorage.getItem('khrate_guest_cart');
@@ -49,7 +50,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         }
       }
     }
-  }, [user, isAuthenticated, setCart, performSync]);
+  }, [user, isAuthenticated, setCart]);
 
   const openCart = () => setIsCartOpen(true);
   const closeCart = () => setIsCartOpen(false);
@@ -57,21 +58,20 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const addToCart = async (item: any, skipCartOpen = false): Promise<void> => {
     const itemKey = `${item.id}_${item.type || 'product'}`;
     
-    if (addingItems.has(itemKey)) {
+    if (isAdding(itemKey)) {
       console.log('Item already being added, skipping:', itemKey);
       return;
     }
 
     try {
-      setAddingItems(prev => new Set(prev).add(itemKey));
+      setAdding(itemKey, true);
       
-      await operations.addToCart(
-        user,
-        isAuthenticated,
-        item,
-        cart,
-        setCart
-      );
+      await operations.addToCart(item);
+
+      // Sync cart after adding
+      if (isAuthenticated && user) {
+        await performSync();
+      }
 
       // Auto-open cart unless explicitly skipped
       if (!skipCartOpen) {
@@ -80,24 +80,29 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         }, 100);
       }
     } finally {
-      setAddingItems(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(itemKey);
-        return newSet;
-      });
+      clearAdding(itemKey);
     }
   };
 
   const removeFromCart = async (id: string): Promise<void> => {
-    await operations.removeFromCart(user, isAuthenticated, id, cart, setCart);
+    await operations.removeFromCart(id);
+    if (isAuthenticated && user) {
+      await performSync();
+    }
   };
 
   const updateQuantity = async (id: string, quantity: number): Promise<void> => {
-    await operations.updateQuantity(user, isAuthenticated, id, quantity, cart, setCart);
+    await operations.updateQuantity(id, quantity);
+    if (isAuthenticated && user) {
+      await performSync();
+    }
   };
 
   const clearCart = async (): Promise<void> => {
-    await operations.clearCart(user, isAuthenticated, setCart);
+    await operations.clearCart();
+    if (isAuthenticated && user) {
+      await performSync();
+    }
   };
 
   const getCartTotal = (): number => {
@@ -110,13 +115,13 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
   const syncCart = async (): Promise<void> => {
     if (isAuthenticated && user) {
-      await performSync(user, setCart);
+      await performSync();
     }
   };
 
   const isAddingToCart = (productId: number, productType = 'product'): boolean => {
     const itemKey = `${productId}_${productType}`;
-    return addingItems.has(itemKey);
+    return isAdding(itemKey);
   };
 
   const contextValue: CartContextType = {
