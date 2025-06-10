@@ -7,26 +7,26 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%; /* White background */
-    --foreground: 0 0% 12%; /* Dark text */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 12%;
 
-    --card: 0 0% 100%; /* White cards */
-    --card-foreground: 0 0% 12%; /* Dark text on cards */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 12%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 12%;
 
-    --primary: 24 96% 48%; /* KHRATE Orange */
-    --primary-foreground: 0 0% 100%; /* White text on orange */
+    --primary: 24 96% 48%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 96%; /* Light gray */
-    --secondary-foreground: 0 0% 12%; /* Dark text */
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 12%;
 
     --muted: 0 0% 96%;
     --muted-foreground: 0 0% 45%;
 
-    --accent: 24 96% 96%; /* Light orange */
-    --accent-foreground: 24 96% 48%; /* Orange text */
+    --accent: 24 96% 96%;
+    --accent-foreground: 24 96% 48%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -48,7 +48,7 @@
   }
 
   .dark {
-    --background: 0 0% 100%; /* Keep white even in dark mode for this design */
+    --background: 0 0% 100%;
     --foreground: 0 0% 12%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 12%;
@@ -77,7 +77,7 @@
 
   body {
     @apply bg-white text-foreground font-sans;
-    background-color: #ffffff !important;
+    background-color: #ffffff;
     color: #1e1e1e;
   }
 
@@ -104,75 +104,65 @@
   .container {
     @apply px-4 md:px-6;
   }
-
-  /* Ensure all sections have white background */
-  main, section, div {
-    background-color: #ffffff;
-  }
 }
 
 @layer components {
   .btn-khrate {
     @apply bg-khrate-500 text-white hover:bg-khrate-600 transition-colors rounded-full px-6 py-2.5 font-medium;
-    background-color: #F25C05 !important;
-    color: white !important;
+    background-color: #F25C05;
+    color: white;
   }
 
   .btn-outline {
     @apply border border-khrate-500 text-khrate-500 hover:bg-khrate-50 transition-colors rounded-full px-6 py-2.5 font-medium;
-    border-color: #F25C05 !important;
-    color: #F25C05 !important;
+    border-color: #F25C05;
+    color: #F25C05;
   }
 
   .nav-link {
     @apply text-gray-700 hover:text-khrate-500 transition-colors;
-    color: #374151 !important;
+    color: #374151;
   }
 
   .nav-link.active {
     @apply text-khrate-500 font-medium;
-    color: #F25C05 !important;
+    color: #F25C05;
   }
 
-  /* Fix text visibility issues */
   .text-visible {
-    color: #1e1e1e !important;
+    color: #1e1e1e;
     opacity: 1;
   }
 
-  /* Ensure proper button styling */
   .button-primary {
-    background-color: #F25C05 !important;
-    color: white !important;
+    background-color: #F25C05;
+    color: white;
     border: none;
   }
 
   .button-primary:hover {
-    background-color: #d14c04 !important;
+    background-color: #d14c04;
   }
 
-  /* Fix card backgrounds */
   .card-white {
-    background-color: #ffffff !important;
-    color: #1e1e1e !important;
+    background-color: #ffffff;
+    color: #1e1e1e;
   }
 
-  /* Mobile responsive fixes */
   @media (max-width: 768px) {
     .responsive-text {
       font-size: 0.875rem;
       line-height: 1.25rem;
-      color: #1e1e1e !important;
+      color: #1e1e1e;
     }
   }
 }
 
-/* Fix navigation styling */
 .sticky-nav {
   position: sticky;
   top: 0;
   z-index: 50;
-  background-color: #ffffff !important;
+  background-color: #ffffff;
   border-bottom: 1px solid #e5e7eb;
 }
 
@@ -181,20 +171,18 @@
   align-items: center;
   justify-content: space-between;
   height: 4rem;
-  background-color: #ffffff !important;
+  background-color: #ffffff;
 }
 
-/* Cart button fixes */
 .cart-button {
   position: relative;
   z-index: 10;
   min-height: 44px;
   min-width: 44px;
-  background-color: transparent !important;
-  color: #F25C05 !important;
+  background-color: transparent;
+  color: #F25C05;
 }
 
-/* Touch targets for mobile */
 @media (max-width: 768px) {
   .touch-target {
     min-height: 44px;
@@ -202,11 +190,10 @@
   }
 }
 
-/* Force white backgrounds everywhere */
 .bg-background, .bg-card {
-  background-color: #ffffff !important;
+  background-color: #ffffff;
 }
 
 .text-foreground {
-  color: #1e1e1e !important;
+  color: #1e1e1e;
 }
