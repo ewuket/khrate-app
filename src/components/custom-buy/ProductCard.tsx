@@ -4,25 +4,34 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart } from "lucide-react";
 import { Product } from '@/types/product';
+import { useCartContext } from '@/contexts/CartContext';
 
 interface ProductCardProps {
   product: Product;
-  onAddToCart: (product: Product) => void;
-  isAdding: boolean;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, isAdding }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+  const { addToCart, isAddingToCart } = useCartContext();
+
   const formatPrice = (price: number) => {
     return `RWF ${price.toLocaleString()}`;
   };
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!isAdding) {
-      onAddToCart(product);
+    if (!isAddingToCart(product.id, 'product')) {
+      await addToCart({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        unit: product.unit,
+        type: 'product'
+      });
     }
   };
+
+  const isAdding = isAddingToCart(product.id, 'product');
 
   return (
     <Card className="group hover:shadow-lg transition-all duration-300 bg-white border">

@@ -189,9 +189,7 @@ const BundleCard: React.FC<BundleCardProps> = ({
           price,
           originalPrice,
           items,
-          image,
-          category,
-          description
+          image
         }}
         onAddToCart={handleAddToCart}
         isAdding={isAddingToCart(id, 'bundle')}

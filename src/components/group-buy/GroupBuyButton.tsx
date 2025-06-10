@@ -110,7 +110,6 @@ const GroupBuyButton: React.FC<GroupBuyButtonProps> = ({
       <CreateGroupModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        initialItem={item}
       />
 
       <JoinGroupModal
