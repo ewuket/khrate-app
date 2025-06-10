@@ -142,9 +142,11 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
       // Close the checkout dialog
       onOpenChange(false);
       
-      // Show success modal
+      // Show success modal immediately
       console.log('Setting showSuccessModal to true');
-      setShowSuccessModal(true);
+      setTimeout(() => {
+        setShowSuccessModal(true);
+      }, 300);
 
     } catch (error) {
       console.error('Payment error:', error);

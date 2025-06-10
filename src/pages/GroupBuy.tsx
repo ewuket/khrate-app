@@ -17,7 +17,8 @@ const GroupBuy = () => {
     groupMembers, 
     groupCart, 
     groupSummary,
-    leaveGroup
+    leaveGroup,
+    joinGroup
   } = useGroupBuying();
   
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -46,8 +47,25 @@ const GroupBuy = () => {
       return;
     }
     
-    // Simulate joining a preset group with enhanced feedback
-    toast.success(`Successfully joined ${groupId.replace('-', ' ')} group! Start adding items to your group cart.`);
+    try {
+      // Simulate joining a preset group with enhanced feedback
+      const mockJoinCode = `PRESET${groupId.slice(-3)}`;
+      await joinGroup(mockJoinCode);
+      toast.success(`Successfully joined ${groupId.replace('-', ' ')} group! Start adding items to your group cart.`);
+    } catch (error) {
+      console.error('Error joining preset group:', error);
+      toast.error('Failed to join group. Please try again.');
+    }
+  };
+
+  const handleLeaveGroup = async () => {
+    try {
+      await leaveGroup();
+      toast.success('Left group successfully');
+    } catch (error) {
+      console.error('Error leaving group:', error);
+      toast.error('Failed to leave group. Please try again.');
+    }
   };
 
   return (
@@ -72,7 +90,7 @@ const GroupBuy = () => {
               groupCart={groupCart}
               groupSummary={groupSummary}
               onViewGroupCart={() => setShowGroupCart(true)}
-              onLeaveGroup={leaveGroup}
+              onLeaveGroup={handleLeaveGroup}
             />
           )}
         </div>

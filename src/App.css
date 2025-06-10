@@ -1,42 +1,161 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+
+    /* Custom Khrate colors */
+    --khrate-50: 220 100% 97%;
+    --khrate-100: 220 100% 94%;
+    --khrate-200: 220 100% 87%;
+    --khrate-300: 220 100% 78%;
+    --khrate-400: 220 100% 67%;
+    --khrate-500: 220 100% 56%;
+    --khrate-600: 220 100% 45%;
+    --khrate-700: 220 100% 36%;
+    --khrate-800: 220 100% 27%;
+    --khrate-900: 220 100% 18%;
   }
-  to {
-    transform: rotate(360deg);
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
-.card {
-  padding: 2em;
+/* Ensure proper text visibility and contrast */
+@layer components {
+  .text-khrate-600 {
+    color: hsl(var(--khrate-600));
+  }
+  
+  .bg-khrate-500 {
+    background-color: hsl(var(--khrate-500));
+  }
+  
+  .bg-khrate-600 {
+    background-color: hsl(var(--khrate-600));
+  }
+  
+  .hover\:bg-khrate-600:hover {
+    background-color: hsl(var(--khrate-600));
+  }
+  
+  .border-khrate-500 {
+    border-color: hsl(var(--khrate-500));
+  }
+  
+  .hover\:bg-khrate-50:hover {
+    background-color: hsl(var(--khrate-50));
+  }
+
+  /* Fix text visibility issues */
+  .text-visible {
+    color: hsl(var(--foreground));
+    opacity: 1;
+  }
+
+  /* Ensure proper spacing and readability */
+  .card-spacing {
+    @apply p-4 space-y-3;
+  }
+
+  /* Fix overlapping text issues */
+  .no-overlap {
+    z-index: 1;
+    position: relative;
+  }
+
+  /* Mobile responsive text */
+  @media (max-width: 768px) {
+    .responsive-text {
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+    }
+  }
 }
 
-.read-the-docs {
-  color: #888;
+/* Fix specific layout issues */
+.sticky-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+/* Prevent duplicate navigation issues */
+.nav-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 4rem;
+}
+
+/* Ensure cart button is always clickable */
+.cart-button {
+  position: relative;
+  z-index: 10;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Mobile touch targets */
+@media (max-width: 768px) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }

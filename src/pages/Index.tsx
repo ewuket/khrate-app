@@ -2,8 +2,8 @@
 import { useEffect } from "react";
 import Hero from "@/components/home/Hero";
 import FeaturedBundles from "@/components/home/FeaturedBundles";
-import HowItWorks from "@/components/home/HowItWorks";
 import PopularGroupBuys from "@/components/home/PopularGroupBuys";
+import HowItWorks from "@/components/home/HowItWorks";
 import ChatAssistant from "@/components/chat/ChatAssistant";
 import { useAuth } from "@/contexts/AuthContext";
 

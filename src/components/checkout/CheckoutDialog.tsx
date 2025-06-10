@@ -1,34 +1,27 @@
 
-import { 
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { X } from "lucide-react";
-import ScheduledDelivery from "@/components/checkout/ScheduledDelivery";
-import { useAuth } from "@/contexts/AuthContext";
-import PaymentSection from "./PaymentSection";
-import OrderSummary from "./OrderSummary";
-import GuestUserPrompt from "./GuestUserPrompt";
-import OrderSuccessModal from "./OrderSuccessModal";
+import React from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useCheckoutForm } from "@/hooks/useCheckoutForm";
+import CheckoutPayment from "./CheckoutPayment";
+import OrderSuccessModal from "./OrderSuccessModal";
 
 interface CheckoutDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   getCartTotal: () => number;
   formatPrice: (price: number) => string;
-  cartItems: any[];
+  cartItems: Array<{
+    id: number;
+    name: string;
+    price: number;
+    quantity: number;
+    unit: string;
+  }>;
   clearCart: () => void;
   saveOrder: () => void;
 }
 
-const CheckoutDialog = ({
+const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
   open,
   onOpenChange,
   getCartTotal,
@@ -36,121 +29,44 @@ const CheckoutDialog = ({
   cartItems,
   clearCart,
   saveOrder
-}: CheckoutDialogProps) => {
-  const { isAuthenticated, openAuthModal } = useAuth();
-  
-  const {
-    paymentMethod,
-    setPaymentMethod,
-    phoneNumber,
-    setPhoneNumber,
-    processingPayment,
-    deliverySchedule,
-    setDeliverySchedule,
-    showSuccessModal,
-    setShowSuccessModal,
-    orderDetails,
-    handlePayment
-  } = useCheckoutForm({
+}) => {
+  const checkoutForm = useCheckoutForm({
     onSuccess: () => {
-      console.log('Payment success callback triggered');
-      saveOrder();
       clearCart();
+      saveOrder();
     },
     onOpenChange
   });
 
-  const currentTotal = getCartTotal();
-  
-  console.log('CheckoutDialog render - showSuccessModal:', showSuccessModal, 'currentTotal:', currentTotal);
-  
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <DialogTitle>Complete Your Order</DialogTitle>
-                <DialogDescription>
-                  Schedule your delivery and choose a payment method.
-                </DialogDescription>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onOpenChange(false)}
-                className="h-6 w-6 p-0 hover:bg-gray-100"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+            <DialogTitle>Checkout</DialogTitle>
           </DialogHeader>
           
-          <form onSubmit={handlePayment}>
-            <div className="grid gap-6 py-4">
-              {!isAuthenticated && (
-                <div className="mb-4">
-                  <GuestUserPrompt 
-                    onSignInClick={() => {
-                      onOpenChange(false);
-                      openAuthModal();
-                    }} 
-                  />
-                </div>
-              )}
-              
-              <ScheduledDelivery 
-                onDeliveryScheduleChange={setDeliverySchedule} 
-              />
-              
-              <Separator />
-              
-              <PaymentSection
-                paymentMethod={paymentMethod}
-                onPaymentMethodChange={setPaymentMethod}
-                phoneNumber={phoneNumber}
-                onPhoneNumberChange={setPhoneNumber}
-              />
-              
-              <OrderSummary
-                total={currentTotal}
-                formatPrice={formatPrice}
-                deliverySchedule={deliverySchedule}
-              />
-
-              {(paymentMethod === "mtn" || paymentMethod === "airtel") && (
-                <div className="bg-blue-50 border border-blue-200 p-4 rounded-md text-blue-800">
-                  <p className="font-medium">Payment Instructions</p>
-                  <p className="text-sm mt-1">
-                    Send payment to: <span className="font-bold">0795754391</span>
-                  </p>
-                  <p className="text-xs text-blue-600 mt-1">
-                    Your order will be confirmed once payment is received.
-                  </p>
-                </div>
-              )}
-            </div>
-            
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-              <Button 
-                type="submit" 
-                disabled={processingPayment || !deliverySchedule.date || currentTotal <= 0}
-                className="bg-khrate-500 hover:bg-khrate-600"
-              >
-                {processingPayment ? "Processing..." : `Place Order (${formatPrice(currentTotal)})`}
-              </Button>
-            </DialogFooter>
-          </form>
+          <CheckoutPayment
+            cartItems={cartItems}
+            getCartTotal={getCartTotal}
+            formatPrice={formatPrice}
+            paymentMethod={checkoutForm.paymentMethod}
+            setPaymentMethod={checkoutForm.setPaymentMethod}
+            phoneNumber={checkoutForm.phoneNumber}
+            setPhoneNumber={checkoutForm.setPhoneNumber}
+            processingPayment={checkoutForm.processingPayment}
+            deliverySchedule={checkoutForm.deliverySchedule}
+            setDeliverySchedule={checkoutForm.setDeliverySchedule}
+            onSubmit={checkoutForm.handlePayment}
+          />
         </DialogContent>
       </Dialog>
 
-      {orderDetails && (
+      {checkoutForm.orderDetails && (
         <OrderSuccessModal
-          open={showSuccessModal}
-          onOpenChange={setShowSuccessModal}
-          orderDetails={orderDetails}
+          open={checkoutForm.showSuccessModal}
+          onOpenChange={checkoutForm.setShowSuccessModal}
+          orderDetails={checkoutForm.orderDetails}
           formatPrice={formatPrice}
         />
       )}
