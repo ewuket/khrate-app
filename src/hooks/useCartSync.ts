@@ -7,11 +7,13 @@ import { CartItem } from "@/types/cart";
 
 export const useCartSync = () => {
   const [loading, setLoading] = useState(false);
+  const [cart, setCart] = useState<CartItem[]>([]);
   const { user, isAuthenticated } = useAuth();
 
-  const syncCart = async (): Promise<CartItem[]> => {
+  const syncCart = async (): Promise<void> => {
     if (!isAuthenticated || !user) {
-      return [];
+      setCart([]);
+      return;
     }
 
     setLoading(true);
@@ -27,7 +29,8 @@ export const useCartSync = () => {
       if (error) {
         console.error('Error syncing cart:', error);
         toast.error('Failed to load cart items');
-        return [];
+        setCart([]);
+        return;
       }
       
       const formattedCart: CartItem[] = (data || []).map(item => ({
@@ -41,16 +44,16 @@ export const useCartSync = () => {
         product_items: Array.isArray(item.product_items) ? item.product_items as string[] : undefined
       }));
 
+      setCart(formattedCart);
       console.log('Cart synced successfully:', formattedCart.length, 'items');
-      return formattedCart;
     } catch (error) {
       console.error('Error syncing cart:', error);
       toast.error('Failed to load cart items');
-      return [];
+      setCart([]);
     } finally {
       setLoading(false);
     }
   };
 
-  return { syncCart, loading };
+  return { cart, setCart, loading, syncCart };
 };
