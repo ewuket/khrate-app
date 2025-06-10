@@ -1,156 +1,57 @@
 
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { useCartContext } from '@/contexts/CartContext';
 import { toast } from 'sonner';
 
-interface UseCheckoutFormProps {
+interface CheckoutFormProps {
   onSuccess: () => void;
   onOpenChange: (open: boolean) => void;
 }
 
-export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProps) => {
-  const { user } = useAuth();
-  const { cart, getCartTotal } = useCartContext();
-  
+export const useCheckoutForm = ({ onSuccess, onOpenChange }: CheckoutFormProps) => {
   const [paymentMethod, setPaymentMethod] = useState('mtn');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [processingPayment, setProcessingPayment] = useState(false);
-  const [deliverySchedule, setDeliverySchedule] = useState<{
-    date: string;
-    timeSlot: string;
-  }>({ date: '', timeSlot: '' });
+  const [deliverySchedule, setDeliverySchedule] = useState({ date: '', timeSlot: '' });
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [orderDetails, setOrderDetails] = useState<{
-    orderNumber: string;
-    total: number;
-    deliveryDate: string;
-    deliveryTimeSlot: string;
-  } | null>(null);
-
-  const generateOrderNumber = () => {
-    return `KH${Date.now().toString().slice(-6)}`;
-  };
-
-  const handleDeliveryScheduleChange = (schedule: { date: Date | undefined; timeSlot: string }) => {
-    setDeliverySchedule({
-      date: schedule.date ? schedule.date.toISOString().split('T')[0] : '',
-      timeSlot: schedule.timeSlot
-    });
-  };
+  const [orderDetails, setOrderDetails] = useState<any>(null);
 
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('handlePayment called - starting payment process');
-    
-    if (!deliverySchedule.date) {
-      toast.error('Please select a delivery date');
+    if (!deliverySchedule.date || !deliverySchedule.timeSlot) {
+      toast.error('Please select a delivery date and time slot');
       return;
     }
 
-    if (!deliverySchedule.timeSlot) {
-      toast.error('Please select a delivery time slot');
-      return;
-    }
-
-    if (cart.length === 0) {
-      toast.error('Your cart is empty');
+    if (paymentMethod === 'mtn' && !phoneNumber) {
+      toast.error('Please enter your phone number for MTN Mobile Money');
       return;
     }
 
     setProcessingPayment(true);
 
     try {
-      const total = getCartTotal();
-      const orderNumber = generateOrderNumber();
-
-      console.log('Processing order with total:', total, 'cart items:', cart.length);
-
-      // Ensure total is not zero
-      if (total <= 0) {
-        toast.error('Invalid order total. Please check your cart.');
-        setProcessingPayment(false);
-        return;
-      }
-
-      // Create order in database
+      // Simulate payment processing
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Generate order details
+      const orderNumber = `KH${Date.now().toString().slice(-6)}`;
       const orderData = {
-        user_id: user?.id || null,
-        items: cart.map(item => ({
-          name: item.product_name,
-          price: item.product_price,
-          quantity: item.quantity,
-          unit: item.product_unit,
-          type: item.product_type,
-          items: item.product_items || []
-        })),
-        total_amount: total,
-        original_amount: total,
-        discount_applied: 0,
-        delivery_address: 'Default Address', // This should come from user profile
-        delivery_date: deliverySchedule.date,
-        delivery_time_slot: deliverySchedule.timeSlot,
-        payment_method: paymentMethod,
-        payment_status: 'completed', // Simulate successful payment
-        status: 'confirmed',
-        phone_number: phoneNumber
-      };
-
-      console.log('Creating order with data:', orderData);
-
-      const { data, error } = await supabase
-        .from('orders')
-        .insert(orderData)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Supabase order creation error:', error);
-        throw error;
-      }
-
-      console.log('Order created successfully:', data);
-
-      // Save to localStorage for guest users or as backup
-      const existingOrders = JSON.parse(localStorage.getItem(`khrate_orders_${user?.id || 'guest'}`) || '[]');
-      const newOrder = {
-        id: data.id,
-        order_number: orderNumber,
-        ...orderData,
-        created_at: new Date().toISOString()
-      };
-      existingOrders.unshift(newOrder);
-      localStorage.setItem(`khrate_orders_${user?.id || 'guest'}`, JSON.stringify(existingOrders));
-
-      console.log('Order saved to localStorage');
-
-      // Set order details for success modal
-      setOrderDetails({
         orderNumber,
-        total,
+        total: Math.floor(Math.random() * 100000) + 10000, // Mock total
         deliveryDate: deliverySchedule.date,
         deliveryTimeSlot: deliverySchedule.timeSlot
-      });
+      };
 
-      toast.success('Order placed successfully!');
-      
-      // Call success callback first
+      setOrderDetails(orderData);
+      setShowSuccessModal(true);
+      onOpenChange(false);
       onSuccess();
       
-      // Close the checkout dialog
-      onOpenChange(false);
-      
-      // Show success modal immediately
-      console.log('Setting showSuccessModal to true');
-      setTimeout(() => {
-        setShowSuccessModal(true);
-      }, 300);
-
+      toast.success('Order placed successfully!');
     } catch (error) {
       console.error('Payment error:', error);
-      toast.error('Failed to process payment. Please try again.');
+      toast.error('Payment failed. Please try again.');
     } finally {
       setProcessingPayment(false);
     }
@@ -163,7 +64,7 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
     setPhoneNumber,
     processingPayment,
     deliverySchedule,
-    setDeliverySchedule: handleDeliveryScheduleChange,
+    setDeliverySchedule,
     showSuccessModal,
     setShowSuccessModal,
     orderDetails,

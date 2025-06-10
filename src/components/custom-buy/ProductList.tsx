@@ -23,9 +23,10 @@ interface ProductListProps {
     image: string;
     description?: string;
   }>;
+  onAddToCart: (product: any) => void;
 }
 
-const ProductList: React.FC<ProductListProps> = ({ products }) => {
+const ProductList: React.FC<ProductListProps> = ({ products, onAddToCart }) => {
   // Convert products to include inStock property
   const productsWithStock: Product[] = products.map(product => ({
     ...product,
@@ -38,6 +39,7 @@ const ProductList: React.FC<ProductListProps> = ({ products }) => {
         <ProductCard
           key={product.id}
           product={product}
+          onAddToCart={onAddToCart}
         />
       ))}
     </div>

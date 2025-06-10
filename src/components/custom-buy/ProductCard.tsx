@@ -4,34 +4,22 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart } from "lucide-react";
 import { Product } from '@/types/product';
-import { useCartContext } from '@/contexts/CartContext';
 
 interface ProductCardProps {
   product: Product;
+  onAddToCart: (product: any) => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const { addToCart, isAddingToCart } = useCartContext();
-
+const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
   const formatPrice = (price: number) => {
     return `RWF ${price.toLocaleString()}`;
   };
 
-  const handleAddToCart = async (e: React.MouseEvent) => {
+  const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!isAddingToCart(product.id, 'product')) {
-      await addToCart({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        unit: product.unit,
-        type: 'product'
-      });
-    }
+    onAddToCart(product);
   };
-
-  const isAdding = isAddingToCart(product.id, 'product');
 
   return (
     <Card className="group hover:shadow-lg transition-all duration-300 bg-white border">
@@ -61,11 +49,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           
           <Button 
             onClick={handleAddToCart}
-            disabled={isAdding}
-            className="w-full bg-khrate-500 hover:bg-khrate-600 text-white font-medium py-2 px-4 transition-colors disabled:opacity-50"
+            className="w-full bg-khrate-500 hover:bg-khrate-600 text-white font-medium py-2 px-4 transition-colors"
           >
             <ShoppingCart className="h-4 w-4 mr-2" />
-            {isAdding ? 'Adding...' : 'Add to Cart'}
+            Add to Cart
           </Button>
         </div>
       </CardContent>

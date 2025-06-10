@@ -22,7 +22,6 @@ interface BundleCardProps {
   originalPrice: number;
   items: BundleItem[];
   image?: string;
-  category?: string;
   description?: string;
 }
 
@@ -33,7 +32,6 @@ const BundleCard: React.FC<BundleCardProps> = ({
   originalPrice,
   items,
   image,
-  category,
   description
 }) => {
   const [showPreview, setShowPreview] = useState(false);
@@ -90,15 +88,6 @@ const BundleCard: React.FC<BundleCardProps> = ({
             <div className="w-full h-48 bg-gradient-to-br from-khrate-100 to-khrate-200 flex items-center justify-center">
               <span className="text-khrate-600 font-medium">Bundle Image</span>
             </div>
-          )}
-          
-          {category && (
-            <Badge 
-              variant="secondary" 
-              className="absolute top-3 left-3 bg-white/90 text-khrate-700"
-            >
-              {category}
-            </Badge>
           )}
           
           <Badge 
