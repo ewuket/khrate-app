@@ -36,7 +36,8 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   // Sync cart when user changes or app loads
   useEffect(() => {
     if (isAuthenticated && user) {
-      performSync().then(() => {
+      performSync().then((syncedCart) => {
+        setCart(syncedCart);
         console.log('Cart synced for authenticated user');
       });
     } else {
@@ -70,7 +71,8 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
       // Sync cart after adding
       if (isAuthenticated && user) {
-        await performSync();
+        const syncedCart = await performSync();
+        setCart(syncedCart);
       }
 
       // Auto-open cart unless explicitly skipped
@@ -87,21 +89,24 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const removeFromCart = async (id: string): Promise<void> => {
     await operations.removeFromCart(id);
     if (isAuthenticated && user) {
-      await performSync();
+      const syncedCart = await performSync();
+      setCart(syncedCart);
     }
   };
 
   const updateQuantity = async (id: string, quantity: number): Promise<void> => {
     await operations.updateQuantity(id, quantity);
     if (isAuthenticated && user) {
-      await performSync();
+      const syncedCart = await performSync();
+      setCart(syncedCart);
     }
   };
 
   const clearCart = async (): Promise<void> => {
     await operations.clearCart();
     if (isAuthenticated && user) {
-      await performSync();
+      const syncedCart = await performSync();
+      setCart(syncedCart);
     }
   };
 
@@ -115,7 +120,8 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
   const syncCart = async (): Promise<void> => {
     if (isAuthenticated && user) {
-      await performSync();
+      const syncedCart = await performSync();
+      setCart(syncedCart);
     }
   };
 

@@ -1,79 +1,29 @@
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
-import { X, Plus } from "lucide-react";
+import { X } from "lucide-react";
 import { useGroupBuying } from "@/contexts/GroupBuyingContext";
-import { toast } from 'sonner';
+import { toast } from "sonner";
 
 interface CreateGroupModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialItem?: any;
 }
 
-const commonItems = [
-  { name: "Rice", unit: "kg" },
-  { name: "Beans", unit: "kg" },
-  { name: "Oil", unit: "L" },
-  { name: "Sugar", unit: "kg" },
-  { name: "Salt", unit: "kg" },
-  { name: "Tomatoes", unit: "kg" },
-  { name: "Onions", unit: "kg" },
-  { name: "Potatoes", unit: "kg" },
-  { name: "Eggs", unit: "dozen" },
-  { name: "Milk", unit: "L" },
-  { name: "Bread", unit: "loaf" },
-  { name: "Bananas", unit: "kg" }
-];
-
-const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
-  isOpen,
-  onClose,
-  initialItem
-}) => {
-  const { createGroup, addItemToGroupCart } = useGroupBuying();
-  const [formData, setFormData] = useState({
-    name: '',
-    isPublic: false
-  });
-  const [selectedItems, setSelectedItems] = useState<Array<{name: string, quantity: number, unit: string}>>([]);
-  const [customItem, setCustomItem] = useState({ name: '', quantity: 1, unit: 'kg' });
+const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ isOpen, onClose }) => {
+  const [groupName, setGroupName] = useState('');
+  const [isPublic, setIsPublic] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-
-  const handleAddItem = (item: {name: string, unit: string}) => {
-    if (!selectedItems.find(selected => selected.name === item.name)) {
-      setSelectedItems(prev => [...prev, { ...item, quantity: 1 }]);
-    }
-  };
-
-  const handleAddCustomItem = () => {
-    if (customItem.name.trim() && !selectedItems.find(item => item.name === customItem.name)) {
-      setSelectedItems(prev => [...prev, customItem]);
-      setCustomItem({ name: '', quantity: 1, unit: 'kg' });
-    }
-  };
-
-  const handleRemoveItem = (itemName: string) => {
-    setSelectedItems(prev => prev.filter(item => item.name !== itemName));
-  };
-
-  const handleUpdateQuantity = (itemName: string, quantity: number) => {
-    setSelectedItems(prev => 
-      prev.map(item => 
-        item.name === itemName ? { ...item, quantity: Math.max(1, quantity) } : item
-      )
-    );
-  };
+  const { createGroup } = useGroupBuying();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name.trim()) {
+    if (!groupName.trim()) {
       toast.error('Please enter a group name');
       return;
     }
@@ -81,39 +31,17 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
     setIsCreating(true);
     try {
       const group = await createGroup({
-        name: formData.name,
-        is_public: formData.isPublic,
-        group_type: formData.isPublic ? 'public' : 'private',
-        items: selectedItems.length > 0 ? selectedItems : (initialItem ? [initialItem] : [])
+        name: groupName.trim(),
+        min_participants: 3, // Fixed to 3
+        max_participants: 10, // Fixed to 10
+        is_public: isPublic,
+        group_type: isPublic ? 'public' : 'private'
       });
-
+      
       if (group) {
-        // Add initial item if provided
-        if (initialItem) {
-          await addItemToGroupCart(initialItem);
-        }
-
-        // Add selected items to group cart
-        for (const item of selectedItems) {
-          await addItemToGroupCart({
-            id: Math.random(),
-            name: item.name,
-            price: 1000, // Default price, admin can adjust
-            quantity: item.quantity,
-            unit: item.unit,
-            type: 'product'
-          });
-        }
-
-        toast.success(`Group "${formData.name}" created successfully!`);
-        
-        // Reset form and close modal
         onClose();
-        setFormData({
-          name: '',
-          isPublic: false
-        });
-        setSelectedItems([]);
+        setGroupName('');
+        setIsPublic(false);
       }
     } catch (error) {
       console.error('Error creating group:', error);
@@ -125,138 +53,61 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader className="flex flex-row items-center justify-between">
           <DialogTitle>Create New Group</DialogTitle>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={onClose}
+            className="h-8 w-8"
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </DialogHeader>
-
+        
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="groupName">Group Name</Label>
             <Input
               id="groupName"
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="e.g., Neighborhood Group"
+              type="text"
+              placeholder="e.g., Weekend Groceries"
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
               required
             />
           </div>
 
-          {/* Fixed participant info - no longer editable */}
-          <div className="p-3 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-600">
-              <strong>Group Settings:</strong>
-            </p>
-            <p className="text-sm text-gray-500">• Minimum participants: 3 (required for discount)</p>
-            <p className="text-sm text-gray-500">• Maximum participants: 10</p>
-            <p className="text-sm text-gray-500">• Group discount: 10% (automatic when minimum reached)</p>
-          </div>
-
-          <div className="space-y-3">
-            <Label>Pre-select Items for Group</Label>
-            
-            {/* Selected Items */}
-            {selectedItems.length > 0 && (
-              <div className="space-y-2">
-                <Label className="text-sm text-gray-600">Selected Items:</Label>
-                {selectedItems.map((item, index) => (
-                  <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
-                    <span className="flex-1">{item.name}</span>
-                    <Input
-                      type="number"
-                      min="1"
-                      value={item.quantity}
-                      onChange={(e) => handleUpdateQuantity(item.name, Number(e.target.value))}
-                      className="w-16 h-6 text-sm"
-                    />
-                    <span className="text-sm text-gray-500">{item.unit}</span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveItem(item.name)}
-                      className="h-6 w-6 p-0"
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Common Items */}
-            <div className="space-y-2">
-              <Label className="text-sm text-gray-600">Quick Add:</Label>
-              <div className="flex flex-wrap gap-1">
-                {commonItems.map((item) => (
-                  <Badge
-                    key={item.name}
-                    variant="outline"
-                    className="cursor-pointer hover:bg-khrate-50"
-                    onClick={() => handleAddItem(item)}
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    {item.name}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-
-            {/* Custom Item */}
-            <div className="space-y-2">
-              <Label className="text-sm text-gray-600">Add Custom Item:</Label>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Item name"
-                  value={customItem.name}
-                  onChange={(e) => setCustomItem(prev => ({ ...prev, name: e.target.value }))}
-                  className="flex-1"
-                />
-                <Input
-                  type="number"
-                  min="1"
-                  value={customItem.quantity}
-                  onChange={(e) => setCustomItem(prev => ({ ...prev, quantity: Number(e.target.value) }))}
-                  className="w-16"
-                />
-                <Input
-                  value={customItem.unit}
-                  onChange={(e) => setCustomItem(prev => ({ ...prev, unit: e.target.value }))}
-                  className="w-16"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddCustomItem}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
+          <div className="space-y-2">
+            <Label>Group Settings</Label>
+            <div className="text-sm text-gray-600 space-y-2">
+              <p>Minimum participants: 3 (required for discount)</p>
+              <p>Maximum participants: 10</p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="isPublic">Make group public</Label>
+              <p className="text-sm text-gray-600">
+                {isPublic ? 'Anyone can find and join this group' : 'Share a join code to invite members'}
+              </p>
+            </div>
             <Switch
               id="isPublic"
-              checked={formData.isPublic}
-              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isPublic: checked }))}
+              checked={isPublic}
+              onCheckedChange={setIsPublic}
             />
-            <Label htmlFor="isPublic">Make group public (others can find and join)</Label>
           </div>
 
-          <DialogFooter className="flex gap-2">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={isCreating}
-              className="bg-khrate-500 hover:bg-khrate-600"
-            >
-              {isCreating ? 'Creating...' : 'Create Group'}
-            </Button>
-          </DialogFooter>
+          <Button 
+            type="submit" 
+            className="w-full bg-khrate-500 hover:bg-khrate-600 text-white"
+            disabled={isCreating}
+          >
+            {isCreating ? 'Creating Group...' : 'Create Group'}
+          </Button>
         </form>
       </DialogContent>
     </Dialog>

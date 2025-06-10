@@ -1,17 +1,20 @@
 
-import React from "react";
+import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Package, Clock, MapPin } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 
 interface OrderSuccessModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   orderDetails: {
-    orderNumber: string;
-    total: number;
-    deliveryDate?: string;
-    deliveryTimeSlot?: string;
+    orderId: string;
+    totalAmount: number;
+    items: Array<{
+      name: string;
+      quantity: number;
+      price: number;
+    }>;
   };
   formatPrice: (price: number) => string;
 }
@@ -22,14 +25,10 @@ const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
   orderDetails,
   formatPrice
 }) => {
-  const handleContinueShopping = () => {
+  const handleClose = () => {
     onOpenChange(false);
+    // Redirect to home or order history
     window.location.href = '/';
-  };
-
-  const handleViewOrders = () => {
-    onOpenChange(false);
-    window.location.href = '/orders';
   };
 
   return (
@@ -39,71 +38,39 @@ const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
             <CheckCircle className="h-6 w-6 text-green-600" />
           </div>
-          <DialogTitle className="text-xl font-semibold">Order Confirmed!</DialogTitle>
+          <DialogTitle className="text-xl font-bold text-gray-900">
+            Order Successfully Placed!
+          </DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4 py-4">
+        <div className="space-y-4">
           <div className="text-center">
-            <p className="text-gray-600 mb-4">
-              Thank you for your order! We've received your payment and will process your delivery soon.
-            </p>
-          </div>
-
-          <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
-            <div className="flex items-center justify-between">
-              <span className="font-medium">Order Number:</span>
-              <span className="text-khrate-600 font-mono">{orderDetails.orderNumber}</span>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <span className="font-medium">Total Amount:</span>
-              <span className="text-lg font-bold text-khrate-600">
-                {formatPrice(orderDetails.total)}
-              </span>
-            </div>
-
-            {orderDetails.deliveryDate && (
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-gray-500" />
-                <span className="text-sm">
-                  Delivery: {new Date(orderDetails.deliveryDate).toLocaleDateString()}
-                  {orderDetails.deliveryTimeSlot && ` at ${orderDetails.deliveryTimeSlot}`}
-                </span>
-              </div>
-            )}
-
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-gray-500" />
-              <span className="text-sm text-gray-600">
-                We'll deliver to your specified address
-              </span>
+            <p className="text-gray-600 mb-2">Order ID: {orderDetails.orderId}</p>
+            <div className="text-2xl font-bold text-khrate-600">
+              Total: {formatPrice(orderDetails.totalAmount)}
             </div>
           </div>
-
-          <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <Package className="h-4 w-4 text-blue-600" />
-              <span className="font-medium text-blue-800">What's Next?</span>
+          
+          <div className="border-t pt-4">
+            <h4 className="font-medium text-gray-900 mb-2">Order Summary:</h4>
+            <div className="space-y-1 max-h-32 overflow-y-auto">
+              {orderDetails.items.map((item, index) => (
+                <div key={index} className="flex justify-between text-sm">
+                  <span className="text-gray-700">{item.name} x{item.quantity}</span>
+                  <span className="text-gray-900">{formatPrice(item.price * item.quantity)}</span>
+                </div>
+              ))}
             </div>
-            <ul className="text-sm text-blue-700 space-y-1">
-              <li>• You'll receive SMS confirmation shortly</li>
-              <li>• Track your order in the Orders section</li>
-              <li>• Our team will contact you before delivery</li>
-            </ul>
           </div>
-        </div>
-
-        <div className="flex flex-col gap-2 pt-4">
-          <Button 
-            onClick={handleViewOrders}
-            className="w-full bg-khrate-500 hover:bg-khrate-600"
-          >
-            View My Orders
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={handleContinueShopping}
-            className="w-full"
+          
+          <div className="text-center text-sm text-gray-600">
+            <p>You will receive a confirmation email shortly.</p>
+            <p>Your order will be delivered as scheduled.</p>
+          </div>
+          
+          <Button
+            onClick={handleClose}
+            className="w-full bg-khrate-500 hover:bg-khrate-600 text-white"
           >
             Continue Shopping
           </Button>
