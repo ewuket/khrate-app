@@ -4,28 +4,68 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Phone, CreditCard, CheckCircle } from "lucide-react";
 import ScheduledDelivery from "./ScheduledDelivery";
+import { Button } from "@/components/ui/button";
 
 interface CheckoutPaymentProps {
-  onPaymentMethodChange: (method: string) => void;
-  onDeliveryScheduleChange?: (schedule: { date: Date | undefined, timeSlot: string }) => void;
+  cartItems: Array<{
+    id: number;
+    name: string;
+    price: number;
+    quantity: number;
+    unit: string;
+  }>;
+  getCartTotal: () => number;
+  formatPrice: (price: number) => string;
+  paymentMethod: string;
+  setPaymentMethod: (method: string) => void;
+  phoneNumber: string;
+  setPhoneNumber: (phone: string) => void;
+  processingPayment: boolean;
+  deliverySchedule: { date: string; timeSlot: string };
+  setDeliverySchedule: (schedule: { date: Date | undefined; timeSlot: string }) => void;
+  onSubmit: (e: React.FormEvent) => Promise<void>;
 }
 
-const CheckoutPayment = ({ onPaymentMethodChange, onDeliveryScheduleChange }: CheckoutPaymentProps) => {
-  const [paymentMethod, setPaymentMethod] = useState("momo");
-
+const CheckoutPayment = ({ 
+  cartItems,
+  getCartTotal,
+  formatPrice,
+  paymentMethod, 
+  setPaymentMethod,
+  phoneNumber,
+  setPhoneNumber,
+  processingPayment,
+  deliverySchedule,
+  setDeliverySchedule,
+  onSubmit
+}: CheckoutPaymentProps) => {
   const handlePaymentChange = (value: string) => {
     setPaymentMethod(value);
-    onPaymentMethodChange(value);
   };
 
   const handleDeliveryScheduleChange = (schedule: { date: Date | undefined, timeSlot: string }) => {
-    if (onDeliveryScheduleChange) {
-      onDeliveryScheduleChange(schedule);
-    }
+    setDeliverySchedule(schedule);
   };
 
   return (
-    <div className="space-y-8">
+    <form onSubmit={onSubmit} className="space-y-8">
+      {/* Order Summary */}
+      <div className="space-y-4">
+        <h3 className="text-xl font-semibold">Order Summary</h3>
+        <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+          {cartItems.map((item) => (
+            <div key={item.id} className="flex justify-between">
+              <span>{item.name} x {item.quantity}</span>
+              <span>{formatPrice(item.price * item.quantity)}</span>
+            </div>
+          ))}
+          <div className="border-t pt-2 font-semibold flex justify-between">
+            <span>Total:</span>
+            <span>{formatPrice(getCartTotal())}</span>
+          </div>
+        </div>
+      </div>
+
       {/* Scheduled Delivery Section */}
       <ScheduledDelivery onDeliveryScheduleChange={handleDeliveryScheduleChange} />
       
@@ -40,20 +80,20 @@ const CheckoutPayment = ({ onPaymentMethodChange, onDeliveryScheduleChange }: Ch
         >
           <div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="momo" id="momo" />
+              <RadioGroupItem value="mtn" id="mtn" />
               <Label 
-                htmlFor="momo" 
+                htmlFor="mtn" 
                 className="flex items-center cursor-pointer p-2 rounded-lg hover:bg-gray-50"
               >
                 <Phone className="h-5 w-5 text-yellow-500 mr-2" />
                 <span>MTN Mobile Money</span>
-                {paymentMethod === "momo" && (
+                {paymentMethod === "mtn" && (
                   <CheckCircle className="h-4 w-4 text-green-500 ml-2" />
                 )}
               </Label>
             </div>
             
-            {paymentMethod === "momo" && (
+            {paymentMethod === "mtn" && (
               <div className="mt-2 ml-8 p-3 bg-yellow-50 rounded-md border border-yellow-200">
                 <p className="text-sm mb-1">Send payment to this MTN MoMo number:</p>
                 <p className="text-lg font-bold">0795754391</p>
@@ -85,7 +125,17 @@ const CheckoutPayment = ({ onPaymentMethodChange, onDeliveryScheduleChange }: Ch
           </div>
         </RadioGroup>
       </div>
-    </div>
+
+      <div className="flex gap-4">
+        <Button 
+          type="submit" 
+          disabled={processingPayment || !deliverySchedule.date}
+          className="flex-1 bg-khrate-500 hover:bg-khrate-600"
+        >
+          {processingPayment ? "Processing..." : "Place Order"}
+        </Button>
+      </div>
+    </form>
   );
 };
 

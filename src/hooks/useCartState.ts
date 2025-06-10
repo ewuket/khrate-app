@@ -1,27 +1,15 @@
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
+import { CartItem } from '@/types/cart';
 
 export const useCartState = () => {
-  const [addingStates, setAddingStates] = useState<Record<string, boolean>>({});
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
-  const setAdding = useCallback((itemId: string | number, isAdding: boolean) => {
-    setAddingStates(prev => ({
-      ...prev,
-      [itemId]: isAdding
-    }));
-  }, []);
-
-  const isAdding = useCallback((itemId: string | number) => {
-    return addingStates[itemId] || false;
-  }, [addingStates]);
-
-  const clearAdding = useCallback((itemId: string | number) => {
-    setAddingStates(prev => {
-      const newState = { ...prev };
-      delete newState[itemId];
-      return newState;
-    });
-  }, []);
-
-  return { setAdding, isAdding, clearAdding };
+  return {
+    cart,
+    setCart,
+    isCartOpen,
+    setIsCartOpen
+  };
 };

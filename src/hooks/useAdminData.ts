@@ -54,7 +54,21 @@ export const useAdminData = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setGroupSessions(data || []);
+      
+      // Format the data to match AdminGroupSession interface
+      const formattedGroupSessions: AdminGroupSession[] = (data || []).map(session => ({
+        id: session.id,
+        name: session.name || 'Unnamed Group',
+        join_code: session.join_code,
+        leader_id: session.leader_id,
+        member_count: 0, // This would typically come from a separate query or join
+        total_amount: 0, // This would typically come from calculating cart items
+        status: session.status,
+        order_status: session.order_status || 'collecting',
+        created_at: session.created_at
+      }));
+
+      setGroupSessions(formattedGroupSessions);
     } catch (error) {
       console.error('Error loading group sessions:', error);
       // Set mock data for demo

@@ -30,7 +30,7 @@ interface CartProviderProps {
 export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const { user, isAuthenticated } = useAuth();
   const { cart, setCart, isCartOpen, setIsCartOpen } = useCartState();
-  const { addingItems, setAddingItems } = useState<Set<string>>(new Set());
+  const [addingItems, setAddingItems] = useState<Set<string>>(new Set());
   const operations = useCartOperations();
   const { syncCart: performSync } = useCartSync();
 
