@@ -35,12 +35,12 @@ const CartSidebar = () => {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [showGuestOptions, setShowGuestOptions] = useState(false);
 
-  // Sync cart when sidebar opens to ensure latest data
+  // Sync cart when sidebar opens
   useEffect(() => {
-    if (isCartOpen) {
+    if (isCartOpen && isAuthenticated) {
       syncCart();
     }
-  }, [isCartOpen, syncCart]);
+  }, [isCartOpen, isAuthenticated, syncCart]);
 
   const handleCheckout = () => {
     if (cart.length === 0) {
@@ -54,6 +54,7 @@ const CartSidebar = () => {
       return;
     }
 
+    // Allow guest checkout - don't force authentication
     if (!isAuthenticated) {
       setShowGuestOptions(true);
       return;

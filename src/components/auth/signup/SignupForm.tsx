@@ -27,26 +27,21 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSuccess, onSwitchToLogin }) =
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const validateRwandaPhone = (phone: string): boolean => {
-    // Rwanda phone number formats: +250XXXXXXXXX, 250XXXXXXXXX, 07XXXXXXXX, 78XXXXXXXX, 79XXXXXXXX
     const rwandaPhoneRegex = /^(\+250|250)?(07|78|79)[0-9]{7}$/;
     return rwandaPhoneRegex.test(phone.replace(/\s/g, ''));
   };
 
   const formatPhoneNumber = (phone: string): string => {
-    // Remove all non-digit characters except +
     const cleaned = phone.replace(/[^\d+]/g, '');
     
-    // If it starts with 07, 78, or 79, add +250
     if (/^(07|78|79)/.test(cleaned)) {
       return `+250${cleaned}`;
     }
     
-    // If it starts with 250, add +
     if (/^250/.test(cleaned)) {
       return `+${cleaned}`;
     }
     
-    // If it already starts with +250, return as is
     if (/^\+250/.test(cleaned)) {
       return cleaned;
     }
@@ -58,7 +53,6 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSuccess, onSwitchToLogin }) =
     e.preventDefault();
     setError('');
 
-    // Validation
     if (!formData.fullName.trim()) {
       setError('Full name is required');
       return;
@@ -94,7 +88,6 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSuccess, onSwitchToLogin }) =
     try {
       const formattedPhone = formatPhoneNumber(formData.phone);
 
-      // Sign up with Supabase Auth
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -113,7 +106,6 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSuccess, onSwitchToLogin }) =
       }
 
       if (data.user) {
-        // Update the user profile with phone number
         const { error: profileError } = await supabase
           .from('user_profiles')
           .upsert({
@@ -125,7 +117,6 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSuccess, onSwitchToLogin }) =
 
         if (profileError) {
           console.error('Profile update error:', profileError);
-          // Don't throw error here as the user is already signed up
         }
 
         toast.success('Account created successfully! Please check your email to verify your account.');
@@ -145,132 +136,139 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSuccess, onSwitchToLogin }) =
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="fullName">Full Name</Label>
-        <Input
-          id="fullName"
-          type="text"
-          value={formData.fullName}
-          onChange={(e) => handleInputChange('fullName', e.target.value)}
-          placeholder="Enter your full name"
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          value={formData.email}
-          onChange={(e) => handleInputChange('email', e.target.value)}
-          placeholder="Enter your email"
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="phone">Phone Number</Label>
-        <Input
-          id="phone"
-          type="tel"
-          value={formData.phone}
-          onChange={(e) => handleInputChange('phone', e.target.value)}
-          placeholder="e.g., +250781234567 or 0781234567"
-          required
-        />
-        <p className="text-xs text-gray-500">
-          Enter your Rwanda phone number for order notifications
-        </p>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
-        <div className="relative">
+    <div className="max-h-[80vh] overflow-y-auto">
+      <form onSubmit={handleSubmit} className="space-y-4 p-1">
+        <div className="space-y-2">
+          <Label htmlFor="fullName" className="text-white">Full Name</Label>
           <Input
-            id="password"
-            type={showPassword ? "text" : "password"}
-            value={formData.password}
-            onChange={(e) => handleInputChange('password', e.target.value)}
-            placeholder="Enter your password"
+            id="fullName"
+            type="text"
+            value={formData.fullName}
+            onChange={(e) => handleInputChange('fullName', e.target.value)}
+            placeholder="Enter your full name"
+            className="bg-white text-black"
             required
           />
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-            onClick={() => setShowPassword(!showPassword)}
-          >
-            {showPassword ? (
-              <EyeOff className="h-4 w-4" />
-            ) : (
-              <Eye className="h-4 w-4" />
-            )}
-          </Button>
         </div>
-      </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Confirm Password</Label>
-        <div className="relative">
+        <div className="space-y-2">
+          <Label htmlFor="email" className="text-white">Email</Label>
           <Input
-            id="confirmPassword"
-            type={showConfirmPassword ? "text" : "password"}
-            value={formData.confirmPassword}
-            onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-            placeholder="Confirm your password"
+            id="email"
+            type="email"
+            value={formData.email}
+            onChange={(e) => handleInputChange('email', e.target.value)}
+            placeholder="Enter your email"
+            className="bg-white text-black"
             required
           />
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-          >
-            {showConfirmPassword ? (
-              <EyeOff className="h-4 w-4" />
-            ) : (
-              <Eye className="h-4 w-4" />
-            )}
-          </Button>
         </div>
-      </div>
 
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+        <div className="space-y-2">
+          <Label htmlFor="phone" className="text-white">Phone Number</Label>
+          <Input
+            id="phone"
+            type="tel"
+            value={formData.phone}
+            onChange={(e) => handleInputChange('phone', e.target.value)}
+            placeholder="e.g., +250781234567 or 0781234567"
+            className="bg-white text-black"
+            required
+          />
+          <p className="text-xs text-gray-300">
+            Enter your Rwanda phone number for order notifications
+          </p>
+        </div>
 
-      <Button
-        type="submit"
-        className="w-full bg-khrate-500 hover:bg-khrate-600"
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Creating Account...
-          </>
-        ) : (
-          'Create Account'
+        <div className="space-y-2">
+          <Label htmlFor="password" className="text-white">Password</Label>
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              value={formData.password}
+              onChange={(e) => handleInputChange('password', e.target.value)}
+              placeholder="Enter your password"
+              className="bg-white text-black pr-10"
+              required
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-black"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="confirmPassword" className="text-white">Confirm Password</Label>
+          <div className="relative">
+            <Input
+              id="confirmPassword"
+              type={showConfirmPassword ? "text" : "password"}
+              value={formData.confirmPassword}
+              onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+              placeholder="Confirm your password"
+              className="bg-white text-black pr-10"
+              required
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-black"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            >
+              {showConfirmPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {error && (
+          <Alert variant="destructive" className="bg-red-100 border-red-300">
+            <AlertDescription className="text-red-800">{error}</AlertDescription>
+          </Alert>
         )}
-      </Button>
 
-      <div className="text-center">
         <Button
-          type="button"
-          variant="link"
-          onClick={onSwitchToLogin}
-          className="text-sm"
+          type="submit"
+          className="w-full bg-khrate-500 hover:bg-khrate-600 text-white"
+          disabled={isLoading}
         >
-          Already have an account? Sign in
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Creating Account...
+            </>
+          ) : (
+            'Create Account'
+          )}
         </Button>
-      </div>
-    </form>
+
+        <div className="text-center">
+          <Button
+            type="button"
+            variant="link"
+            onClick={onSwitchToLogin}
+            className="text-sm text-white hover:text-gray-200"
+          >
+            Already have an account? Sign in
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 };
 

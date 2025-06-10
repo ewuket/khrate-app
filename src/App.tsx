@@ -25,7 +25,7 @@ function App() {
           <GroupBuyingProvider>
             <div className="min-h-screen bg-white">
               <Navbar />
-              <main>
+              <main className="relative">
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/about" element={<About />} />
