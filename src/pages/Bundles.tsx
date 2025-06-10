@@ -1,12 +1,9 @@
-
-import { useState } from "react";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
+import React from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import BundleCard from "@/components/bundles/BundleCard";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Footer from "@/components/layout/Footer";
 
-// Sample bundle data
-const allBundles = [
+const bundlesData = [
   {
     id: 1,
     title: "Single Bundle",
@@ -25,8 +22,7 @@ const allBundles = [
       { name: "Sugar", quantity: 1, unit: "kg" },
       { name: "Salt", quantity: 0.1, unit: "kg" },
       { name: "Eggs", quantity: 10, unit: "pieces" }
-    ],
-    category: "single"
+    ]
   },
   {
     id: 2,
@@ -47,8 +43,7 @@ const allBundles = [
       { name: "Eggs", quantity: 12, unit: "pieces" },
       { name: "Slice Bread", quantity: 1, unit: "loaf" },
       { name: "Milk", quantity: 2, unit: "liter" }
-    ],
-    category: "medium"
+    ]
   },
   {
     id: 3,
@@ -69,191 +64,70 @@ const allBundles = [
       { name: "Milk", quantity: 4, unit: "liter" },
       { name: "Cassava Flour", quantity: 5, unit: "kg" },
       { name: "Sugar", quantity: 5, unit: "kg" }
-    ],
-    category: "large"
-  },
-  {
-    id: 4,
-    title: "Vegetables Bundle",
-    description: "Fresh vegetables for the week",
-    price: 19999,
-    originalPrice: 25000,
-    image: "/lovable-uploads/4049f27e-26db-4497-9920-9b60326fe5f7.png",
-    items: [
-      { name: "Tomatoes", quantity: 1, unit: "kg" },
-      { name: "Onions", quantity: 1, unit: "kg" },
-      { name: "Carrots", quantity: 3, unit: "kg" },
-      { name: "Lettuce", quantity: 2, unit: "pieces" },
-      { name: "Peppers", quantity: 4, unit: "pieces" },
-      { name: "Cucumber", quantity: 2, unit: "pieces" }
-    ],
-    category: "single"
-  },
-  {
-    id: 5,
-    title: "Breakfast Bundle",
-    description: "Start your day right",
-    price: 19999,
-    originalPrice: 24000,
-    image: "/lovable-uploads/f54999c2-780a-4e38-9b60-7d31fd0fd9bc.png",
-    items: [
-      { name: "Slice Bread", quantity: 2, unit: "loaf" },
-      { name: "Eggs", quantity: 24, unit: "pieces" },
-      { name: "Milk", quantity: 5, unit: "liter" },
-      { name: "Breakfast Cereal", quantity: 1, unit: "box" },
-      { name: "Jam", quantity: 0.3, unit: "kg" },
-      { name: "Butter", quantity: 0.5, unit: "kg" },
-      { name: "Coffee", quantity: 0.25, unit: "kg" }
-    ],
-    category: "medium"
-  },
-  {
-    id: 6,
-    title: "Pantry Essentials",
-    description: "Stock your pantry with basics",
-    price: 39999,
-    originalPrice: 48000,
-    image: "/lovable-uploads/64610299-1b2e-480f-ad10-ca5f00ac3808.png",
-    items: [
-      { name: "Rice", quantity: 10, unit: "kg" },
-      { name: "Wheat Flour", quantity: 5, unit: "kg" },
-      { name: "Sugar", quantity: 2, unit: "kg" },
-      { name: "Oil", quantity: 3, unit: "liter" },
-      { name: "Salt", quantity: 0.1, unit: "kg" },
-      { name: "Pasta", quantity: 3, unit: "kg" },
-      { name: "Beans", quantity: 3, unit: "kg" },
-      { name: "Lentils", quantity: 2, unit: "kg" },
-      { name: "Spices", quantity: 1, unit: "pack" }
-    ],
-    category: "large"
-  },
-  {
-    id: 7,
-    title: "Small Fruit Bundle",
-    description: "Fresh seasonal fruits for 1-2 people",
-    price: 8500,
-    originalPrice: 11000,
-    image: "/lovable-uploads/0225ce03-0269-4b10-b603-3c14cf3e55ca.png",
-    items: [
-      { name: "Oranges", quantity: 4, unit: "pieces" },
-      { name: "Apples", quantity: 4, unit: "pieces" },
-      { name: "Bananas", quantity: 6, unit: "pieces" },
-      { name: "Grapes", quantity: 1, unit: "kg" },
-      { name: "Strawberries", quantity: 0.5, unit: "kg" }
-    ],
-    category: "fruit"
-  },
-  {
-    id: 8,
-    title: "Medium Fruit Bundle",
-    description: "Variety pack for a small family",
-    price: 16000,
-    originalPrice: 20000,
-    image: "/lovable-uploads/44536f37-66fe-4604-a318-5afc62c7fcdf.png",
-    items: [
-      { name: "Oranges", quantity: 6, unit: "pieces" },
-      { name: "Apples", quantity: 6, unit: "pieces" },
-      { name: "Bananas", quantity: 8, unit: "pieces" },
-      { name: "Grapes", quantity: 2, unit: "kg" },
-      { name: "Strawberries", quantity: 0.75, unit: "kg" },
-      { name: "Pineapple", quantity: 1, unit: "piece" },
-      { name: "Mango", quantity: 2, unit: "pieces" }
-    ],
-    category: "fruit"
-  },
-  {
-    id: 9,
-    title: "Large Fruit Bundle",
-    description: "Complete fruit assortment for families",
-    price: 29000,
-    originalPrice: 36000,
-    image: "/lovable-uploads/09c44f3e-b941-47e8-b1c7-86fee2bd1286.png",
-    items: [
-      { name: "Oranges", quantity: 10, unit: "pieces" },
-      { name: "Apples", quantity: 10, unit: "pieces" },
-      { name: "Bananas", quantity: 12, unit: "pieces" },
-      { name: "Grapes", quantity: 3, unit: "kg" },
-      { name: "Strawberries", quantity: 1, unit: "kg" },
-      { name: "Pineapple", quantity: 2, unit: "pieces" },
-      { name: "Mango", quantity: 4, unit: "pieces" },
-      { name: "Blueberries", quantity: 0.25, unit: "kg" },
-      { name: "Raspberries", quantity: 0.25, unit: "kg" }
-    ],
-    category: "fruit"
+    ]
   }
 ];
 
 const Bundles = () => {
-  const [category, setCategory] = useState<string>("all");
-  
-  const filteredBundles = category === "all" 
-    ? allBundles 
-    : allBundles.filter(bundle => bundle.category === category);
-  
-  const handleSaveBundle = (bundleId: number) => {
-    console.log('Bundle saved:', bundleId);
-  };
-  
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-      
-      <main className="flex-1">
-        <section className="bg-gradient-to-r from-khrate-500 to-khrate-600 py-12 text-white">
-          <div className="container mx-auto">
-            <h1 className="text-3xl md:text-4xl font-bold">Grocery Bundles</h1>
-            <p className="mt-2 max-w-lg">
-              Pre-curated grocery packages with everything you need, delivered to your door
-            </p>
-          </div>
-        </section>
-        
-        <section className="py-12">
-          <div className="container mx-auto">
-            <Tabs 
-              defaultValue="all" 
-              className="mb-8"
-              onValueChange={setCategory}
-              value={category}
-            >
-              <div className="border-b mb-6">
-                <TabsList className="bg-transparent">
-                  <TabsTrigger value="all" className="data-[state=active]:text-khrate-500 data-[state=active]:border-khrate-500 rounded-none border-b-2 border-transparent data-[state=active]:bg-transparent">
-                    All Bundles
-                  </TabsTrigger>
-                  <TabsTrigger value="single" className="data-[state=active]:text-khrate-500 data-[state=active]:border-khrate-500 rounded-none border-b-2 border-transparent data-[state=active]:bg-transparent">
-                    Single
-                  </TabsTrigger>
-                  <TabsTrigger value="medium" className="data-[state=active]:text-khrate-500 data-[state=active]:border-khrate-500 rounded-none border-b-2 border-transparent data-[state=active]:bg-transparent">
-                    Medium
-                  </TabsTrigger>
-                  <TabsTrigger value="large" className="data-[state=active]:text-khrate-500 data-[state=active]:border-khrate-500 rounded-none border-b-2 border-transparent data-[state=active]:bg-transparent">
-                    Large
-                  </TabsTrigger>
-                  <TabsTrigger value="fruit" className="data-[state=active]:text-khrate-500 data-[state=active]:border-khrate-500 rounded-none border-b-2 border-transparent data-[state=active]:bg-transparent">
-                    Fruit
-                  </TabsTrigger>
-                </TabsList>
-              </div>
+    <div className="min-h-screen bg-gray-50">
+      <main className="container mx-auto px-4 py-8">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Our Bundles</h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Choose from our carefully curated bundles designed to meet your household needs. 
+            Save time and money with our pre-selected combinations of essential items.
+          </p>
+        </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {filteredBundles.map(bundle => (
-                  <BundleCard 
-                    key={bundle.id}
-                    id={bundle.id}
-                    title={bundle.title}
-                    price={bundle.price}
-                    originalPrice={bundle.originalPrice}
-                    items={bundle.items}
-                    image={bundle.image}
-                    category={bundle.category}
-                    description={bundle.description}
-                  />
-                ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+          {bundlesData.map((bundle) => (
+            <BundleCard
+              key={bundle.id}
+              id={bundle.id}
+              title={bundle.title}
+              price={bundle.price}
+              originalPrice={bundle.originalPrice}
+              items={bundle.items}
+              image={bundle.image}
+              description={bundle.description}
+            />
+          ))}
+        </div>
+
+        <Card className="bg-white border-khrate-200">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl text-khrate-600">Why Choose Our Bundles?</CardTitle>
+            <CardDescription className="text-lg">
+              Save time, money, and effort with our expertly curated grocery bundles
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="bg-khrate-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">💰</span>
+                </div>
+                <h3 className="font-semibold mb-2">Great Savings</h3>
+                <p className="text-gray-600">Save up to 20% compared to buying items individually</p>
               </div>
-            </Tabs>
-          </div>
-        </section>
+              <div className="text-center">
+                <div className="bg-khrate-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">⏰</span>
+                </div>
+                <h3 className="font-semibold mb-2">Time Saving</h3>
+                <p className="text-gray-600">No need to select individual items - we've done the work for you</p>
+              </div>
+              <div className="text-center">
+                <div className="bg-khrate-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">📦</span>
+                </div>
+                <h3 className="font-semibold mb-2">Convenience</h3>
+                <p className="text-gray-600">Everything you need in one package, delivered to your door</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </main>
       
       <Footer />

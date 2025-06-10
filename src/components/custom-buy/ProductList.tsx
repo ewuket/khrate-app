@@ -23,10 +23,9 @@ interface ProductListProps {
     image: string;
     description?: string;
   }>;
-  onAddToCart: (product: Product, quantity: number) => void;
 }
 
-const ProductList: React.FC<ProductListProps> = ({ products, onAddToCart }) => {
+const ProductList: React.FC<ProductListProps> = ({ products }) => {
   // Convert products to include inStock property
   const productsWithStock: Product[] = products.map(product => ({
     ...product,

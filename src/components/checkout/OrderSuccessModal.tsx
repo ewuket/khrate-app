@@ -35,12 +35,13 @@ const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-            <CheckCircle className="h-6 w-6 text-green-600" />
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+            <CheckCircle className="h-8 w-8 text-green-600" />
           </div>
           <DialogTitle className="text-xl font-bold text-gray-900">
-            Order Successfully Placed!
+            🎉 Order placed successfully!
           </DialogTitle>
+          <p className="text-gray-600 mt-2">Thank you for shopping with Khrate.</p>
         </DialogHeader>
         
         <div className="space-y-4">
@@ -63,7 +64,8 @@ const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
             </div>
           </div>
           
-          <div className="text-center text-sm text-gray-600">
+          <div className="text-center text-sm text-gray-600 bg-green-50 p-3 rounded-lg">
+            <p className="font-medium text-green-800">✅ Order Confirmed</p>
             <p>You will receive a confirmation email shortly.</p>
             <p>Your order will be delivered as scheduled.</p>
           </div>

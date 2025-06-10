@@ -13,13 +13,15 @@ export type CartItem = {
 export interface CartContextType {
   cart: CartItem[];
   isCartOpen: boolean;
-  loading: boolean;
+  loading?: boolean;
   openCart: () => void;
   closeCart: () => void;
-  addToCart: (item: any, type: 'bundle' | 'custom' | 'group') => Promise<void>;
+  addToCart: (item: any, type?: 'bundle' | 'custom' | 'group') => Promise<void>;
   removeFromCart: (id: string) => Promise<void>;
   updateQuantity: (id: string, quantity: number) => Promise<void>;
   clearCart: () => Promise<void>;
   getCartTotal: () => number;
+  getCartCount: () => number;
   syncCart: () => Promise<void>;
+  isAddingToCart: (productId: number, productType?: string) => boolean;
 }

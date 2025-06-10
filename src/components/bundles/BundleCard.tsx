@@ -55,7 +55,7 @@ const BundleCard: React.FC<BundleCardProps> = ({
         title,
         price,
         unit: 'bundle',
-        type: 'bundle',
+        type: 'bundle' as const,
         items: items.map(item => `${item.quantity} ${item.unit} ${item.name}`)
       };
       
