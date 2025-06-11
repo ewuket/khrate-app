@@ -65,6 +65,13 @@ const CustomBuyCheckoutDialog = ({
     onSuccess: saveOrder,
     onOpenChange
   });
+
+  const handleDeliveryScheduleChange = (schedule: { date: Date | undefined; timeSlot: string }) => {
+    setDeliverySchedule({
+      date: schedule.date ? schedule.date.toISOString().split('T')[0] : '',
+      timeSlot: schedule.timeSlot
+    });
+  };
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -102,7 +109,7 @@ const CustomBuyCheckoutDialog = ({
             )}
             
             <ScheduledDelivery 
-              onDeliveryScheduleChange={setDeliverySchedule} 
+              onDeliveryScheduleChange={handleDeliveryScheduleChange} 
             />
             
             <Separator />

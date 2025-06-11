@@ -91,7 +91,7 @@ const bundlesData = [
     description: "Start your day right",
     price: 19999,
     originalPrice: 25000,
-    image: "/lovable-uploads/6d22b9d7-17a9-457a-947a-9bb8301a4051.png",
+    image: "/lovable-uploads/0d93dc66-4bae-4f1a-a8d0-99ad18115c40.png",
     items: [
       { name: "Eggs", quantity: 12, unit: "pieces" },
       { name: "Bread", quantity: 2, unit: "loaves" },
@@ -108,7 +108,7 @@ const bundlesData = [
     description: "Stock your pantry with basics",
     price: 39999,
     originalPrice: 50000,
-    image: "/lovable-uploads/30fe686e-a6f6-469f-bb69-c889c304c4e7.png",
+    image: "/lovable-uploads/710b4c9d-82af-42d8-a869-ea7b86e0d412.png",
     items: [
       { name: "Rice", quantity: 5, unit: "kg" },
       { name: "Sugar", quantity: 2, unit: "kg" },
@@ -125,7 +125,7 @@ const bundlesData = [
     description: "Fresh seasonal fruits for 1-2 people",
     price: 8500,
     originalPrice: 12000,
-    image: "/lovable-uploads/4730e151-0c90-4bde-a3cf-7eb370e2cac1.png",
+    image: "/lovable-uploads/280f9459-3e15-4683-85fb-0295c65c6045.png",
     items: [
       { name: "Bananas", quantity: 6, unit: "pieces" },
       { name: "Apples", quantity: 4, unit: "pieces" },
@@ -140,7 +140,7 @@ const bundlesData = [
     description: "Variety pack for a small family",
     price: 16000,
     originalPrice: 20000,
-    image: "/lovable-uploads/6d22b9d7-17a9-457a-947a-9bb8301a4051.png",
+    image: "/lovable-uploads/bca8e1ad-44ee-4a9a-a33a-af0189f97b9c.png",
     items: [
       { name: "Bananas", quantity: 12, unit: "pieces" },
       { name: "Apples", quantity: 8, unit: "pieces" },
@@ -157,7 +157,7 @@ const bundlesData = [
     description: "Abundant fruit selection for families",
     price: 29000,
     originalPrice: 35000,
-    image: "/lovable-uploads/30fe686e-a6f6-469f-bb69-c889c304c4e7.png",
+    image: "/lovable-uploads/ac33e2f2-2a58-4fae-af4a-cc509ae3aae0.png",
     items: [
       { name: "Bananas", quantity: 24, unit: "pieces" },
       { name: "Apples", quantity: 12, unit: "pieces" },

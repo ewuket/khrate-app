@@ -1,273 +1,198 @@
 
-import React, { useState } from 'react';
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Eye, EyeOff } from "lucide-react";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Eye, EyeOff, Gift, User, Mail, Phone, Lock } from "lucide-react";
 
 interface SignupFormProps {
-  onSuccess: () => void;
   onSwitchToLogin: () => void;
+  onSuccess: () => void;
 }
 
-const SignupForm: React.FC<SignupFormProps> = ({ onSuccess, onSwitchToLogin }) => {
+const SignupForm = ({ onSwitchToLogin, onSuccess }: SignupFormProps) => {
   const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    password: '',
-    confirmPassword: ''
+    fullName: "",
+    email: "",
+    phoneNumber: "",
+    password: "",
+    confirmPassword: ""
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  const validateRwandaPhone = (phone: string): boolean => {
-    const rwandaPhoneRegex = /^(\+250|250)?(07|78|79)[0-9]{7}$/;
-    return rwandaPhoneRegex.test(phone.replace(/\s/g, ''));
-  };
-
-  const formatPhoneNumber = (phone: string): string => {
-    const cleaned = phone.replace(/[^\d+]/g, '');
-    
-    if (/^(07|78|79)/.test(cleaned)) {
-      return `+250${cleaned}`;
-    }
-    
-    if (/^250/.test(cleaned)) {
-      return `+${cleaned}`;
-    }
-    
-    if (/^\+250/.test(cleaned)) {
-      return cleaned;
-    }
-    
-    return phone;
-  };
+  const { signUp, loading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-
-    if (!formData.fullName.trim()) {
-      setError('Full name is required');
-      return;
-    }
-
-    if (!formData.email.trim()) {
-      setError('Email is required');
-      return;
-    }
-
-    if (!formData.phone.trim()) {
-      setError('Phone number is required');
-      return;
-    }
-
-    if (!validateRwandaPhone(formData.phone)) {
-      setError('Please enter a valid Rwanda phone number (e.g., +250781234567, 0781234567)');
-      return;
-    }
-
-    if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters long');
-      return;
-    }
-
+    
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
       return;
     }
-
-    setIsLoading(true);
-
-    try {
-      const formattedPhone = formatPhoneNumber(formData.phone);
-
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            full_name: formData.fullName,
-            phone: formattedPhone
-          }
-        }
-      });
-
-      if (signUpError) {
-        console.error('Signup error:', signUpError);
-        setError(signUpError.message);
-        return;
-      }
-
-      if (data.user) {
-        const { error: profileError } = await supabase
-          .from('user_profiles')
-          .upsert({
-            id: data.user.id,
-            email: formData.email,
-            full_name: formData.fullName,
-            phone: formattedPhone
-          });
-
-        if (profileError) {
-          console.error('Profile update error:', profileError);
-        }
-
-        toast.success('Account created successfully! Please check your email to verify your account.');
-        onSuccess();
-      }
-    } catch (error: any) {
-      console.error('Signup error:', error);
-      setError(error.message || 'An error occurred during signup');
-    } finally {
-      setIsLoading(false);
+    
+    const result = await signUp(formData.email, formData.password, formData.fullName);
+    if (result && !result.error) {
+      onSuccess();
     }
   };
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (error) setError('');
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
   };
 
   return (
-    <div className="max-h-[80vh] overflow-y-auto">
-      <form onSubmit={handleSubmit} className="space-y-4 p-1">
-        <div className="space-y-2">
-          <Label htmlFor="fullName" className="text-white">Full Name</Label>
-          <Input
-            id="fullName"
-            type="text"
-            value={formData.fullName}
-            onChange={(e) => handleInputChange('fullName', e.target.value)}
-            placeholder="Enter your full name"
-            className="bg-white text-black"
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="email" className="text-white">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            value={formData.email}
-            onChange={(e) => handleInputChange('email', e.target.value)}
-            placeholder="Enter your email"
-            className="bg-white text-black"
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="phone" className="text-white">Phone Number</Label>
-          <Input
-            id="phone"
-            type="tel"
-            value={formData.phone}
-            onChange={(e) => handleInputChange('phone', e.target.value)}
-            placeholder="e.g., +250781234567 or 0781234567"
-            className="bg-white text-black"
-            required
-          />
-          <p className="text-xs text-gray-300">
-            Enter your Rwanda phone number for order notifications
+    <div className="space-y-6">
+      {/* Discount Banner */}
+      <div className="bg-gradient-to-r from-green-50 to-khrate-50 border border-green-200 rounded-lg p-4">
+        <div className="flex items-center gap-2 text-green-700 mb-2">
+          <Gift className="h-5 w-5" />
+          <p className="font-bold text-green-700">
+            🎉 Get 10% discount on your first 3 orders!
           </p>
         </div>
+        <p className="text-sm text-green-600">
+          Start saving on groceries immediately after creating your account
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="space-y-2">
+          <Label htmlFor="fullName" className="text-gray-700 font-medium">Full Name</Label>
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Input
+              id="fullName"
+              name="fullName"
+              type="text"
+              value={formData.fullName}
+              onChange={handleChange}
+              required
+              placeholder="Enter your full name"
+              className="pl-10 py-3 bg-white border-gray-300 focus:border-khrate-500 focus:ring-khrate-500"
+            />
+          </div>
+        </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password" className="text-white">Password</Label>
+          <Label htmlFor="email" className="text-gray-700 font-medium">Email Address</Label>
           <div className="relative">
+            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              placeholder="Enter your email address"
+              className="pl-10 py-3 bg-white border-gray-300 focus:border-khrate-500 focus:ring-khrate-500"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="phoneNumber" className="text-gray-700 font-medium">Phone Number</Label>
+          <div className="relative">
+            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Input
+              id="phoneNumber"
+              name="phoneNumber"
+              type="tel"
+              value={formData.phoneNumber}
+              onChange={handleChange}
+              placeholder="Enter your phone number"
+              className="pl-10 py-3 bg-white border-gray-300 focus:border-khrate-500 focus:ring-khrate-500"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="password" className="text-gray-700 font-medium">Password</Label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <Input
               id="password"
+              name="password"
               type={showPassword ? "text" : "password"}
               value={formData.password}
-              onChange={(e) => handleInputChange('password', e.target.value)}
-              placeholder="Enter your password"
-              className="bg-white text-black pr-10"
+              onChange={handleChange}
               required
+              placeholder="Create a strong password"
+              className="pl-10 pr-10 py-3 bg-white border-gray-300 focus:border-khrate-500 focus:ring-khrate-500"
             />
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-black"
+              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? (
-                <EyeOff className="h-4 w-4" />
+                <EyeOff className="h-4 w-4 text-gray-400" />
               ) : (
-                <Eye className="h-4 w-4" />
+                <Eye className="h-4 w-4 text-gray-400" />
               )}
             </Button>
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="confirmPassword" className="text-white">Confirm Password</Label>
+          <Label htmlFor="confirmPassword" className="text-gray-700 font-medium">Confirm Password</Label>
           <div className="relative">
+            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <Input
               id="confirmPassword"
+              name="confirmPassword"
               type={showConfirmPassword ? "text" : "password"}
               value={formData.confirmPassword}
-              onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-              placeholder="Confirm your password"
-              className="bg-white text-black pr-10"
+              onChange={handleChange}
               required
+              placeholder="Confirm your password"
+              className="pl-10 pr-10 py-3 bg-white border-gray-300 focus:border-khrate-500 focus:ring-khrate-500"
             />
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-black"
+              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             >
               {showConfirmPassword ? (
-                <EyeOff className="h-4 w-4" />
+                <EyeOff className="h-4 w-4 text-gray-400" />
               ) : (
-                <Eye className="h-4 w-4" />
+                <Eye className="h-4 w-4 text-gray-400" />
               )}
             </Button>
           </div>
         </div>
 
-        {error && (
-          <Alert variant="destructive" className="bg-red-100 border-red-300">
-            <AlertDescription className="text-red-800">{error}</AlertDescription>
-          </Alert>
+        {formData.password !== formData.confirmPassword && formData.confirmPassword && (
+          <p className="text-sm text-red-600">Passwords do not match</p>
         )}
 
-        <Button
-          type="submit"
-          className="w-full bg-khrate-500 hover:bg-khrate-600 text-white"
-          disabled={isLoading}
+        <Button 
+          type="submit" 
+          className="w-full bg-khrate-500 hover:bg-khrate-600 text-white py-3 text-lg font-semibold"
+          disabled={loading || formData.password !== formData.confirmPassword}
         >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Creating Account...
-            </>
-          ) : (
-            'Create Account'
-          )}
+          {loading ? "Creating Account..." : "Create Account"}
         </Button>
-
-        <div className="text-center">
-          <Button
-            type="button"
-            variant="link"
-            onClick={onSwitchToLogin}
-            className="text-sm text-white hover:text-gray-200"
-          >
-            Already have an account? Sign in
-          </Button>
-        </div>
       </form>
+
+      <div className="text-center">
+        <p className="text-sm text-gray-600">
+          Already have an account?{" "}
+          <button
+            onClick={onSwitchToLogin}
+            className="text-khrate-500 hover:text-khrate-600 font-semibold hover:underline"
+          >
+            Sign in here
+          </button>
+        </p>
+      </div>
     </div>
   );
 };

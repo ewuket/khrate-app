@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
@@ -55,42 +55,43 @@ const LoginForm = ({ onSwitchToSignup, onSwitchToReset }: LoginFormProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <div className="space-y-2">
-        <Label htmlFor="email" className="text-gray-700">Email</Label>
+        <Label htmlFor="email" className="text-gray-700 font-medium">Email Address</Label>
         <div className="relative">
+          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
           <Input
             id="email"
             type="email"
-            placeholder="Enter your email"
+            placeholder="Enter your email address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className={`${isValidEmail(email) && email ? "border-green-500" : ""} bg-white text-black`}
+            className={`pl-10 py-3 bg-white border-gray-300 focus:border-khrate-500 focus:ring-khrate-500 ${
+              isValidEmail(email) && email ? "border-green-500 focus:border-green-500" : ""
+            }`}
             required
           />
-          {isValidEmail(email) && email && (
-            <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-500" />
-          )}
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password" className="text-gray-700">Password</Label>
+        <Label htmlFor="password" className="text-gray-700 font-medium">Password</Label>
         <div className="relative">
+          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
           <Input
             id="password"
             type={showPassword ? "text" : "password"}
             placeholder="Enter your password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="bg-white text-black pr-10"
+            className="pl-10 pr-10 py-3 bg-white border-gray-300 focus:border-khrate-500 focus:ring-khrate-500"
             required
           />
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            className="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-700"
+            className="absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-gray-700"
             onClick={() => setShowPassword(!showPassword)}
           >
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -100,18 +101,18 @@ const LoginForm = ({ onSwitchToSignup, onSwitchToReset }: LoginFormProps) => {
 
       <Button 
         type="submit" 
-        className="w-full bg-khrate-500 hover:bg-khrate-600 text-white"
+        className="w-full bg-khrate-500 hover:bg-khrate-600 text-white py-3 text-lg font-semibold"
         disabled={loading || !email || !password}
       >
         {loading ? 'Signing in...' : 'Sign In'}
       </Button>
 
-      <div className="flex flex-col space-y-2 text-sm text-center">
+      <div className="flex flex-col space-y-3 text-sm text-center">
         {onSwitchToReset && (
           <button
             type="button"
             onClick={onSwitchToReset}
-            className="text-khrate-500 hover:underline"
+            className="text-khrate-500 hover:underline hover:text-khrate-600"
           >
             Forgot your password?
           </button>
@@ -122,9 +123,9 @@ const LoginForm = ({ onSwitchToSignup, onSwitchToReset }: LoginFormProps) => {
             <button
               type="button"
               onClick={onSwitchToSignup}
-              className="text-khrate-500 hover:underline font-medium"
+              className="text-khrate-500 hover:underline font-semibold hover:text-khrate-600"
             >
-              Sign up
+              Sign up here
             </button>
           </div>
         )}
