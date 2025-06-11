@@ -4,16 +4,20 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import AuthModal from '@/components/auth/AuthModal';
+import { UserProfile } from '@/types/user';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
+  profile: UserProfile | null;
   loading: boolean;
   isAuthenticated: boolean;
   isAuthModalOpen: boolean;
   signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string, fullName: string) => Promise<any>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<any>;
+  updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
   openAuthModal: () => void;
   closeAuthModal: () => void;
 }
@@ -27,6 +31,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
@@ -40,6 +45,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         } else {
           setSession(session);
           setUser(session?.user ?? null);
+          if (session?.user) {
+            await fetchUserProfile(session.user.id);
+          }
         }
       } catch (error) {
         console.error('Error in getInitialSession:', error);
@@ -57,11 +65,64 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        if (session?.user) {
+          await fetchUserProfile(session.user.id);
+        } else {
+          setProfile(null);
+        }
       }
     );
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error && error.code === 'PGRST116') {
+        // Profile doesn't exist, create it
+        await createUserProfile(userId);
+      } else if (error) {
+        console.error('Error fetching profile:', error);
+      } else {
+        setProfile(data);
+      }
+    } catch (error) {
+      console.error('Profile fetch error:', error);
+    }
+  };
+
+  const createUserProfile = async (userId: string) => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      
+      const newProfile = {
+        id: userId,
+        email: userData.user?.email || '',
+        full_name: userData.user?.user_metadata?.full_name || '',
+        discount_orders_remaining: 3,
+        total_orders: 0,
+        created_at: new Date().toISOString()
+      };
+
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .insert([newProfile])
+        .select()
+        .single();
+
+      if (error) throw error;
+      setProfile(data);
+    } catch (error) {
+      console.error('Error creating profile:', error);
+    }
+  };
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -137,6 +198,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Clear all state immediately
       setUser(null);
       setSession(null);
+      setProfile(null);
       
       // Show success message
       toast.success('Signed out successfully');
@@ -151,18 +213,63 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`
+      });
+
+      if (error) {
+        console.error('Password reset error:', error);
+        toast.error(error.message);
+        return { error };
+      }
+
+      toast.success('Password reset email sent!');
+      return { error: null };
+    } catch (error: any) {
+      console.error('Password reset exception:', error);
+      toast.error('Failed to send reset email');
+      return { error };
+    }
+  };
+
+  const updateProfile = async (updates: Partial<UserProfile>) => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .update(updates)
+        .eq('id', user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      setProfile(data);
+      toast.success('Profile updated successfully');
+    } catch (error: any) {
+      toast.error('Failed to update profile');
+      console.error('Update profile error:', error);
+    }
+  };
+
   const openAuthModal = () => setIsAuthModalOpen(true);
   const closeAuthModal = () => setIsAuthModalOpen(false);
 
   const value: AuthContextType = {
     user,
     session,
+    profile,
     loading,
     isAuthenticated: !!user,
     isAuthModalOpen,
     signIn,
     signUp,
     signOut,
+    resetPassword,
+    updateProfile,
     openAuthModal,
     closeAuthModal,
   };
