@@ -6,6 +6,7 @@ import CustomBuyCheckoutDialog from "@/components/custom-buy/CustomBuyCheckoutDi
 import { Button } from "@/components/ui/button";
 import { ShoppingCart } from "lucide-react";
 import Footer from "@/components/layout/Footer";
+import { productsData } from "@/components/custom-buy/productsData";
 
 interface CartItem {
   id: number;
@@ -63,6 +64,10 @@ const CustomBuy = () => {
     return cart.reduce((total, item) => total + item.quantity, 0);
   };
 
+  const calculateTotal = () => {
+    return getCartTotal().toLocaleString();
+  };
+
   const handleCheckout = () => {
     setShowCart(false);
     setShowCheckout(true);
@@ -101,19 +106,22 @@ const CustomBuy = () => {
       </div>
 
       <main className="container mx-auto px-4 py-8">
-        <ProductList onAddToCart={addToCart} />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <ProductList products={productsData} onAddToCart={addToCart} />
+          </div>
+          
+          <div className="lg:col-span-1">
+            <CustomBuyCart
+              cart={cart}
+              products={productsData}
+              onAddToCart={addToCart}
+              onRemoveFromCart={removeFromCart}
+              calculateTotal={calculateTotal}
+            />
+          </div>
+        </div>
       </main>
-
-      <CustomBuyCart
-        isOpen={showCart}
-        onClose={() => setShowCart(false)}
-        cart={cart}
-        onUpdateQuantity={updateQuantity}
-        onRemoveItem={removeFromCart}
-        onClearCart={clearCart}
-        onCheckout={handleCheckout}
-        getCartTotal={getCartTotal}
-      />
 
       <CustomBuyCheckoutDialog
         open={showCheckout}
