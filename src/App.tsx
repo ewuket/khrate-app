@@ -2,6 +2,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { AdminProvider } from "@/contexts/AdminContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { GroupBuyingProvider } from "@/contexts/GroupBuyingContext";
 import Navbar from "@/components/layout/Navbar";
@@ -21,29 +22,31 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <CartProvider>
-          <GroupBuyingProvider>
-            <div className="min-h-screen bg-white">
-              <Navbar />
-              <main className="relative">
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/bundles" element={<Bundles />} />
-                  <Route path="/custom-buy" element={<CustomBuy />} />
-                  <Route path="/group-buy" element={<GroupBuy />} />
-                  <Route path="/profile" element={<ProfilePage />} />
-                  <Route path="/admin/login" element={<AdminLogin />} />
-                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                </Routes>
-              </main>
-              <CartSidebar />
-              <ChatWidget />
-            </div>
-            <Toaster />
-          </GroupBuyingProvider>
-        </CartProvider>
+        <AdminProvider>
+          <CartProvider>
+            <GroupBuyingProvider>
+              <div className="min-h-screen bg-white">
+                <Navbar />
+                <main className="relative">
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/contact" element={<Contact />} />
+                    <Route path="/bundles" element={<Bundles />} />
+                    <Route path="/custom-buy" element={<CustomBuy />} />
+                    <Route path="/group-buy" element={<GroupBuy />} />
+                    <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/admin/login" element={<AdminLogin />} />
+                    <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                  </Routes>
+                </main>
+                <CartSidebar />
+                <ChatWidget />
+              </div>
+              <Toaster />
+            </GroupBuyingProvider>
+          </CartProvider>
+        </AdminProvider>
       </AuthProvider>
     </BrowserRouter>
   );
