@@ -45,6 +45,13 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
     });
   };
 
+  const convertToScheduleWithDate = (schedule: { date: string; timeSlot: string }) => {
+    return {
+      date: schedule.date ? new Date(schedule.date) : undefined,
+      timeSlot: schedule.timeSlot
+    };
+  };
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
