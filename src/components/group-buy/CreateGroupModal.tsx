@@ -5,9 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { X } from "lucide-react";
 import { useGroupBuying } from "@/contexts/GroupBuyingContext";
-import { toast } from "sonner";
+import { toast } from 'sonner';
 
 interface CreateGroupModalProps {
   isOpen: boolean;
@@ -15,10 +14,10 @@ interface CreateGroupModalProps {
 }
 
 const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ isOpen, onClose }) => {
+  const { createGroup } = useGroupBuying();
   const [groupName, setGroupName] = useState('');
   const [isPublic, setIsPublic] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const { createGroup } = useGroupBuying();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,85 +28,98 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ isOpen, onClose }) 
     }
 
     setIsCreating(true);
+    
     try {
-      const group = await createGroup({
+      const groupData = {
         name: groupName.trim(),
-        min_participants: 3, // Fixed to 3
-        max_participants: 10, // Fixed to 10
         is_public: isPublic,
         group_type: isPublic ? 'public' : 'private'
-      });
+      };
+
+      const group = await createGroup(groupData);
       
       if (group) {
-        onClose();
         setGroupName('');
         setIsPublic(false);
+        onClose();
+        toast.success(`Group "${group.name}" created successfully!`, {
+          description: `Join code: ${group.join_code}`
+        });
       }
     } catch (error) {
       console.error('Error creating group:', error);
-      toast.error('Failed to create group. Please try again.');
+      toast.error('Failed to create group');
     } finally {
       setIsCreating(false);
     }
   };
 
+  const handleClose = () => {
+    if (!isCreating) {
+      setGroupName('');
+      setIsPublic(false);
+      onClose();
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader className="flex flex-row items-center justify-between">
+        <DialogHeader>
           <DialogTitle>Create New Group</DialogTitle>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={onClose}
-            className="h-8 w-8"
-          >
-            <X className="h-4 w-4" />
-          </Button>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="groupName">Group Name</Label>
             <Input
               id="groupName"
-              type="text"
-              placeholder="e.g., Weekend Groceries"
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
+              placeholder="Enter group name"
+              disabled={isCreating}
               required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Group Settings</Label>
-            <div className="text-sm text-gray-600 space-y-2">
-              <p>Minimum participants: 3 (required for discount)</p>
-              <p>Maximum participants: 10</p>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="isPublic">Make group public</Label>
-              <p className="text-sm text-gray-600">
-                {isPublic ? 'Anyone can find and join this group' : 'Share a join code to invite members'}
-              </p>
-            </div>
+          <div className="flex items-center space-x-2">
             <Switch
               id="isPublic"
               checked={isPublic}
               onCheckedChange={setIsPublic}
+              disabled={isCreating}
             />
+            <Label htmlFor="isPublic">Make group public</Label>
           </div>
 
-          <Button 
-            type="submit" 
-            className="w-full bg-khrate-500 hover:bg-khrate-600 text-white"
-            disabled={isCreating}
-          >
-            {isCreating ? 'Creating Group...' : 'Create Group'}
-          </Button>
+          <div className="text-sm text-gray-600">
+            <p><strong>Group Settings:</strong></p>
+            <ul className="list-disc list-inside mt-1 space-y-1">
+              <li>Minimum 3 participants required</li>
+              <li>Maximum 10 participants allowed</li>
+              <li>10% discount when minimum reached</li>
+              <li>{isPublic ? 'Anyone can join this group' : 'Private group - join code required'}</li>
+            </ul>
+          </div>
+
+          <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              disabled={isCreating}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isCreating || !groupName.trim()}
+              className="flex-1 bg-khrate-500 hover:bg-khrate-600"
+            >
+              {isCreating ? 'Creating...' : 'Create Group'}
+            </Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
