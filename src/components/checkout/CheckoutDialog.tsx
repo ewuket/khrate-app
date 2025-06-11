@@ -38,13 +38,6 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
     onOpenChange
   });
 
-  const handleDeliveryScheduleChange = (schedule: { date: Date | undefined; timeSlot: string }) => {
-    checkoutForm.setDeliverySchedule({
-      date: schedule.date ? schedule.date.toISOString().split('T')[0] : '',
-      timeSlot: schedule.timeSlot
-    });
-  };
-
   const convertToScheduleWithDate = (schedule: { date: string; timeSlot: string }) => {
     return {
       date: schedule.date ? new Date(schedule.date) : undefined,
@@ -70,7 +63,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
             setPhoneNumber={checkoutForm.setPhoneNumber}
             processingPayment={checkoutForm.processingPayment}
             deliverySchedule={checkoutForm.deliverySchedule}
-            setDeliverySchedule={handleDeliveryScheduleChange}
+            setDeliverySchedule={checkoutForm.setDeliverySchedule}
             onSubmit={checkoutForm.handlePayment}
           />
         </DialogContent>
