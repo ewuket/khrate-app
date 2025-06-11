@@ -6,7 +6,7 @@ import CustomBuyCheckoutDialog from "@/components/custom-buy/CustomBuyCheckoutDi
 import { Button } from "@/components/ui/button";
 import { ShoppingCart } from "lucide-react";
 import Footer from "@/components/layout/Footer";
-import { productsData } from "@/components/custom-buy/productsData";
+import { products } from "@/components/custom-buy/productsData";
 
 interface CartItem {
   id: number;
@@ -108,13 +108,13 @@ const CustomBuy = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            <ProductList products={productsData} onAddToCart={addToCart} />
+            <ProductList products={products} onAddToCart={addToCart} />
           </div>
           
           <div className="lg:col-span-1">
             <CustomBuyCart
               cart={cart}
-              products={productsData}
+              products={products}
               onAddToCart={addToCart}
               onRemoveFromCart={removeFromCart}
               calculateTotal={calculateTotal}
