@@ -73,7 +73,7 @@ const bundlesData = [
     description: "Fresh vegetables for the week",
     price: 19999,
     originalPrice: 25000,
-    image: "/lovable-uploads/4730e151-0c90-4bde-a3cf-7eb370e2cac1.png",
+    image: "/lovable-uploads/e0cc7a56-c962-4b80-90b7-edf92f2a5162.png",
     items: [
       { name: "Tomatoes", quantity: 3, unit: "kg" },
       { name: "Onions", quantity: 2, unit: "kg" },
@@ -174,15 +174,18 @@ const bundlesData = [
 const Bundles = () => {
   return (
     <div className="min-h-screen bg-gray-50">
-      <main className="container mx-auto px-4 py-8">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Our Bundles</h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+      {/* Header with orange background and white text */}
+      <div className="bg-khrate-500 text-white py-12">
+        <div className="container mx-auto px-4 text-center">
+          <h1 className="text-4xl font-bold mb-4">Our Bundles</h1>
+          <p className="text-xl max-w-3xl mx-auto opacity-90">
             Choose from our carefully curated bundles designed to meet your household needs. 
             Save time and money with our pre-selected combinations of essential items.
           </p>
         </div>
+      </div>
 
+      <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
           {bundlesData.map((bundle) => (
             <BundleCard

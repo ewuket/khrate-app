@@ -8,6 +8,7 @@ import GroupCartSidebar from "@/components/group-buy/GroupCartSidebar";
 import GroupBuyHero from "@/components/group-buy/GroupBuyHero";
 import NoGroupView from "@/components/group-buy/NoGroupView";
 import ActiveGroupView from "@/components/group-buy/ActiveGroupView";
+import Footer from "@/components/layout/Footer";
 import { toast } from "sonner";
 
 const GroupBuy = () => {
@@ -70,12 +71,15 @@ const GroupBuy = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <GroupBuyHero 
-        onCreateGroup={handleCreateGroup}
-        onJoinGroup={handleJoinGroup}
-      />
+      {/* Header with orange background and white text */}
+      <div className="bg-khrate-500 text-white">
+        <GroupBuyHero 
+          onCreateGroup={handleCreateGroup}
+          onJoinGroup={handleJoinGroup}
+        />
+      </div>
       
-      <section className="py-12">
+      <section className="py-12 flex-1">
         <div className="container mx-auto">
           {!currentGroup ? (
             <NoGroupView
@@ -110,6 +114,8 @@ const GroupBuy = () => {
         isOpen={showGroupCart}
         onClose={() => setShowGroupCart(false)}
       />
+
+      <Footer />
     </div>
   );
 };

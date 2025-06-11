@@ -1,14 +1,11 @@
 
-import { useState, useEffect } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { ShoppingCart, Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { useState } from "react";
 import ProductList from "@/components/custom-buy/ProductList";
 import CustomBuyCart from "@/components/custom-buy/CustomBuyCart";
 import CustomBuyCheckoutDialog from "@/components/custom-buy/CustomBuyCheckoutDialog";
-import FloatingGroupCartButton from "@/components/group-buy/FloatingGroupCartButton";
-import products from "@/components/custom-buy/productsData";
+import { Button } from "@/components/ui/button";
+import { ShoppingCart } from "lucide-react";
+import Footer from "@/components/layout/Footer";
 
 interface CartItem {
   id: number;
@@ -21,23 +18,10 @@ interface CartItem {
 
 const CustomBuy = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
   const [showCart, setShowCart] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
 
-  const categories = [
-    "all",
-    ...Array.from(new Set(products.map(product => product.category)))
-  ];
-
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "all" || product.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
-
-  const addToCart = (product: any) => {
+  const addToCart = (product: Omit<CartItem, 'quantity'>) => {
     setCart(prevCart => {
       const existingItem = prevCart.find(item => item.id === product.id);
       if (existingItem) {
@@ -46,15 +30,14 @@ const CustomBuy = () => {
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
-      } else {
-        return [...prevCart, { ...product, quantity: 1 }];
       }
+      return [...prevCart, { ...product, quantity: 1 }];
     });
   };
 
   const updateQuantity = (id: number, quantity: number) => {
     if (quantity <= 0) {
-      removeFromCart(id);
+      setCart(prevCart => prevCart.filter(item => item.id !== id));
     } else {
       setCart(prevCart =>
         prevCart.map(item =>
@@ -68,128 +51,69 @@ const CustomBuy = () => {
     setCart(prevCart => prevCart.filter(item => item.id !== id));
   };
 
-  const getCartTotal = () => {
-    return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-  };
-
   const clearCart = () => {
     setCart([]);
+  };
+
+  const getCartTotal = () => {
+    return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
 
   const getCartItemCount = () => {
     return cart.reduce((total, item) => total + item.quantity, 0);
   };
 
-  const calculateTotal = () => {
-    return getCartTotal().toLocaleString();
+  const handleCheckout = () => {
+    setShowCart(false);
+    setShowCheckout(true);
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <section className="bg-gradient-to-r from-khrate-500 to-khrate-600 py-8 sm:py-12 text-white">
+    <div className="min-h-screen bg-gray-50">
+      {/* Header with orange background and white text */}
+      <div className="bg-khrate-500 text-white py-12">
         <div className="container mx-auto px-4">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">Custom Buy</h1>
-          <p className="mt-2 max-w-lg text-sm sm:text-base">
-            Choose your own items and create your perfect shopping list
-          </p>
-        </div>
-      </section>
-
-      <section className="py-6 sm:py-8">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Main Content */}
-            <div className="flex-1">
-              {/* Search and Filter */}
-              <div className="mb-6 space-y-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder="Search products..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-
-                <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <TabsList className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 w-full">
-                    {categories.map(category => (
-                      <TabsTrigger 
-                        key={category} 
-                        value={category} 
-                        className="text-xs sm:text-sm capitalize truncate"
-                      >
-                        {category === "all" ? "All" : category}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                </Tabs>
-              </div>
-
-              {/* Products Grid */}
-              <ProductList products={filteredProducts} onAddToCart={addToCart} />
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-4xl font-bold mb-4">Custom Buy</h1>
+              <p className="text-xl max-w-2xl opacity-90">
+                Build your own custom bundle by selecting exactly what you need. 
+                Perfect for specific dietary requirements or unique preferences.
+              </p>
             </div>
-
-            {/* Cart Sidebar - Hidden on mobile, use floating button instead */}
-            <div className="hidden lg:block lg:w-80 xl:w-96">
-              <div className="sticky top-4">
-                <CustomBuyCart
-                  cart={cart}
-                  products={products}
-                  onAddToCart={addToCart}
-                  onRemoveFromCart={removeFromCart}
-                  calculateTotal={calculateTotal}
-                />
-              </div>
-            </div>
+            
+            {/* Floating Cart Button */}
+            <Button
+              onClick={() => setShowCart(true)}
+              className="bg-white text-khrate-500 hover:bg-gray-100 relative"
+              size="lg"
+            >
+              <ShoppingCart className="h-5 w-5 mr-2" />
+              Cart ({getCartItemCount()})
+              {getCartItemCount() > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">
+                  {getCartItemCount()}
+                </span>
+              )}
+            </Button>
           </div>
         </div>
-      </section>
-
-      {/* Mobile Cart Button */}
-      <div className="lg:hidden fixed bottom-4 right-4 z-50">
-        <Button
-          onClick={() => setShowCart(true)}
-          className="bg-khrate-500 hover:bg-khrate-600 rounded-full h-14 w-14 shadow-lg"
-          size="lg"
-        >
-          <div className="relative">
-            <ShoppingCart className="h-6 w-6" />
-            {getCartItemCount() > 0 && (
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                {getCartItemCount()}
-              </span>
-            )}
-          </div>
-        </Button>
       </div>
 
-      {/* Floating Group Cart Button */}
-      <FloatingGroupCartButton />
+      <main className="container mx-auto px-4 py-8">
+        <ProductList onAddToCart={addToCart} />
+      </main>
 
-      {/* Mobile Cart Sheet */}
-      {showCart && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => setShowCart(false)}>
-          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-lg max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="p-4 border-b">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Your Cart</h3>
-                <Button variant="ghost" size="sm" onClick={() => setShowCart(false)}>×</Button>
-              </div>
-            </div>
-            <div className="overflow-y-auto max-h-[60vh]">
-              <CustomBuyCart
-                cart={cart}
-                products={products}
-                onAddToCart={addToCart}
-                onRemoveFromCart={removeFromCart}
-                calculateTotal={calculateTotal}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <CustomBuyCart
+        isOpen={showCart}
+        onClose={() => setShowCart(false)}
+        cart={cart}
+        onUpdateQuantity={updateQuantity}
+        onRemoveItem={removeFromCart}
+        onClearCart={clearCart}
+        onCheckout={handleCheckout}
+        getCartTotal={getCartTotal}
+      />
 
       <CustomBuyCheckoutDialog
         open={showCheckout}
@@ -198,6 +122,8 @@ const CustomBuy = () => {
         getCartTotal={getCartTotal}
         clearCart={clearCart}
       />
+
+      <Footer />
     </div>
   );
 };
