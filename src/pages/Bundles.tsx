@@ -187,18 +187,23 @@ const Bundles = () => {
 
       <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-          {bundlesData.map((bundle) => (
-            <BundleCard
-              key={bundle.id}
-              id={bundle.id}
-              title={bundle.title}
-              price={bundle.price}
-              originalPrice={bundle.originalPrice}
-              items={bundle.items.map(item => `${item.name} (${item.quantity} ${item.unit})`)}
-              image={bundle.image}
-              description={bundle.description}
-            />
-          ))}
+          {bundlesData.map((bundle) => {
+            const discount = Math.round(((bundle.originalPrice - bundle.price) / bundle.originalPrice) * 100);
+            
+            return (
+              <BundleCard
+                key={bundle.id}
+                id={bundle.id}
+                title={bundle.title}
+                price={bundle.price}
+                originalPrice={bundle.originalPrice}
+                discount={discount}
+                items={bundle.items.map(item => `${item.name} (${item.quantity} ${item.unit})`)}
+                image={bundle.image}
+                description={bundle.description}
+              />
+            );
+          })}
         </div>
 
         <Card className="bg-white border-khrate-200">
