@@ -58,7 +58,7 @@ const BundleCard: React.FC<BundleCardProps> = ({
       };
       
       await addToCart(bundleItem);
-      toast.success(`${title} added to cart!`);
+      console.log('Bundle added to cart successfully');
     } catch (error) {
       console.error('Error adding bundle to cart:', error);
       toast.error('Failed to add bundle to cart. Please try again.');
@@ -178,7 +178,7 @@ const BundleCard: React.FC<BundleCardProps> = ({
           price,
           originalPrice,
           items,
-          image
+          image: image || "/lovable-uploads/4730e151-0c90-4bde-a3cf-7eb370e2cac1.png"
         }}
         onAddToCart={handleAddToCart}
         isAdding={isAddingToCart(id, 'bundle')}

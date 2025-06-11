@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Phone, CreditCard, CheckCircle } from "lucide-react";
 import ScheduledDelivery from "./ScheduledDelivery";
 import { Button } from "@/components/ui/button";
@@ -94,10 +95,24 @@ const CheckoutPayment = ({
             </div>
             
             {paymentMethod === "mtn" && (
-              <div className="mt-2 ml-8 p-3 bg-yellow-50 rounded-md border border-yellow-200">
-                <p className="text-sm mb-1">Send payment to this MTN MoMo number:</p>
-                <p className="text-lg font-bold">0795754391</p>
-                <p className="text-xs text-gray-500 mt-1">Payment will be verified automatically</p>
+              <div className="mt-2 ml-8 space-y-3">
+                <div className="p-3 bg-yellow-50 rounded-md border border-yellow-200">
+                  <p className="text-sm mb-1">Send payment to this MTN MoMo number:</p>
+                  <p className="text-lg font-bold">0795754391</p>
+                  <p className="text-xs text-gray-500 mt-1">Payment will be verified automatically</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone-number">Enter the phone number you used to pay</Label>
+                  <Input
+                    id="phone-number"
+                    type="tel"
+                    placeholder="07XX XXX XXX"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    className="w-full"
+                    required
+                  />
+                </div>
               </div>
             )}
           </div>

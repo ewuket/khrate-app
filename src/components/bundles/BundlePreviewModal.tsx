@@ -11,7 +11,7 @@ interface BundlePreviewModalProps {
     price: number;
     originalPrice?: number;
     image: string;
-    items: Array<{ name: string; quantity: number | string }>;
+    items: Array<{ name: string; quantity: number | string; unit?: string }>;
   };
   isOpen: boolean;
   onClose: () => void;
@@ -30,6 +30,17 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
     return `RWF ${price.toLocaleString()}`;
   };
 
+  const calculateSavings = () => {
+    if (bundle.originalPrice) {
+      const savings = bundle.originalPrice - bundle.price;
+      const percentage = Math.round((savings / bundle.originalPrice) * 100);
+      return { amount: savings, percentage };
+    }
+    return null;
+  };
+
+  const savings = calculateSavings();
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -37,7 +48,6 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
   };
 
   const handleCheckout = () => {
-    // For now, add to cart and close modal
     const syntheticEvent = {
       preventDefault: () => {},
       stopPropagation: () => {},
@@ -50,8 +60,8 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="flex flex-row items-center justify-between">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto p-0">
+        <DialogHeader className="flex flex-row items-center justify-between p-4 border-b">
           <DialogTitle className="text-xl font-bold text-gray-900">
             {bundle.title}
           </DialogTitle>
@@ -65,40 +75,47 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
           </Button>
         </DialogHeader>
         
-        <div className="space-y-4">
-          {/* Smaller Bundle Image */}
+        <div className="p-4 space-y-4">
+          {/* Bundle Image */}
           <div className="relative overflow-hidden rounded-lg">
             <img 
               src={bundle.image} 
               alt={bundle.title}
-              className="w-full h-32 object-cover"
+              className="w-full h-48 object-cover"
             />
-          </div>
-          
-          {/* Price */}
-          <div className="text-center">
-            <div className="text-2xl font-bold text-khrate-600">
-              {formatPrice(bundle.price)}
-            </div>
-            {bundle.originalPrice && (
-              <div className="text-sm text-gray-500 line-through">
-                {formatPrice(bundle.originalPrice)}
+            {savings && (
+              <div className="absolute top-3 right-3 bg-green-500 text-white px-2 py-1 rounded text-sm font-medium">
+                Save {savings.percentage}% (RWF {savings.amount.toLocaleString()})
               </div>
             )}
           </div>
           
-          {/* Items List */}
-          <div className="space-y-2">
-            <h4 className="font-medium text-gray-900">Items included:</h4>
-            <div className="space-y-1 max-h-32 overflow-y-auto">
+          {/* Price Section */}
+          <div className="text-center space-y-2">
+            <div className="text-3xl font-bold text-khrate-600">
+              {formatPrice(bundle.price)}
+            </div>
+            {bundle.originalPrice && (
+              <div className="text-lg text-gray-500 line-through">
+                {formatPrice(bundle.originalPrice)}
+              </div>
+            )}
+            <p className="text-sm text-gray-600">
+              Great for 2-3 people, weekly essentials
+            </p>
+          </div>
+          
+          {/* What's Included Section */}
+          <div className="space-y-3">
+            <h4 className="font-semibold text-gray-900 text-lg">What's included:</h4>
+            <div className="space-y-2 max-h-40 overflow-y-auto">
               {bundle.items.map((item, index) => (
-                <div key={index} className="flex justify-between text-sm">
-                  <span className="text-gray-700">{item.name}</span>
-                  <span className="text-khrate-600 font-medium">
-                    {typeof item.quantity === 'number' && item.quantity < 1 
+                <div key={index} className="flex items-center justify-between text-sm">
+                  <span className="text-gray-700">
+                    • {typeof item.quantity === 'number' && item.quantity < 1 
                       ? `${item.quantity}kg` 
                       : item.quantity
-                    }
+                    } {item.unit ? item.unit + ' ' : ''}{item.name}
                   </span>
                 </div>
               ))}
@@ -106,22 +123,22 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
           </div>
           
           {/* Action Buttons */}
-          <div className="flex flex-col space-y-2 pt-4">
+          <div className="flex flex-col space-y-3 pt-4">
             <Button
               onClick={handleAddToCart}
               disabled={isAdding}
-              className="w-full bg-khrate-500 hover:bg-khrate-600 text-white"
+              className="w-full bg-khrate-500 hover:bg-khrate-600 text-white py-3 text-lg font-medium"
             >
-              <ShoppingCart className="h-4 w-4 mr-2" />
+              <ShoppingCart className="h-5 w-5 mr-2" />
               {isAdding ? 'Adding...' : 'Add to Cart'}
             </Button>
             
             <Button
               onClick={handleCheckout}
               variant="outline"
-              className="w-full border-khrate-500 text-khrate-600 hover:bg-khrate-50"
+              className="w-full border-khrate-500 text-khrate-600 hover:bg-khrate-50 py-3 text-lg font-medium"
             >
-              Checkout Now
+              Proceed to Checkout
             </Button>
           </div>
         </div>

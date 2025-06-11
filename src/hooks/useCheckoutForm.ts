@@ -15,6 +15,13 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: CheckoutFormProps) 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [orderDetails, setOrderDetails] = useState<any>(null);
 
+  const handleDeliveryScheduleChange = (schedule: { date: Date | undefined; timeSlot: string }) => {
+    setDeliverySchedule({
+      date: schedule.date ? schedule.date.toISOString().split('T')[0] : '',
+      timeSlot: schedule.timeSlot
+    });
+  };
+
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -40,7 +47,8 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: CheckoutFormProps) 
         orderNumber,
         total: Math.floor(Math.random() * 100000) + 10000, // Mock total
         deliveryDate: deliverySchedule.date,
-        deliveryTimeSlot: deliverySchedule.timeSlot
+        deliveryTimeSlot: deliverySchedule.timeSlot,
+        phoneNumber: phoneNumber
       };
 
       setOrderDetails(orderData);
@@ -64,7 +72,7 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: CheckoutFormProps) 
     setPhoneNumber,
     processingPayment,
     deliverySchedule,
-    setDeliverySchedule,
+    setDeliverySchedule: handleDeliveryScheduleChange,
     showSuccessModal,
     setShowSuccessModal,
     orderDetails,

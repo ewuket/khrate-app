@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import BundleCard from "@/components/bundles/BundleCard";
@@ -64,6 +65,108 @@ const bundlesData = [
       { name: "Milk", quantity: 4, unit: "liter" },
       { name: "Cassava Flour", quantity: 5, unit: "kg" },
       { name: "Sugar", quantity: 5, unit: "kg" }
+    ]
+  },
+  {
+    id: 4,
+    title: "Vegetables Bundle",
+    description: "Fresh vegetables for the week",
+    price: 19999,
+    originalPrice: 25000,
+    image: "/lovable-uploads/4730e151-0c90-4bde-a3cf-7eb370e2cac1.png",
+    items: [
+      { name: "Tomatoes", quantity: 3, unit: "kg" },
+      { name: "Onions", quantity: 2, unit: "kg" },
+      { name: "Carrots", quantity: 2, unit: "kg" },
+      { name: "Cabbage", quantity: 1, unit: "head" },
+      { name: "Green Beans", quantity: 1, unit: "kg" },
+      { name: "Bell Peppers", quantity: 1, unit: "kg" },
+      { name: "Spinach", quantity: 1, unit: "bunch" },
+      { name: "Lettuce", quantity: 2, unit: "heads" }
+    ]
+  },
+  {
+    id: 5,
+    title: "Breakfast Bundle",
+    description: "Start your day right",
+    price: 19999,
+    originalPrice: 25000,
+    image: "/lovable-uploads/6d22b9d7-17a9-457a-947a-9bb8301a4051.png",
+    items: [
+      { name: "Eggs", quantity: 12, unit: "pieces" },
+      { name: "Bread", quantity: 2, unit: "loaves" },
+      { name: "Milk", quantity: 2, unit: "liters" },
+      { name: "Butter", quantity: 1, unit: "pack" },
+      { name: "Jam", quantity: 1, unit: "jar" },
+      { name: "Cereal", quantity: 1, unit: "box" },
+      { name: "Bananas", quantity: 6, unit: "pieces" }
+    ]
+  },
+  {
+    id: 6,
+    title: "Pantry Essentials",
+    description: "Stock your pantry with basics",
+    price: 39999,
+    originalPrice: 50000,
+    image: "/lovable-uploads/30fe686e-a6f6-469f-bb69-c889c304c4e7.png",
+    items: [
+      { name: "Rice", quantity: 5, unit: "kg" },
+      { name: "Sugar", quantity: 2, unit: "kg" },
+      { name: "Salt", quantity: 1, unit: "kg" },
+      { name: "Oil", quantity: 2, unit: "liters" },
+      { name: "Flour", quantity: 2, unit: "kg" },
+      { name: "Tea", quantity: 1, unit: "pack" },
+      { name: "Coffee", quantity: 1, unit: "pack" }
+    ]
+  },
+  {
+    id: 7,
+    title: "Small Fruit Bundle",
+    description: "Fresh seasonal fruits for 1-2 people",
+    price: 8500,
+    originalPrice: 12000,
+    image: "/lovable-uploads/4730e151-0c90-4bde-a3cf-7eb370e2cac1.png",
+    items: [
+      { name: "Bananas", quantity: 6, unit: "pieces" },
+      { name: "Apples", quantity: 4, unit: "pieces" },
+      { name: "Oranges", quantity: 4, unit: "pieces" },
+      { name: "Pineapple", quantity: 1, unit: "piece" },
+      { name: "Mangoes", quantity: 3, unit: "pieces" }
+    ]
+  },
+  {
+    id: 8,
+    title: "Medium Fruit Bundle",
+    description: "Variety pack for a small family",
+    price: 16000,
+    originalPrice: 20000,
+    image: "/lovable-uploads/6d22b9d7-17a9-457a-947a-9bb8301a4051.png",
+    items: [
+      { name: "Bananas", quantity: 12, unit: "pieces" },
+      { name: "Apples", quantity: 8, unit: "pieces" },
+      { name: "Oranges", quantity: 8, unit: "pieces" },
+      { name: "Pineapple", quantity: 2, unit: "pieces" },
+      { name: "Mangoes", quantity: 6, unit: "pieces" },
+      { name: "Avocados", quantity: 4, unit: "pieces" },
+      { name: "Lemons", quantity: 6, unit: "pieces" }
+    ]
+  },
+  {
+    id: 9,
+    title: "Large Fruit Bundle",
+    description: "Abundant fruit selection for families",
+    price: 29000,
+    originalPrice: 35000,
+    image: "/lovable-uploads/30fe686e-a6f6-469f-bb69-c889c304c4e7.png",
+    items: [
+      { name: "Bananas", quantity: 24, unit: "pieces" },
+      { name: "Apples", quantity: 12, unit: "pieces" },
+      { name: "Oranges", quantity: 12, unit: "pieces" },
+      { name: "Pineapple", quantity: 3, unit: "pieces" },
+      { name: "Mangoes", quantity: 10, unit: "pieces" },
+      { name: "Avocados", quantity: 8, unit: "pieces" },
+      { name: "Watermelon", quantity: 1, unit: "piece" },
+      { name: "Grapes", quantity: 2, unit: "bunches" }
     ]
   }
 ];

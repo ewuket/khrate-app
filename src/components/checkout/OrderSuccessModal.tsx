@@ -10,6 +10,7 @@ interface OrderSuccessModalProps {
   orderDetails: {
     orderId: string;
     totalAmount: number;
+    phoneNumber?: string;
     items: Array<{
       name: string;
       quantity: number;
@@ -50,6 +51,11 @@ const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
             <div className="text-2xl font-bold text-khrate-600">
               Total: {formatPrice(orderDetails.totalAmount)}
             </div>
+            {orderDetails.phoneNumber && (
+              <p className="text-sm text-gray-600 mt-1">
+                Payment Number: {orderDetails.phoneNumber}
+              </p>
+            )}
           </div>
           
           <div className="border-t pt-4">

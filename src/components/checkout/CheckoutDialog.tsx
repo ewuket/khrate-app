@@ -68,7 +68,8 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
           onOpenChange={checkoutForm.setShowSuccessModal}
           orderDetails={{
             orderId: checkoutForm.orderDetails.orderNumber,
-            totalAmount: checkoutForm.orderDetails.total,
+            totalAmount: getCartTotal(),
+            phoneNumber: checkoutForm.orderDetails.phoneNumber,
             items: cartItems.map(item => ({
               name: item.name,
               quantity: item.quantity,
