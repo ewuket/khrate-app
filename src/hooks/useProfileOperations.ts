@@ -1,14 +1,15 @@
 
 import { useState } from 'react';
-import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { UserProfile } from '@/types/user';
 import { toast } from 'sonner';
 
 export const useProfileOperations = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const fetchUserProfile = async (userId: string) => {
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('user_profiles')
@@ -16,87 +17,76 @@ export const useProfileOperations = () => {
         .eq('id', userId)
         .single();
 
-      if (error && error.code === 'PGRST116') {
-        // Profile doesn't exist, create it
-        await createUserProfile(userId);
-      } else if (error) {
+      if (error) {
         console.error('Error fetching profile:', error);
-      } else {
-        setProfile(data);
+        return;
       }
+
+      setProfile(data);
     } catch (error) {
-      console.error('Profile fetch error:', error);
+      console.error('Error in fetchUserProfile:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const createUserProfile = async (userId: string) => {
-    try {
-      const { data: userData } = await supabase.auth.getUser();
-      
-      const newProfile = {
-        id: userId,
-        email: userData.user?.email || '',
-        full_name: userData.user?.user_metadata?.full_name || '',
-        discount_orders_remaining: 3,
-        total_orders: 0,
-        created_at: new Date().toISOString()
-      };
+  const updateProfile = async (user: any, updates: Partial<UserProfile>) => {
+    if (!user) return;
 
-      const { data, error } = await supabase
+    try {
+      const { error } = await supabase
         .from('user_profiles')
-        .insert([newProfile])
-        .select()
-        .single();
+        .update(updates)
+        .eq('id', user.id);
 
       if (error) throw error;
-      setProfile(data);
+
+      setProfile(prev => prev ? { ...prev, ...updates } : null);
+      toast.success('Profile updated successfully!');
     } catch (error) {
-      console.error('Error creating profile:', error);
+      console.error('Error updating profile:', error);
+      toast.error('Failed to update profile');
     }
   };
 
   const applyFirstTimeUserDiscount = async (userId: string) => {
     try {
-      await supabase
+      // Check if user already has a discount
+      const { data: existingDiscount } = await supabase
         .from('user_discounts')
-        .insert([{
+        .select('id')
+        .eq('user_id', userId)
+        .single();
+
+      if (existingDiscount) {
+        console.log('User already has a discount');
+        return;
+      }
+
+      // Create first-time user discount
+      const { error } = await supabase
+        .from('user_discounts')
+        .insert({
           user_id: userId,
           discount_type: 'first_time_user',
           discount_percentage: 10,
-          orders_remaining: 3
-        }]);
-    } catch (error) {
-      console.error('Error applying first-time discount:', error);
-    }
-  };
-
-  const updateProfile = async (user: User | null, updates: Partial<UserProfile>) => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .update(updates)
-        .eq('id', user.id)
-        .select()
-        .single();
+          orders_remaining: 3,
+          is_active: true
+        });
 
       if (error) throw error;
-      
-      setProfile(data);
-      toast.success('Profile updated successfully');
-    } catch (error: any) {
-      toast.error('Failed to update profile');
-      console.error('Update profile error:', error);
+      console.log('First-time user discount applied');
+    } catch (error) {
+      console.error('Error applying first-time discount:', error);
     }
   };
 
   return {
     profile,
     setProfile,
+    loading,
     fetchUserProfile,
-    createUserProfile,
-    applyFirstTimeUserDiscount,
-    updateProfile
+    updateProfile,
+    applyFirstTimeUserDiscount
   };
 };

@@ -1,26 +1,36 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { OrderService } from '@/services/orderService';
 
-interface CheckoutFormProps {
+interface DeliverySchedule {
+  date: string;
+  timeSlot: string;
+}
+
+interface OrderDetails {
+  orderNumber: string;
+  phoneNumber: string;
+}
+
+interface UseCheckoutFormProps {
   onSuccess: () => void;
   onOpenChange: (open: boolean) => void;
 }
 
-export const useCheckoutForm = ({ onSuccess, onOpenChange }: CheckoutFormProps) => {
-  const [paymentMethod, setPaymentMethod] = useState('mtn');
-  const [phoneNumber, setPhoneNumber] = useState('');
+export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProps) => {
+  const { user, isAuthenticated } = useAuth();
+  const [paymentMethod, setPaymentMethod] = useState<string>('');
+  const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [processingPayment, setProcessingPayment] = useState(false);
-  const [deliverySchedule, setDeliverySchedule] = useState({ date: '', timeSlot: '' });
+  const [deliverySchedule, setDeliverySchedule] = useState<DeliverySchedule>({
+    date: '',
+    timeSlot: ''
+  });
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [orderDetails, setOrderDetails] = useState<any>(null);
-
-  const handleDeliveryScheduleChange = (schedule: { date: Date | undefined; timeSlot: string }) => {
-    setDeliverySchedule({
-      date: schedule.date ? schedule.date.toISOString().split('T')[0] : '',
-      timeSlot: schedule.timeSlot
-    });
-  };
+  const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
 
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,30 +40,38 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: CheckoutFormProps) 
       return;
     }
 
-    if (paymentMethod === 'mtn' && !phoneNumber) {
-      toast.error('Please enter your phone number for MTN Mobile Money');
+    if (!paymentMethod) {
+      toast.error('Please select a payment method');
+      return;
+    }
+
+    if ((paymentMethod === 'mtn' || paymentMethod === 'airtel') && !phoneNumber) {
+      toast.error('Please enter your phone number');
       return;
     }
 
     setProcessingPayment(true);
 
     try {
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Generate order number
+      const orderNumber = `ORD-${Date.now()}`;
       
-      // Generate order details
-      const orderNumber = `KH${Date.now().toString().slice(-6)}`;
-      const orderData = {
+      // Create order details
+      const newOrderDetails: OrderDetails = {
         orderNumber,
-        total: Math.floor(Math.random() * 100000) + 10000, // Mock total
-        deliveryDate: deliverySchedule.date,
-        deliveryTimeSlot: deliverySchedule.timeSlot,
-        phoneNumber: phoneNumber
+        phoneNumber: phoneNumber || 'N/A'
       };
 
-      setOrderDetails(orderData);
-      setShowSuccessModal(true);
+      setOrderDetails(newOrderDetails);
+
+      // Simulate payment processing
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Close checkout dialog and show success modal
       onOpenChange(false);
+      setShowSuccessModal(true);
+      
+      // Call success callback (clears cart, etc.)
       onSuccess();
       
       toast.success('Order placed successfully!');
@@ -72,10 +90,10 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: CheckoutFormProps) 
     setPhoneNumber,
     processingPayment,
     deliverySchedule,
-    setDeliverySchedule: handleDeliveryScheduleChange,
+    setDeliverySchedule,
+    handlePayment,
     showSuccessModal,
     setShowSuccessModal,
-    orderDetails,
-    handlePayment
+    orderDetails
   };
 };

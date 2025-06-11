@@ -5,27 +5,29 @@ import { CartItem } from '@/types/cart';
 export const useCartState = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [addingItems, setAddingItems] = useState<Set<string>>(new Set());
+  const [addingStates, setAddingStates] = useState<Record<string, boolean>>({});
 
-  const setAdding = (itemId: string | number, isAdding: boolean) => {
-    const key = String(itemId);
-    setAddingItems(prev => {
-      const newSet = new Set(prev);
-      if (isAdding) {
-        newSet.add(key);
-      } else {
-        newSet.delete(key);
-      }
-      return newSet;
+  const isAdding = (key: string): boolean => {
+    return addingStates[key] || false;
+  };
+
+  const setAdding = (key: string, isAdding: boolean) => {
+    setAddingStates(prev => ({
+      ...prev,
+      [key]: isAdding
+    }));
+  };
+
+  const clearAdding = (key: string) => {
+    setAddingStates(prev => {
+      const newState = { ...prev };
+      delete newState[key];
+      return newState;
     });
   };
 
-  const isAdding = (itemId: string | number) => {
-    return addingItems.has(String(itemId));
-  };
-
-  const clearAdding = (itemId: string | number) => {
-    setAdding(itemId, false);
+  const clearAllAdding = () => {
+    setAddingStates({});
   };
 
   return {
@@ -33,10 +35,9 @@ export const useCartState = () => {
     setCart,
     isCartOpen,
     setIsCartOpen,
-    addingItems,
-    setAddingItems,
-    setAdding,
     isAdding,
-    clearAdding
+    setAdding,
+    clearAdding,
+    clearAllAdding
   };
 };

@@ -4,17 +4,10 @@ export interface UserProfile {
   email: string;
   full_name?: string;
   phone?: string;
-  created_at: string;
-  discount_orders_remaining: number;
-  total_orders: number;
   profile_image_url?: string;
-}
-
-export interface UserDiscount {
-  id: string;
-  user_id: string;
-  discount_type: 'first_time_user';
-  discount_percentage: number;
-  orders_remaining: number;
-  created_at: string;
+  total_orders?: number;
+  discount_orders_remaining?: number;
+  first_order_discount_used?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }

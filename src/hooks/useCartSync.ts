@@ -1,34 +1,36 @@
 
 import { useState } from 'react';
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
-import { CartItem } from "@/types/cart";
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { CartItem } from '@/types/cart';
 
 export const useCartSync = () => {
-  const [loading, setLoading] = useState(false);
   const { user, isAuthenticated } = useAuth();
+  const [syncing, setSyncing] = useState(false);
 
   const syncCart = async (): Promise<CartItem[]> => {
     if (!isAuthenticated || !user) {
+      // Return guest cart from localStorage
+      const guestCart = localStorage.getItem('khrate_guest_cart');
+      if (guestCart) {
+        try {
+          return JSON.parse(guestCart);
+        } catch (error) {
+          console.error('Error parsing guest cart:', error);
+          return [];
+        }
+      }
       return [];
     }
 
-    setLoading(true);
+    setSyncing(true);
     try {
-      console.log('Syncing cart for user:', user.id);
-      
       const { data, error } = await supabase
         .from('cart_items')
         .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: true });
+        .eq('user_id', user.id);
 
-      if (error) {
-        console.error('Error syncing cart:', error);
-        toast.error('Failed to load cart items');
-        return [];
-      }
+      if (error) throw error;
       
       const formattedCart: CartItem[] = (data || []).map(item => ({
         id: item.id,
@@ -41,16 +43,18 @@ export const useCartSync = () => {
         product_items: Array.isArray(item.product_items) ? item.product_items as string[] : undefined
       }));
 
-      console.log('Cart synced successfully:', formattedCart.length, 'items');
+      console.log('Cart synced from Supabase:', formattedCart.length, 'items');
       return formattedCart;
     } catch (error) {
       console.error('Error syncing cart:', error);
-      toast.error('Failed to load cart items');
       return [];
     } finally {
-      setLoading(false);
+      setSyncing(false);
     }
   };
 
-  return { loading, syncCart };
+  return {
+    syncCart,
+    syncing
+  };
 };

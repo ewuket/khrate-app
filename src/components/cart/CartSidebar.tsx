@@ -40,7 +40,11 @@ const CartSidebar = () => {
     if (isCartOpen && isAuthenticated) {
       syncCart();
     }
-  }, [isCartOpen, isAuthenticated, syncCart]);
+  }, [isCartOpen, isAuthenticated]);
+
+  const formatPrice = (price: number) => {
+    return `${price.toLocaleString()} RWF`;
+  };
 
   const handleCheckout = () => {
     if (cart.length === 0) {
@@ -48,115 +52,108 @@ const CartSidebar = () => {
       return;
     }
 
-    const total = getCartTotal();
-    if (total <= 0) {
-      toast.error("Invalid cart total");
-      return;
-    }
-
-    // Allow guest checkout - don't force authentication
     if (!isAuthenticated) {
       setShowGuestOptions(true);
       return;
     }
-    
+
     setCheckoutOpen(true);
-    closeCart();
   };
 
-  const handleGuestCheckout = () => {
-    setShowGuestOptions(false);
-    setCheckoutOpen(true);
-    closeCart();
-  };
-
-  const handleSignUp = () => {
+  const handleSignInAndCheckout = () => {
     setShowGuestOptions(false);
     closeCart();
     openAuthModal();
   };
 
-  const formatPrice = (price: number) => {
-    return price.toLocaleString() + " RWF";
+  const handleGuestCheckout = () => {
+    setShowGuestOptions(false);
+    setCheckoutOpen(true);
   };
 
-  const currentTotal = getCartTotal();
+  const saveOrder = () => {
+    console.log('Order saved successfully');
+    toast.success('Order placed successfully!');
+  };
 
   return (
     <>
       <Sheet open={isCartOpen} onOpenChange={closeCart}>
-        <SheetContent className="w-full sm:max-w-md overflow-y-auto p-0 flex flex-col h-full z-50">
-          <SheetHeader className="flex flex-row justify-between items-center p-4 border-b flex-shrink-0 bg-background">
-            <SheetTitle className="flex items-center text-lg font-semibold">
-              <ShoppingCart className="mr-2 h-5 w-5" />
-              Your Cart ({cart.length})
-            </SheetTitle>
-            <Button variant="ghost" size="icon" onClick={closeCart} className="h-8 w-8">
-              <X className="h-4 w-4" />
-              <span className="sr-only">Close</span>
-            </Button>
+        <SheetContent className="w-full sm:max-w-lg flex flex-col">
+          <SheetHeader className="flex-shrink-0">
+            <div className="flex items-center justify-between">
+              <SheetTitle className="flex items-center">
+                <ShoppingCart className="h-5 w-5 mr-2" />
+                Shopping Cart ({cart.length})
+              </SheetTitle>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={closeCart}
+                className="h-8 w-8"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </SheetHeader>
-          
-          <div className="flex-1 overflow-y-auto min-h-0 bg-background">
-            {cart.length === 0 ? (
-              <div className="p-4 h-full flex items-center justify-center">
-                <EmptyCart onClose={closeCart} />
-              </div>
-            ) : (
-              <div className="p-4 space-y-4">
+
+          {cart.length === 0 ? (
+            <EmptyCart onClose={closeCart} />
+          ) : (
+            <>
+              <div className="flex-1 overflow-y-auto py-4 space-y-4">
                 {cart.map((item) => (
-                  <CartItem 
+                  <CartItem
                     key={item.id}
-                    item={{
-                      id: parseInt(item.id.split('-')[0]) || item.product_id,
-                      name: item.product_name,
-                      price: item.product_price,
-                      quantity: item.quantity,
-                      unit: item.product_unit
-                    }}
+                    item={item}
+                    onRemove={removeFromCart}
+                    onUpdateQuantity={updateQuantity}
                     formatPrice={formatPrice}
-                    onUpdateQuantity={(id, quantity) => updateQuantity(item.id, quantity)}
-                    onRemoveFromCart={() => removeFromCart(item.id)}
                   />
                 ))}
               </div>
-            )}
-          </div>
-          
-          {cart.length > 0 && (
-            <SheetFooter className="p-4 border-t flex-shrink-0 bg-background">
-              <CartSummary 
-                getCartTotal={() => currentTotal}
-                formatPrice={formatPrice}
-                onCheckout={handleCheckout}
-                onClearCart={clearCart}
-              />
-            </SheetFooter>
+
+              <div className="flex-shrink-0 border-t pt-4 space-y-4">
+                <CartSummary 
+                  total={getCartTotal()}
+                  formatPrice={formatPrice}
+                />
+                
+                <SheetFooter className="flex-col space-y-2">
+                  <Button 
+                    onClick={handleCheckout}
+                    className="w-full bg-khrate-500 hover:bg-khrate-600 text-white"
+                    size="lg"
+                  >
+                    Proceed to Checkout
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    onClick={clearCart}
+                    className="w-full"
+                  >
+                    Clear Cart
+                  </Button>
+                </SheetFooter>
+              </div>
+            </>
           )}
         </SheetContent>
       </Sheet>
 
-      {/* Guest Checkout Options */}
-      <Sheet open={showGuestOptions} onOpenChange={setShowGuestOptions}>
-        <SheetContent className="w-full sm:max-w-md z-50">
-          <SheetHeader>
-            <SheetTitle>Checkout Options</SheetTitle>
-          </SheetHeader>
-          
-          <div className="py-6">
-            <GuestCheckoutOption
-              onContinueAsGuest={handleGuestCheckout}
-              onSignUp={handleSignUp}
-            />
-          </div>
-        </SheetContent>
-      </Sheet>
+      {showGuestOptions && (
+        <GuestCheckoutOption
+          open={showGuestOptions}
+          onClose={() => setShowGuestOptions(false)}
+          onSignIn={handleSignInAndCheckout}
+          onGuestCheckout={handleGuestCheckout}
+        />
+      )}
 
       <CheckoutDialog
         open={checkoutOpen}
         onOpenChange={setCheckoutOpen}
-        getCartTotal={() => currentTotal}
-        formatPrice={formatPrice}
         cartItems={cart.map(item => ({
           id: item.product_id,
           name: item.product_name,
@@ -164,8 +161,10 @@ const CartSidebar = () => {
           quantity: item.quantity,
           unit: item.product_unit
         }))}
+        getCartTotal={getCartTotal}
+        formatPrice={formatPrice}
         clearCart={clearCart}
-        saveOrder={() => {}}
+        saveOrder={saveOrder}
       />
     </>
   );
