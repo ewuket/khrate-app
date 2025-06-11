@@ -142,20 +142,18 @@ const CartSidebar = () => {
         </SheetContent>
       </Sheet>
 
-      {showGuestOptions && (
-        <GuestCheckoutOption
-          open={showGuestOptions}
-          onClose={() => setShowGuestOptions(false)}
-          onSignIn={handleSignInAndCheckout}
-          onGuestCheckout={handleGuestCheckout}
-        />
-      )}
+      <GuestCheckoutOption
+        open={showGuestOptions}
+        onClose={() => setShowGuestOptions(false)}
+        onSignIn={handleSignInAndCheckout}
+        onGuestCheckout={handleGuestCheckout}
+      />
 
       <CheckoutDialog
         open={checkoutOpen}
         onOpenChange={setCheckoutOpen}
         cartItems={cart.map(item => ({
-          id: item.product_id,
+          id: parseInt(item.product_id.toString()),
           name: item.product_name,
           price: item.product_price,
           quantity: item.quantity,

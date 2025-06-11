@@ -194,7 +194,7 @@ const Bundles = () => {
               title={bundle.title}
               price={bundle.price}
               originalPrice={bundle.originalPrice}
-              items={bundle.items}
+              items={bundle.items.map(item => `${item.name} (${item.quantity} ${item.unit})`)}
               image={bundle.image}
               description={bundle.description}
             />

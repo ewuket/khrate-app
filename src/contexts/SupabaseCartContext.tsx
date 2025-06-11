@@ -10,7 +10,7 @@ const SupabaseCartContext = createContext<CartContextType | undefined>(undefined
 export const SupabaseCartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const { loading } = useCartSync();
+  const { syncing } = useCartSync();
   
   const openCart = () => setIsCartOpen(true);
   const closeCart = () => setIsCartOpen(false);
@@ -39,7 +39,8 @@ export const SupabaseCartProvider: React.FC<{ children: React.ReactNode }> = ({ 
     <SupabaseCartContext.Provider 
       value={{ 
         cart, 
-        isCartOpen, 
+        isCartOpen,
+        loading: syncing,
         openCart, 
         closeCart, 
         addToCart, 
