@@ -68,15 +68,14 @@ export const useCart = () => {
   const getCartTotal = () => {
     const total = cart.reduce((total, item) => {
       const itemTotal = (item.product_price || 0) * (item.quantity || 0);
-      console.log(`Item ${item.product_name}: ${item.product_price} x ${item.quantity} = ${itemTotal}`);
       return total + itemTotal;
     }, 0);
     console.log('Cart total calculated:', total, 'from', cart.length, 'items');
     return total;
   };
 
-  const addToCart = async (item: any, skipCartOpen: boolean = false) => {
-    const itemKey = `${item.id}-${item.type || 'bundle'}`;
+  const addToCart = async (item: any, type: 'bundle' | 'custom' | 'group' = 'bundle') => {
+    const itemKey = `${item.id}-${type}`;
     
     if (isAdding(itemKey)) {
       console.log('Already adding this item, skipping duplicate request');
@@ -88,37 +87,22 @@ export const useCart = () => {
     try {
       console.log('Adding item to cart:', item);
       
-      // Optimistically update the cart for instant feedback
-      const optimisticItem: CartItem = {
-        id: `temp-${Date.now()}`,
-        product_id: item.id,
-        product_name: item.name || item.title,
-        product_price: item.price,
-        quantity: 1,
-        product_unit: item.unit || 'item',
-        product_type: item.type || 'bundle',
-        product_items: item.items
-      };
-      
-      setCart(prevCart => {
-        const newCart = [...prevCart, optimisticItem];
-        console.log('Cart updated optimistically:', newCart.length, 'items');
-        return newCart;
+      // Add to backend first
+      await operations.addToCart({
+        ...item,
+        type: type
       });
       
-      // Open cart immediately for instant feedback
-      if (!skipCartOpen) {
-        setIsCartOpen(true);
-      }
-      
-      // Then sync with backend
-      await operations.addToCart(item);
+      // Then sync cart to get updated state
       await syncCart();
+      
+      // Open cart to show the added item
+      setIsCartOpen(true);
+      
+      toast.success(`${item.name} added to cart!`);
       
     } catch (error) {
       console.error('Error in addToCart:', error);
-      // Remove optimistic update on error
-      setCart(prevCart => prevCart.filter(cartItem => !cartItem.id.startsWith('temp-')));
       toast.error('Failed to add item to cart');
     } finally {
       clearAdding(itemKey);

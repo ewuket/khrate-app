@@ -10,7 +10,7 @@ interface OrderSuccessModalProps {
   orderDetails: {
     orderId: string;
     totalAmount: number;
-    phoneNumber?: string;
+    phoneNumber: string;
     items: Array<{
       name: string;
       quantity: number;
@@ -26,68 +26,51 @@ const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
   orderDetails,
   formatPrice
 }) => {
-  const handleClose = () => {
-    onOpenChange(false);
-    // Redirect to home or order history
-    window.location.href = '/';
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-white">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader className="text-center">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
-            <CheckCircle className="h-12 w-12 text-green-600" />
+          <div className="mx-auto mb-4 w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+            <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
-          <DialogTitle className="text-2xl font-bold text-gray-900 mb-2">
-            🎉 Order Placed Successfully!
+          <DialogTitle className="text-xl font-semibold text-green-600">
+            Order Placed Successfully!
           </DialogTitle>
-          <p className="text-gray-600 text-lg">Thank you for shopping with KHRATE!</p>
         </DialogHeader>
         
-        <div className="space-y-6">
-          <div className="text-center bg-green-50 p-4 rounded-lg border border-green-200">
-            <p className="text-gray-700 mb-2 font-medium">Order ID</p>
-            <p className="text-lg font-bold text-green-700">{orderDetails.orderId}</p>
-          </div>
-
+        <div className="space-y-4 py-4">
           <div className="text-center">
-            <p className="text-gray-600 mb-2">Total Amount</p>
-            <div className="text-3xl font-bold text-khrate-600">
-              {formatPrice(orderDetails.totalAmount)}
-            </div>
-            {orderDetails.phoneNumber && (
-              <p className="text-sm text-gray-600 mt-2">
-                Payment Number: {orderDetails.phoneNumber}
-              </p>
-            )}
+            <p className="text-sm text-gray-600">Order ID: #{orderDetails.orderId}</p>
+            <p className="text-sm text-gray-600">Phone: {orderDetails.phoneNumber}</p>
           </div>
           
           <div className="border-t pt-4">
-            <h4 className="font-semibold text-gray-900 mb-3 text-center">Order Summary</h4>
-            <div className="space-y-2 max-h-32 overflow-y-auto bg-gray-50 p-3 rounded-lg">
+            <h4 className="font-medium mb-2">Order Summary:</h4>
+            <div className="space-y-1 text-sm">
               {orderDetails.items.map((item, index) => (
-                <div key={index} className="flex justify-between text-sm">
-                  <span className="text-gray-700">{item.name} x{item.quantity}</span>
-                  <span className="text-gray-900 font-medium">{formatPrice(item.price * item.quantity)}</span>
+                <div key={index} className="flex justify-between">
+                  <span>{item.name} x {item.quantity}</span>
+                  <span>{formatPrice(item.price * item.quantity)}</span>
                 </div>
               ))}
             </div>
-          </div>
-          
-          <div className="text-center text-sm bg-green-50 p-4 rounded-lg border border-green-200">
-            <div className="flex items-center justify-center mb-2">
-              <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-              <p className="font-semibold text-green-800">Order Confirmed!</p>
+            <div className="border-t mt-2 pt-2 flex justify-between font-semibold">
+              <span>Total:</span>
+              <span>{formatPrice(orderDetails.totalAmount)}</span>
             </div>
-            <p className="text-green-700 mb-1">✅ You will receive a confirmation email shortly</p>
-            <p className="text-green-700">📦 Your order will be delivered as scheduled</p>
           </div>
           
-          <Button
-            onClick={handleClose}
-            className="w-full bg-khrate-500 hover:bg-khrate-600 text-white py-3 text-lg font-medium"
-            size="lg"
+          <div className="bg-blue-50 p-3 rounded-md text-center">
+            <p className="text-sm text-blue-800">
+              We'll contact you shortly to confirm your delivery details.
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex justify-center">
+          <Button 
+            onClick={() => onOpenChange(false)}
+            className="bg-khrate-500 hover:bg-khrate-600"
           >
             Continue Shopping
           </Button>

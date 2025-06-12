@@ -23,5 +23,5 @@ export interface CartContextType {
   getCartTotal: () => number;
   getCartCount: () => number;
   syncCart: () => Promise<void>;
-  isAddingToCart: (productId: number, productType?: string) => boolean;
+  isAddingToCart: (productId: string | number, productType?: string) => boolean;
 }

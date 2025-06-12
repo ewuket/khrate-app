@@ -38,13 +38,6 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
     onOpenChange
   });
 
-  const convertToScheduleWithDate = (schedule: { date: string; timeSlot: string }) => {
-    return {
-      date: schedule.date ? new Date(schedule.date) : undefined,
-      timeSlot: schedule.timeSlot
-    };
-  };
-
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -57,13 +50,21 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
             cartItems={cartItems}
             getCartTotal={getCartTotal}
             formatPrice={formatPrice}
-            paymentMethod={checkoutForm.paymentMethod}
-            setPaymentMethod={checkoutForm.setPaymentMethod}
-            phoneNumber={checkoutForm.phoneNumber}
-            setPhoneNumber={checkoutForm.setPhoneNumber}
-            processingPayment={checkoutForm.processingPayment}
-            deliverySchedule={checkoutForm.deliverySchedule}
-            setDeliverySchedule={checkoutForm.setDeliverySchedule}
+            paymentMethod={checkoutForm.formData.paymentMethod}
+            setPaymentMethod={(method) => checkoutForm.handleInputChange('paymentMethod', method)}
+            phoneNumber={checkoutForm.formData.phoneNumber}
+            setPhoneNumber={(phone) => checkoutForm.handleInputChange('phoneNumber', phone)}
+            processingPayment={checkoutForm.isProcessing}
+            deliverySchedule={{
+              date: checkoutForm.formData.deliveryDate,
+              timeSlot: checkoutForm.formData.timeSlot
+            }}
+            setDeliverySchedule={(schedule) => {
+              checkoutForm.handleInputChange('deliveryDate', schedule.date);
+              checkoutForm.handleInputChange('timeSlot', schedule.timeSlot);
+            }}
+            deliveryAddress={checkoutForm.formData.deliveryAddress}
+            setDeliveryAddress={(address) => checkoutForm.handleInputChange('deliveryAddress', address)}
             onSubmit={checkoutForm.handlePayment}
           />
         </DialogContent>

@@ -10,6 +10,7 @@ import CartButton from "./CartButton";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthModal from "@/components/auth/AuthModal";
 import NavLinks from "./NavLinks";
+import CartSidebar from "@/components/cart/CartSidebar";
 
 const Navbar = () => {
   const { openAuthModal, isAuthenticated } = useAuth();
@@ -97,6 +98,7 @@ const Navbar = () => {
       </nav>
       
       <AuthModal />
+      <CartSidebar />
     </>
   );
 };

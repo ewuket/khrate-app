@@ -17,6 +17,7 @@ import PaymentSection from "@/components/checkout/PaymentSection";
 import OrderSummary from "@/components/checkout/OrderSummary";
 import GuestUserPrompt from "@/components/checkout/GuestUserPrompt";
 import OrderSuccessModal from "@/components/checkout/OrderSuccessModal";
+import DeliveryAddressInput from "@/components/checkout/DeliveryAddressInput";
 import { useCheckoutForm } from "@/hooks/useCheckoutForm";
 
 interface CartItem {
@@ -59,10 +60,8 @@ const CustomBuyCheckoutDialog = ({
   });
 
   const handleDeliveryScheduleChange = (schedule: { date: Date | undefined; timeSlot: string }) => {
-    checkoutForm.setDeliverySchedule({
-      date: schedule.date ? schedule.date.toISOString().split('T')[0] : '',
-      timeSlot: schedule.timeSlot
-    });
+    checkoutForm.handleInputChange('deliveryDate', schedule.date ? schedule.date.toISOString().split('T')[0] : '');
+    checkoutForm.handleInputChange('timeSlot', schedule.timeSlot);
   };
   
   return (
@@ -101,6 +100,11 @@ const CustomBuyCheckoutDialog = ({
                 </div>
               )}
               
+              <DeliveryAddressInput
+                value={checkoutForm.formData.deliveryAddress}
+                onChange={(address) => checkoutForm.handleInputChange('deliveryAddress', address)}
+              />
+              
               <ScheduledDelivery 
                 onDeliveryScheduleChange={handleDeliveryScheduleChange} 
               />
@@ -108,19 +112,22 @@ const CustomBuyCheckoutDialog = ({
               <Separator />
               
               <PaymentSection
-                paymentMethod={checkoutForm.paymentMethod}
-                onPaymentMethodChange={checkoutForm.setPaymentMethod}
-                phoneNumber={checkoutForm.phoneNumber}
-                onPhoneNumberChange={checkoutForm.setPhoneNumber}
+                paymentMethod={checkoutForm.formData.paymentMethod}
+                onPaymentMethodChange={(method) => checkoutForm.handleInputChange('paymentMethod', method)}
+                phoneNumber={checkoutForm.formData.phoneNumber}
+                onPhoneNumberChange={(phone) => checkoutForm.handleInputChange('phoneNumber', phone)}
               />
               
               <OrderSummary
                 total={getCartTotal()}
                 formatPrice={formatPrice}
-                deliverySchedule={checkoutForm.deliverySchedule}
+                deliverySchedule={{
+                  date: checkoutForm.formData.deliveryDate,
+                  timeSlot: checkoutForm.formData.timeSlot
+                }}
               />
 
-              {(checkoutForm.paymentMethod === "mtn" || checkoutForm.paymentMethod === "airtel") && (
+              {(checkoutForm.formData.paymentMethod === "mtn" || checkoutForm.formData.paymentMethod === "airtel") && (
                 <div className="bg-blue-50 border border-blue-200 p-4 rounded-md text-blue-800">
                   <p className="font-medium">Payment Instructions</p>
                   <p className="text-sm mt-1">
@@ -137,10 +144,10 @@ const CustomBuyCheckoutDialog = ({
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
               <Button 
                 type="submit" 
-                disabled={checkoutForm.processingPayment || !checkoutForm.deliverySchedule.date}
+                disabled={checkoutForm.isProcessing || !checkoutForm.formData.deliveryDate || !checkoutForm.formData.deliveryAddress.trim()}
                 className="bg-khrate-500 hover:bg-khrate-600"
               >
-                {checkoutForm.processingPayment ? "Processing..." : "Place Order"}
+                {checkoutForm.isProcessing ? "Processing..." : "Place Order"}
               </Button>
             </DialogFooter>
           </form>

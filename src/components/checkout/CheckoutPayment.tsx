@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import PaymentSection from './PaymentSection';
 import OrderSummary from './OrderSummary';
 import ScheduledDelivery from './ScheduledDelivery';
+import DeliveryAddressInput from './DeliveryAddressInput';
 
 interface CheckoutPaymentProps {
   cartItems: Array<{
@@ -23,6 +24,8 @@ interface CheckoutPaymentProps {
   processingPayment: boolean;
   deliverySchedule: { date: string; timeSlot: string };
   setDeliverySchedule: (schedule: { date: string; timeSlot: string }) => void;
+  deliveryAddress: string;
+  setDeliveryAddress: (address: string) => void;
   onSubmit: (e: React.FormEvent) => void;
 }
 
@@ -37,6 +40,8 @@ const CheckoutPayment: React.FC<CheckoutPaymentProps> = ({
   processingPayment,
   deliverySchedule,
   setDeliverySchedule,
+  deliveryAddress,
+  setDeliveryAddress,
   onSubmit
 }) => {
   const handleDeliveryScheduleChange = (schedule: { date: Date | undefined; timeSlot: string }) => {
@@ -67,6 +72,13 @@ const CheckoutPayment: React.FC<CheckoutPaymentProps> = ({
 
       <Separator />
 
+      <DeliveryAddressInput
+        value={deliveryAddress}
+        onChange={setDeliveryAddress}
+      />
+
+      <Separator />
+
       <ScheduledDelivery onDeliveryScheduleChange={handleDeliveryScheduleChange} />
 
       <Separator />
@@ -92,7 +104,7 @@ const CheckoutPayment: React.FC<CheckoutPaymentProps> = ({
 
       <Button 
         type="submit" 
-        disabled={processingPayment || !deliverySchedule.date}
+        disabled={processingPayment || !deliverySchedule.date || !deliveryAddress.trim()}
         className="w-full bg-khrate-500 hover:bg-khrate-600"
       >
         {processingPayment ? "Processing..." : "Place Order"}
