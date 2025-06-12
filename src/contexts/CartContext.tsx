@@ -12,9 +12,15 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return cartOperations.cart.reduce((total, item) => total + item.quantity, 0);
   };
 
+  // Wrap addToCart to match the expected signature
+  const addToCartWithType = async (item: any, type: 'bundle' | 'custom' | 'group' = 'bundle') => {
+    await cartOperations.addToCart(item, false); // Always open cart by default
+  };
+
   return (
     <CartContext.Provider value={{
       ...cartOperations,
+      addToCart: addToCartWithType,
       getCartCount
     }}>
       {children}

@@ -1,99 +1,99 @@
 
 import { useState } from 'react';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { OrderService } from '@/services/orderService';
+import { useCartContext } from '@/contexts/CartContext';
+import { useOrderOperations } from '@/hooks/useOrderOperations';
+import { toast } from 'sonner';
 
-interface DeliverySchedule {
-  date: string;
-  timeSlot: string;
-}
-
-interface OrderDetails {
-  orderNumber: string;
-  phoneNumber: string;
-}
-
-interface UseCheckoutFormProps {
-  onSuccess: () => void;
-  onOpenChange: (open: boolean) => void;
-}
-
-export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProps) => {
+export const useCheckoutForm = () => {
   const { user, isAuthenticated } = useAuth();
-  const [paymentMethod, setPaymentMethod] = useState<string>('');
-  const [phoneNumber, setPhoneNumber] = useState<string>('');
-  const [processingPayment, setProcessingPayment] = useState(false);
-  const [deliverySchedule, setDeliverySchedule] = useState<DeliverySchedule>({
-    date: '',
-    timeSlot: ''
+  const { cart, clearCart, getCartTotal } = useCartContext();
+  const { saveOrder } = useOrderOperations();
+  
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [formData, setFormData] = useState({
+    deliveryAddress: '',
+    phoneNumber: '',
+    deliveryDate: '',
+    timeSlot: '',
+    paymentMethod: 'cash'
   });
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
 
-  const handlePayment = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const validateForm = () => {
+    if (!formData.deliveryAddress.trim()) {
+      toast.error('Please enter delivery address');
+      return false;
+    }
+    if (!formData.phoneNumber.trim()) {
+      toast.error('Please enter phone number');
+      return false;
+    }
+    if (!formData.deliveryDate) {
+      toast.error('Please select delivery date');
+      return false;
+    }
+    if (!formData.timeSlot) {
+      toast.error('Please select time slot');
+      return false;
+    }
+    return true;
+  };
+
+  const processOrder = async () => {
+    if (!validateForm()) return false;
     
-    if (!deliverySchedule.date || !deliverySchedule.timeSlot) {
-      toast.error('Please select a delivery date and time slot');
-      return;
-    }
-
-    if (!paymentMethod) {
-      toast.error('Please select a payment method');
-      return;
-    }
-
-    if ((paymentMethod === 'mtn' || paymentMethod === 'airtel') && !phoneNumber) {
-      toast.error('Please enter your phone number');
-      return;
-    }
-
-    setProcessingPayment(true);
-
+    setIsProcessing(true);
     try {
-      // Generate order number
-      const orderNumber = `ORD-${Date.now()}`;
-      
-      // Create order details
-      const newOrderDetails: OrderDetails = {
-        orderNumber,
-        phoneNumber: phoneNumber || 'N/A'
+      const orderData = {
+        user_id: user?.id,
+        items: cart.map(item => ({
+          id: item.product_id,
+          name: item.product_name,
+          price: item.product_price,
+          quantity: item.quantity,
+          unit: item.product_unit,
+          type: item.product_type as 'bundle' | 'custom' | 'group',
+          items: item.product_items
+        })),
+        total_amount: getCartTotal(),
+        original_amount: getCartTotal(),
+        status: 'pending' as const,
+        delivery_address: formData.deliveryAddress,
+        delivery_date: formData.deliveryDate,
+        delivery_time_slot: formData.timeSlot,
+        payment_method: formData.paymentMethod,
+        payment_status: 'pending' as const,
+        phone_number: formData.phoneNumber
       };
 
-      setOrderDetails(newOrderDetails);
-
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Close checkout dialog and show success modal
-      onOpenChange(false);
-      setShowSuccessModal(true);
-      
-      // Call success callback (clears cart, etc.)
-      onSuccess();
-      
-      toast.success('Order placed successfully!');
+      const savedOrder = await saveOrder(orderData);
+      if (savedOrder) {
+        await clearCart();
+        toast.success('Order placed successfully!');
+        return true;
+      }
+      return false;
     } catch (error) {
-      console.error('Payment error:', error);
-      toast.error('Payment failed. Please try again.');
+      console.error('Error processing order:', error);
+      toast.error('Failed to process order');
+      return false;
     } finally {
-      setProcessingPayment(false);
+      setIsProcessing(false);
     }
   };
 
   return {
-    paymentMethod,
-    setPaymentMethod,
-    phoneNumber,
-    setPhoneNumber,
-    processingPayment,
-    deliverySchedule,
-    setDeliverySchedule,
-    handlePayment,
-    showSuccessModal,
-    setShowSuccessModal,
-    orderDetails
+    formData,
+    isProcessing,
+    handleInputChange,
+    processOrder,
+    validateForm
   };
 };

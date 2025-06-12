@@ -1,60 +1,18 @@
+
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import { toast } from "sonner";
-import ProfileHeader from "@/components/profile/ProfileHeader";
-import ProfileTabs from "@/components/profile/ProfileTabs";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from '@/integrations/supabase/client';
-import { Order } from '@/types/order';
+import { useOrderOperations } from "@/hooks/useOrderOperations";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { User, Camera, Mail, Phone, LogOut, Package } from "lucide-react";
 
 const ProfilePage = () => {
-  const { user, profile, isAuthenticated, updateProfile, openAuthModal } = useAuth();
+  const { user, profile, isAuthenticated, updateProfile, openAuthModal, signOut } = useAuth();
+  const { orders, loading, fetchOrders } = useOrderOperations();
   const navigate = useNavigate();
-  
-  const [activeTab, setActiveTab] = useState("personal");
-  const [profileData, setProfileData] = useState({
-    name: "",
-    phone: "",
-    email: ""
-  });
-  
-  const [profileImage, setProfileImage] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  // Sample saved addresses
-  const savedAddresses = [
-    {
-      id: 1,
-      name: "Home",
-      address: "123 University Hostel, Campus Road",
-      isDefault: true
-    },
-    {
-      id: 2,
-      name: "Office",
-      address: "45 Tech Park, Innovation Street",
-      isDefault: false
-    }
-  ];
-  
-  // Sample saved bundles
-  const savedBundles = [
-    {
-      id: 1,
-      name: "My Weekly Bundle",
-      items: ["Rice", "Beans", "Tomatoes", "Onions", "Oil", "Salt"],
-      lastOrdered: "2025-05-10"
-    },
-    {
-      id: 2,
-      name: "Breakfast Bundle",
-      items: ["Bread", "Eggs", "Milk", "Sugar", "Coffee"],
-      lastOrdered: "2025-05-01"
-    }
-  ];
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -67,61 +25,51 @@ const ProfilePage = () => {
     }
   }, [isAuthenticated, navigate, openAuthModal]);
 
-  // Load user data
+  // Fetch orders when component mounts
   useEffect(() => {
-    if (user && profile) {
-      setProfileData({
-        name: profile.full_name || "",
-        phone: profile.phone || "",
-        email: user.email || ""
-      });
-      
-      // Load profile image if it exists
-      if (profile.profile_image_url) {
-        setProfileImage(profile.profile_image_url);
-      }
+    if (isAuthenticated) {
+      fetchOrders();
     }
-  }, [user, profile]);
+  }, [isAuthenticated, fetchOrders]);
 
-  const handleProfileImageClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfileImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && user) {
       const reader = new FileReader();
       reader.onload = () => {
         const imageData = reader.result as string;
-        setProfileImage(imageData);
-        
-        // Update user profile
         updateProfile({ profile_image_url: imageData });
+        toast.success('Profile picture updated!');
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    setProfileData(prev => ({
-      ...prev,
-      [id]: value
-    }));
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate("/");
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast.error('Failed to sign out');
+    }
   };
-  
-  const handleSaveChanges = () => {
-    if (!user) return;
-    
-    // Update user profile
-    updateProfile({
-      full_name: profileData.name,
-      phone: profileData.phone
-    });
-    
-    toast.success("Profile updated successfully!");
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const formatPrice = (amount: number) => {
+    return `${amount.toLocaleString()} RWF`;
   };
 
   if (!isAuthenticated || !user) {
