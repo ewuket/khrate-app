@@ -5,12 +5,26 @@ import { useCartContext } from '@/contexts/CartContext';
 import { useOrderOperations } from '@/hooks/useOrderOperations';
 import { toast } from 'sonner';
 
-export const useCheckoutForm = () => {
+interface UseCheckoutFormProps {
+  onSuccess?: () => void;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export const useCheckoutForm = (props?: UseCheckoutFormProps) => {
   const { user, isAuthenticated } = useAuth();
   const { cart, clearCart, getCartTotal } = useCartContext();
   const { saveOrder } = useOrderOperations();
   
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [orderDetails, setOrderDetails] = useState<any>(null);
+  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [deliverySchedule, setDeliverySchedule] = useState({
+    date: '',
+    timeSlot: ''
+  });
+  
   const [formData, setFormData] = useState({
     deliveryAddress: '',
     phoneNumber: '',
@@ -46,7 +60,11 @@ export const useCheckoutForm = () => {
     return true;
   };
 
-  const processOrder = async () => {
+  const handlePayment = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+    
     if (!validateForm()) return false;
     
     setIsProcessing(true);
@@ -76,7 +94,18 @@ export const useCheckoutForm = () => {
       const savedOrder = await saveOrder(orderData);
       if (savedOrder) {
         await clearCart();
+        setOrderDetails({
+          orderNumber: savedOrder.id,
+          phoneNumber: formData.phoneNumber
+        });
+        setShowSuccessModal(true);
         toast.success('Order placed successfully!');
+        if (props?.onSuccess) {
+          props.onSuccess();
+        }
+        if (props?.onOpenChange) {
+          props.onOpenChange(false);
+        }
         return true;
       }
       return false;
@@ -89,11 +118,26 @@ export const useCheckoutForm = () => {
     }
   };
 
+  const processOrder = async () => {
+    return await handlePayment();
+  };
+
   return {
     formData,
     isProcessing,
+    processingPayment: isProcessing,
     handleInputChange,
     processOrder,
-    validateForm
+    validateForm,
+    paymentMethod,
+    setPaymentMethod,
+    phoneNumber,
+    setPhoneNumber,
+    deliverySchedule,
+    setDeliverySchedule,
+    handlePayment,
+    showSuccessModal,
+    setShowSuccessModal,
+    orderDetails
   };
 };

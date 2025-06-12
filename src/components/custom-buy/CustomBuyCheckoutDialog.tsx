@@ -53,25 +53,13 @@ const CustomBuyCheckoutDialog = ({
     clearCart();
   };
 
-  const {
-    paymentMethod,
-    setPaymentMethod,
-    phoneNumber,
-    setPhoneNumber,
-    processingPayment,
-    deliverySchedule,
-    setDeliverySchedule,
-    handlePayment,
-    showSuccessModal,
-    setShowSuccessModal,
-    orderDetails
-  } = useCheckoutForm({
+  const checkoutForm = useCheckoutForm({
     onSuccess: saveOrder,
     onOpenChange
   });
 
   const handleDeliveryScheduleChange = (schedule: { date: Date | undefined; timeSlot: string }) => {
-    setDeliverySchedule({
+    checkoutForm.setDeliverySchedule({
       date: schedule.date ? schedule.date.toISOString().split('T')[0] : '',
       timeSlot: schedule.timeSlot
     });
@@ -100,7 +88,7 @@ const CustomBuyCheckoutDialog = ({
             </div>
           </DialogHeader>
           
-          <form onSubmit={handlePayment}>
+          <form onSubmit={checkoutForm.handlePayment}>
             <div className="grid gap-6 py-4">
               {!isAuthenticated && (
                 <div className="mb-4">
@@ -120,19 +108,19 @@ const CustomBuyCheckoutDialog = ({
               <Separator />
               
               <PaymentSection
-                paymentMethod={paymentMethod}
-                onPaymentMethodChange={setPaymentMethod}
-                phoneNumber={phoneNumber}
-                onPhoneNumberChange={setPhoneNumber}
+                paymentMethod={checkoutForm.paymentMethod}
+                onPaymentMethodChange={checkoutForm.setPaymentMethod}
+                phoneNumber={checkoutForm.phoneNumber}
+                onPhoneNumberChange={checkoutForm.setPhoneNumber}
               />
               
               <OrderSummary
                 total={getCartTotal()}
                 formatPrice={formatPrice}
-                deliverySchedule={deliverySchedule}
+                deliverySchedule={checkoutForm.deliverySchedule}
               />
 
-              {(paymentMethod === "mtn" || paymentMethod === "airtel") && (
+              {(checkoutForm.paymentMethod === "mtn" || checkoutForm.paymentMethod === "airtel") && (
                 <div className="bg-blue-50 border border-blue-200 p-4 rounded-md text-blue-800">
                   <p className="font-medium">Payment Instructions</p>
                   <p className="text-sm mt-1">
@@ -149,24 +137,24 @@ const CustomBuyCheckoutDialog = ({
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
               <Button 
                 type="submit" 
-                disabled={processingPayment || !deliverySchedule.date}
+                disabled={checkoutForm.processingPayment || !checkoutForm.deliverySchedule.date}
                 className="bg-khrate-500 hover:bg-khrate-600"
               >
-                {processingPayment ? "Processing..." : "Place Order"}
+                {checkoutForm.processingPayment ? "Processing..." : "Place Order"}
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
-      {orderDetails && (
+      {checkoutForm.orderDetails && (
         <OrderSuccessModal
-          open={showSuccessModal}
-          onOpenChange={setShowSuccessModal}
+          open={checkoutForm.showSuccessModal}
+          onOpenChange={checkoutForm.setShowSuccessModal}
           orderDetails={{
-            orderId: orderDetails.orderNumber,
+            orderId: checkoutForm.orderDetails.orderNumber,
             totalAmount: getCartTotal(),
-            phoneNumber: orderDetails.phoneNumber,
+            phoneNumber: checkoutForm.orderDetails.phoneNumber,
             items: cart.map(item => ({
               name: item.name,
               quantity: item.quantity,
