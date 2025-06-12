@@ -143,7 +143,7 @@ const CartSidebar = () => {
       </Sheet>
 
       <GuestCheckoutOption
-        open={showGuestOptions}
+        isOpen={showGuestOptions}
         onClose={() => setShowGuestOptions(false)}
         onSignIn={handleSignInAndCheckout}
         onGuestCheckout={handleGuestCheckout}

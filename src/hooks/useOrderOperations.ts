@@ -84,10 +84,16 @@ export const useOrderOperations = () => {
       };
 
       if (isAuthenticated && user) {
+        // Convert items to JSON format for Supabase
+        const orderForSupabase = {
+          ...newOrder,
+          items: JSON.stringify(newOrder.items) as any
+        };
+        
         // Save to Supabase
         const { error } = await supabase
           .from('orders')
-          .insert(newOrder);
+          .insert(orderForSupabase);
 
         if (error) throw error;
         

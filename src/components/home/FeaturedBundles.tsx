@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Eye } from "lucide-react";
@@ -102,7 +101,7 @@ const FeaturedBundles = () => {
       };
 
       console.log('Adding featured bundle to cart:', bundleItem);
-      await addToCart(bundleItem, false); // Don't skip cart open
+      await addToCart(bundleItem);
       toast.success(`${bundle.title} added to cart!`);
     } catch (error) {
       console.error('Error adding bundle to cart:', error);

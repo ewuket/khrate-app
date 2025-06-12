@@ -45,12 +45,12 @@ const BundleCard: React.FC<BundleCardProps> = ({
       name: title,
       price,
       unit: 'bundle',
-      type: 'bundle',
+      type: 'bundle' as const,
       items
     };
 
     console.log('Adding bundle to cart:', bundleItem);
-    await addToCart(bundleItem, false);
+    await addToCart(bundleItem);
   };
 
   const isAdding = isAddingToCart(id, 'bundle');

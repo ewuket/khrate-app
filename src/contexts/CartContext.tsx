@@ -7,9 +7,16 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const cartOperations = useCart();
+  
+  const getCartCount = () => {
+    return cartOperations.cart.reduce((total, item) => total + item.quantity, 0);
+  };
 
   return (
-    <CartContext.Provider value={cartOperations}>
+    <CartContext.Provider value={{
+      ...cartOperations,
+      getCartCount
+    }}>
       {children}
     </CartContext.Provider>
   );

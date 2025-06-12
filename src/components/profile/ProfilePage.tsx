@@ -1,131 +1,132 @@
-
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { User, Package, LogOut, Phone, Mail, Camera } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
+import { toast } from "sonner";
+import ProfileHeader from "@/components/profile/ProfileHeader";
+import ProfileTabs from "@/components/profile/ProfileTabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from '@/integrations/supabase/client';
 import { Order } from '@/types/order';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const ProfilePage = () => {
-  const { user, profile, signOut, updateProfile } = useAuth();
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      // Force page reload for clean state
-      window.location.href = '/';
-    } catch (error) {
-      console.error('Error signing out:', error);
+  const { user, profile, isAuthenticated, updateProfile, openAuthModal } = useAuth();
+  const navigate = useNavigate();
+  
+  const [activeTab, setActiveTab] = useState("personal");
+  const [profileData, setProfileData] = useState({
+    name: "",
+    phone: "",
+    email: ""
+  });
+  
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Sample saved addresses
+  const savedAddresses = [
+    {
+      id: 1,
+      name: "Home",
+      address: "123 University Hostel, Campus Road",
+      isDefault: true
+    },
+    {
+      id: 2,
+      name: "Office",
+      address: "45 Tech Park, Innovation Street",
+      isDefault: false
     }
-  };
-
-  const fetchOrders = async () => {
-    if (!user?.id) {
-      console.log('No user ID, checking localStorage for guest orders');
-      const guestOrders = JSON.parse(localStorage.getItem(`khrate_orders_guest`) || '[]');
-      setOrders(guestOrders);
-      setLoading(false);
-      return;
+  ];
+  
+  // Sample saved bundles
+  const savedBundles = [
+    {
+      id: 1,
+      name: "My Weekly Bundle",
+      items: ["Rice", "Beans", "Tomatoes", "Onions", "Oil", "Salt"],
+      lastOrdered: "2025-05-10"
+    },
+    {
+      id: 2,
+      name: "Breakfast Bundle",
+      items: ["Bread", "Eggs", "Milk", "Sugar", "Coffee"],
+      lastOrdered: "2025-05-01"
     }
+  ];
 
-    try {
-      setLoading(true);
-      console.log('Fetching orders for user:', user.id);
-
-      // Fetch from Supabase first
-      const { data: supabaseOrders, error } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Supabase query error:', error);
-        throw error;
-      }
-
-      console.log('Supabase orders:', supabaseOrders);
-
-      // Also check localStorage as backup
-      const localOrders = JSON.parse(localStorage.getItem(`khrate_orders_${user.id}`) || '[]');
-      console.log('Local storage orders:', localOrders);
-
-      // Combine and deduplicate orders
-      const allOrders = [...(supabaseOrders || []), ...localOrders];
-      const uniqueOrders = allOrders.reduce((acc, current) => {
-        const existingOrder = acc.find(order => order.id === current.id);
-        if (!existingOrder) {
-          acc.push(current);
-        }
-        return acc;
-      }, [] as Order[]);
-
-      console.log('Combined unique orders:', uniqueOrders);
-
-      // Sort by creation date
-      uniqueOrders.sort((a, b) => 
-        new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime()
-      );
-
-      setOrders(uniqueOrders);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      
-      // Fallback to localStorage only
-      const localOrders = JSON.parse(localStorage.getItem(`khrate_orders_${user.id}`) || '[]');
-      console.log('Fallback to localStorage orders:', localOrders);
-      setOrders(localOrders);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Redirect to login if not authenticated
   useEffect(() => {
-    fetchOrders();
-  }, [user?.id]);
+    if (!isAuthenticated) {
+      toast.error("Please log in to view your profile");
+      navigate("/");
+      setTimeout(() => {
+        openAuthModal();
+      }, 500);
+    }
+  }, [isAuthenticated, navigate, openAuthModal]);
 
-  const formatPrice = (price: number) => {
-    return `RWF ${price.toLocaleString()}`;
+  // Load user data
+  useEffect(() => {
+    if (user && profile) {
+      setProfileData({
+        name: profile.full_name || "",
+        phone: profile.phone || "",
+        email: user.email || ""
+      });
+      
+      // Load profile image if it exists
+      if (profile.profile_image_url) {
+        setProfileImage(profile.profile_image_url);
+      }
+    }
+  }, [user, profile]);
+
+  const handleProfileImageClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  const handleProfileImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !user) return;
-
-    try {
-      // For demo purposes, we'll use a placeholder URL
-      // In production, you'd upload to Supabase storage
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && user) {
       const reader = new FileReader();
-      reader.onload = async () => {
+      reader.onload = () => {
         const imageData = reader.result as string;
-        await updateProfile({ profile_image_url: imageData });
+        setProfileImage(imageData);
+        
+        // Update user profile
+        updateProfile({ profile_image_url: imageData });
       };
       reader.readAsDataURL(file);
-    } catch (error) {
-      console.error('Error uploading profile image:', error);
     }
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setProfileData(prev => ({
+      ...prev,
+      [id]: value
+    }));
   };
+  
+  const handleSaveChanges = () => {
+    if (!user) return;
+    
+    // Update user profile
+    updateProfile({
+      full_name: profileData.name,
+      phone: profileData.phone
+    });
+    
+    toast.success("Profile updated successfully!");
+  };
+
+  if (!isAuthenticated || !user) {
+    return null; // Don't render anything while redirecting
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -230,7 +231,7 @@ const ProfilePage = () => {
                         <span className={`text-xs px-2 py-1 rounded-full ${
                           order.status === 'delivered' 
                             ? 'bg-green-100 text-green-800' 
-                            : order.status === 'processing'
+                            : order.status === 'preparing'
                             ? 'bg-blue-100 text-blue-800'
                             : 'bg-yellow-100 text-yellow-800'
                         }`}>
