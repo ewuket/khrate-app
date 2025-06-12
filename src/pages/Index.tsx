@@ -1,12 +1,9 @@
 
 import { useEffect } from "react";
-import Navbar from "@/components/layout/Navbar";
 import Hero from "@/components/home/Hero";
 import FeaturedBundles from "@/components/home/FeaturedBundles";
 import PopularGroupBuys from "@/components/home/PopularGroupBuys";
 import HowItWorks from "@/components/home/HowItWorks";
-import Footer from "@/components/layout/Footer";
-import ChatAssistant from "@/components/chat/ChatAssistant";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
@@ -18,17 +15,12 @@ const Index = () => {
   }, [user]);
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-      <main className="flex-1">
-        <Hero />
-        <FeaturedBundles />
-        <PopularGroupBuys />
-        <HowItWorks />
-      </main>
-      <Footer />
-      <ChatAssistant />
-    </div>
+    <>
+      <Hero />
+      <FeaturedBundles />
+      <PopularGroupBuys />
+      <HowItWorks />
+    </>
   );
 };
 

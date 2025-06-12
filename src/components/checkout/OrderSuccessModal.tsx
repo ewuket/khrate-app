@@ -26,6 +26,12 @@ const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
   orderDetails,
   formatPrice
 }) => {
+  const handleContinue = () => {
+    onOpenChange(false);
+    // Optionally redirect to home or orders page
+    window.location.href = '/';
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -34,43 +40,45 @@ const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
             <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
           <DialogTitle className="text-xl font-semibold text-green-600">
-            Order Placed Successfully!
+            Order Successfully Placed!
           </DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4 py-4">
-          <div className="text-center">
-            <p className="text-sm text-gray-600">Order ID: #{orderDetails.orderId}</p>
-            <p className="text-sm text-gray-600">Phone: {orderDetails.phoneNumber}</p>
+          <div className="text-center bg-green-50 p-4 rounded-lg">
+            <p className="text-sm text-gray-600 mb-2">Order ID: #{orderDetails.orderId}</p>
+            <p className="text-lg font-bold text-green-700">
+              Total: {formatPrice(orderDetails.totalAmount)} RWF
+            </p>
+            <p className="text-sm text-gray-600 mt-1">Phone: {orderDetails.phoneNumber}</p>
           </div>
           
           <div className="border-t pt-4">
-            <h4 className="font-medium mb-2">Order Summary:</h4>
-            <div className="space-y-1 text-sm">
+            <h4 className="font-medium mb-3 text-center">Order Summary:</h4>
+            <div className="space-y-2 text-sm">
               {orderDetails.items.map((item, index) => (
-                <div key={index} className="flex justify-between">
-                  <span>{item.name} x {item.quantity}</span>
-                  <span>{formatPrice(item.price * item.quantity)}</span>
+                <div key={index} className="flex justify-between items-center py-1">
+                  <span className="text-gray-700">{item.name} × {item.quantity}</span>
+                  <span className="font-medium">{formatPrice(item.price * item.quantity)} RWF</span>
                 </div>
               ))}
             </div>
-            <div className="border-t mt-2 pt-2 flex justify-between font-semibold">
-              <span>Total:</span>
-              <span>{formatPrice(orderDetails.totalAmount)}</span>
-            </div>
           </div>
           
-          <div className="bg-blue-50 p-3 rounded-md text-center">
-            <p className="text-sm text-blue-800">
-              We'll contact you shortly to confirm your delivery details.
+          <div className="bg-blue-50 p-4 rounded-md text-center">
+            <p className="text-sm text-blue-800 font-medium mb-1">
+              🎉 Thank you for your order!
+            </p>
+            <p className="text-sm text-blue-700">
+              We'll contact you shortly to confirm your delivery details and arrange payment.
             </p>
           </div>
         </div>
         
-        <div className="flex justify-center">
+        <div className="flex justify-center pt-4">
           <Button 
-            onClick={() => onOpenChange(false)}
-            className="bg-khrate-500 hover:bg-khrate-600"
+            onClick={handleContinue}
+            className="bg-khrate-500 hover:bg-khrate-600 px-8"
           >
             Continue Shopping
           </Button>

@@ -105,7 +105,10 @@ export const useCart = () => {
       console.error('Error in addToCart:', error);
       toast.error('Failed to add item to cart');
     } finally {
-      clearAdding(itemKey);
+      // Clear the adding state immediately to reset button
+      setTimeout(() => {
+        clearAdding(itemKey);
+      }, 500);
     }
   };
 

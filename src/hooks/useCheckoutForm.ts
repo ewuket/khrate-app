@@ -18,12 +18,6 @@ export const useCheckoutForm = (props?: UseCheckoutFormProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [orderDetails, setOrderDetails] = useState<any>(null);
-  const [paymentMethod, setPaymentMethod] = useState('cash');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [deliverySchedule, setDeliverySchedule] = useState({
-    date: '',
-    timeSlot: ''
-  });
   
   const [formData, setFormData] = useState({
     deliveryAddress: '',
@@ -93,13 +87,20 @@ export const useCheckoutForm = (props?: UseCheckoutFormProps) => {
 
       const savedOrder = await saveOrder(orderData);
       if (savedOrder) {
-        await clearCart();
         setOrderDetails({
           orderNumber: savedOrder.id,
-          phoneNumber: formData.phoneNumber
+          phoneNumber: formData.phoneNumber,
+          totalAmount: getCartTotal()
         });
+        
+        // Clear the cart after successful order
+        await clearCart();
+        
+        // Show success modal
         setShowSuccessModal(true);
+        
         toast.success('Order placed successfully!');
+        
         if (props?.onSuccess) {
           props.onSuccess();
         }
@@ -122,10 +123,27 @@ export const useCheckoutForm = (props?: UseCheckoutFormProps) => {
     return await handlePayment();
   };
 
+  // Helper getters for backward compatibility
+  const paymentMethod = formData.paymentMethod;
+  const setPaymentMethod = (method: string) => handleInputChange('paymentMethod', method);
+  const phoneNumber = formData.phoneNumber;
+  const setPhoneNumber = (phone: string) => handleInputChange('phoneNumber', phone);
+  const deliverySchedule = {
+    date: formData.deliveryDate,
+    timeSlot: formData.timeSlot
+  };
+  const setDeliverySchedule = (schedule: { date: string; timeSlot: string }) => {
+    handleInputChange('deliveryDate', schedule.date);
+    handleInputChange('timeSlot', schedule.timeSlot);
+  };
+  const deliveryAddress = formData.deliveryAddress;
+  const setDeliveryAddress = (address: string) => handleInputChange('deliveryAddress', address);
+  const processingPayment = isProcessing;
+
   return {
     formData,
     isProcessing,
-    processingPayment: isProcessing,
+    processingPayment,
     handleInputChange,
     processOrder,
     validateForm,
@@ -135,6 +153,8 @@ export const useCheckoutForm = (props?: UseCheckoutFormProps) => {
     setPhoneNumber,
     deliverySchedule,
     setDeliverySchedule,
+    deliveryAddress,
+    setDeliveryAddress,
     handlePayment,
     showSuccessModal,
     setShowSuccessModal,
