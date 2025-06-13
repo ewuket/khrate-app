@@ -10,32 +10,19 @@ import OrdersFilter from "@/components/orders/OrdersFilter";
 import OrderDetailsDialog from "@/components/orders/OrderDetailsDialog";
 import { Order, OrderStatus } from "@/types/order";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 
 const Orders = () => {
-  const { user, isAuthenticated, openAuthModal } = useAuth();
-  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
 
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!isAuthenticated) {
-      toast.error("Please log in to view your orders");
-      navigate("/");
-      setTimeout(() => {
-        openAuthModal();
-      }, 500);
-      return;
-    }
-  }, [isAuthenticated, navigate, openAuthModal]);
-
   const fetchOrders = async () => {
     if (!user?.id) {
       console.log('No user ID, checking localStorage for guest orders');
+      // Check localStorage for guest orders
       const guestOrders = JSON.parse(localStorage.getItem(`khrate_orders_guest`) || '[]');
       setOrders(guestOrders);
       setLoading(false);
@@ -46,7 +33,7 @@ const Orders = () => {
       setLoading(true);
       console.log('Fetching orders for user:', user.id);
 
-      // Fetch from Supabase
+      // Fetch from Supabase first
       const { data: supabaseOrders, error } = await supabase
         .from('orders')
         .select('*')
@@ -58,7 +45,7 @@ const Orders = () => {
         throw error;
       }
 
-      console.log('Fetched orders from Supabase:', supabaseOrders);
+      console.log('Supabase orders:', supabaseOrders);
 
       // Also check localStorage as backup
       const localOrders = JSON.parse(localStorage.getItem(`khrate_orders_${user.id}`) || '[]');
@@ -74,12 +61,20 @@ const Orders = () => {
         return acc;
       }, [] as Order[]);
 
+      console.log('Combined unique orders:', uniqueOrders);
+
+      // Sort by creation date
+      uniqueOrders.sort((a, b) => 
+        new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime()
+      );
+
       setOrders(uniqueOrders);
     } catch (error) {
       console.error('Error fetching orders:', error);
       
       // Fallback to localStorage only
       const localOrders = JSON.parse(localStorage.getItem(`khrate_orders_${user.id}`) || '[]');
+      console.log('Fallback to localStorage orders:', localOrders);
       setOrders(localOrders);
       
       if (localOrders.length === 0) {
@@ -91,10 +86,8 @@ const Orders = () => {
   };
 
   useEffect(() => {
-    if (isAuthenticated && user) {
-      fetchOrders();
-    }
-  }, [user?.id, isAuthenticated]);
+    fetchOrders();
+  }, [user?.id]);
 
   const filteredOrders = orders.filter(order => 
     statusFilter === "all" || order.status === statusFilter
@@ -105,8 +98,24 @@ const Orders = () => {
     setShowDetailsDialog(true);
   };
 
-  if (!isAuthenticated || !user) {
-    return null; // Component will redirect
+  const handleReorder = async (order: Order) => {
+    toast.success("Items added to your cart");
+    // In a real app, we would add the items to the cart here
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Please Sign In</h1>
+            <p className="text-gray-600">You need to sign in to view your order history.</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
   }
 
   return (

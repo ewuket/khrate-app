@@ -39,11 +39,6 @@ const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
     navigate('/orders');
   };
 
-  // Calculate the correct total from items
-  const calculatedTotal = orderDetails.items.reduce((total, item) => {
-    return total + (item.price * item.quantity);
-  }, 0);
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -60,7 +55,7 @@ const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
           <div className="text-center bg-green-50 p-4 rounded-lg">
             <p className="text-sm text-gray-600 mb-2">Order ID: #{orderDetails.orderId}</p>
             <p className="text-2xl font-bold text-green-700">
-              {formatPrice(calculatedTotal)} RWF
+              {formatPrice(orderDetails.totalAmount)} RWF
             </p>
             <p className="text-sm text-gray-600 mt-1">Phone: {orderDetails.phoneNumber}</p>
           </div>

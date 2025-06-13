@@ -8,22 +8,16 @@ import AuthModal from '@/components/auth/AuthModal';
 
 interface LayoutProps {
   children: React.ReactNode;
-  showNavigation?: boolean;
-  showFooter?: boolean;
 }
 
-const Layout: React.FC<LayoutProps> = ({ 
-  children, 
-  showNavigation = true, 
-  showFooter = true 
-}) => {
+const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="flex flex-col min-h-screen">
-      {showNavigation && <Navbar />}
+      <Navbar />
       <main className="flex-1">
         {children}
       </main>
-      {showFooter && <Footer />}
+      <Footer />
       <ChatAssistant />
       <CartSidebar />
       <AuthModal />
