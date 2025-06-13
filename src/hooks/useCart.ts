@@ -105,10 +105,8 @@ export const useCart = () => {
       console.error('Error in addToCart:', error);
       toast.error('Failed to add item to cart');
     } finally {
-      // Clear the adding state after a short delay to show feedback
-      setTimeout(() => {
-        clearAdding(itemKey);
-      }, 300);
+      // Clear the adding state immediately
+      clearAdding(itemKey);
     }
   };
 
@@ -141,7 +139,7 @@ export const useCart = () => {
     try {
       clearAllAdding(); // Clear all adding states
       await operations.clearCart();
-      await syncCart();
+      setCart([]); // Immediately clear cart state
       toast.success('Cart cleared');
     } catch (error) {
       console.error('Error clearing cart:', error);

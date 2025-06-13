@@ -62,6 +62,7 @@ export const useCheckoutForm = (props?: UseCheckoutFormProps) => {
     if (!validateForm()) return false;
     
     setIsProcessing(true);
+    
     try {
       const orderData = {
         user_id: user?.id,
@@ -85,8 +86,12 @@ export const useCheckoutForm = (props?: UseCheckoutFormProps) => {
         phone_number: formData.phoneNumber
       };
 
+      console.log('Submitting order:', orderData);
       const savedOrder = await saveOrder(orderData);
+      
       if (savedOrder) {
+        console.log('Order saved successfully:', savedOrder);
+        
         setOrderDetails({
           orderNumber: savedOrder.id,
           phoneNumber: formData.phoneNumber,
@@ -96,6 +101,11 @@ export const useCheckoutForm = (props?: UseCheckoutFormProps) => {
         // Clear the cart after successful order
         await clearCart();
         
+        // Close checkout dialog
+        if (props?.onOpenChange) {
+          props.onOpenChange(false);
+        }
+        
         // Show success modal
         setShowSuccessModal(true);
         
@@ -104,23 +114,18 @@ export const useCheckoutForm = (props?: UseCheckoutFormProps) => {
         if (props?.onSuccess) {
           props.onSuccess();
         }
-        if (props?.onOpenChange) {
-          props.onOpenChange(false);
-        }
+        
         return true;
+      } else {
+        throw new Error('Failed to save order');
       }
-      return false;
     } catch (error) {
       console.error('Error processing order:', error);
-      toast.error('Failed to process order');
+      toast.error('Failed to process order. Please try again.');
       return false;
     } finally {
       setIsProcessing(false);
     }
-  };
-
-  const processOrder = async () => {
-    return await handlePayment();
   };
 
   // Helper getters for backward compatibility
@@ -145,7 +150,7 @@ export const useCheckoutForm = (props?: UseCheckoutFormProps) => {
     isProcessing,
     processingPayment,
     handleInputChange,
-    processOrder,
+    processOrder: handlePayment,
     validateForm,
     paymentMethod,
     setPaymentMethod,

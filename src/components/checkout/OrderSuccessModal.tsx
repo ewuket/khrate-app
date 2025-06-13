@@ -54,8 +54,8 @@ const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
         <div className="space-y-4 py-4">
           <div className="text-center bg-green-50 p-4 rounded-lg">
             <p className="text-sm text-gray-600 mb-2">Order ID: #{orderDetails.orderId}</p>
-            <p className="text-lg font-bold text-green-700">
-              Total: {formatPrice(orderDetails.totalAmount)} RWF
+            <p className="text-2xl font-bold text-green-700">
+              {formatPrice(orderDetails.totalAmount)} RWF
             </p>
             <p className="text-sm text-gray-600 mt-1">Phone: {orderDetails.phoneNumber}</p>
           </div>

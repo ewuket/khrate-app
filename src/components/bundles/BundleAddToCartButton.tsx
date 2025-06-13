@@ -22,26 +22,11 @@ const BundleAddToCartButton: React.FC<BundleAddToCartButtonProps> = ({
     }
   };
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!isAdding) {
-      // Convert touch event to mouse event for consistency
-      const syntheticEvent = {
-        preventDefault: () => {},
-        stopPropagation: () => {},
-        currentTarget: e.currentTarget
-      } as React.MouseEvent;
-      onAddToCart(syntheticEvent);
-    }
-  };
-
   return (
     <Button 
       onClick={handleClick}
-      onTouchStart={handleTouchStart}
       disabled={isAdding}
-      className={`${isAdding ? 'opacity-50 cursor-not-allowed' : 'bg-khrate-500 hover:bg-khrate-600'} text-white font-medium py-2 px-4 transition-colors min-h-[44px] ${className}`}
+      className={`${isAdding ? 'opacity-75 cursor-not-allowed' : 'bg-khrate-500 hover:bg-khrate-600'} text-white font-medium py-2 px-4 transition-all duration-200 min-h-[44px] ${className}`}
       style={{
         touchAction: 'manipulation',
         WebkitUserSelect: 'none',

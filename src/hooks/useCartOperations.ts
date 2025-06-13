@@ -3,7 +3,6 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { CartItem } from '@/types/cart';
 
 export const useCartOperations = () => {
   const { user, isAuthenticated } = useAuth();
@@ -32,7 +31,7 @@ export const useCartOperations = () => {
             .eq('id', existingItems[0].id);
 
           if (error) throw error;
-          toast.success(`${item.name} quantity updated in cart!`);
+          console.log('Item quantity updated in cart');
         } else {
           // Add new item to cart
           const cartItem = {
@@ -51,7 +50,7 @@ export const useCartOperations = () => {
             .insert(cartItem);
 
           if (error) throw error;
-          toast.success(`${item.name} added to cart!`);
+          console.log('New item added to cart');
         }
       } else {
         // Add to localStorage for guest users
@@ -74,11 +73,11 @@ export const useCartOperations = () => {
         }
         
         localStorage.setItem('khrate_guest_cart', JSON.stringify(guestCart));
-        toast.success(`${item.name} added to cart!`);
+        console.log('Item added to guest cart');
       }
     } catch (error) {
       console.error('Error adding to cart:', error);
-      toast.error('Failed to add item to cart');
+      throw error; // Re-throw to handle in calling function
     } finally {
       setLoading(false);
     }
@@ -95,16 +94,14 @@ export const useCartOperations = () => {
           .eq('id', itemId);
 
         if (error) throw error;
-        toast.success('Item removed from cart');
       } else {
         const guestCart = JSON.parse(localStorage.getItem('khrate_guest_cart') || '[]');
         const filteredCart = guestCart.filter((item: any) => item.id !== itemId);
         localStorage.setItem('khrate_guest_cart', JSON.stringify(filteredCart));
-        toast.success('Item removed from cart');
       }
     } catch (error) {
       console.error('Error removing from cart:', error);
-      toast.error('Failed to remove item');
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -136,7 +133,7 @@ export const useCartOperations = () => {
       }
     } catch (error) {
       console.error('Error updating quantity:', error);
-      toast.error('Failed to update quantity');
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -153,14 +150,14 @@ export const useCartOperations = () => {
           .eq('user_id', user.id);
 
         if (error) throw error;
+        console.log('Cart cleared from Supabase');
       } else {
         localStorage.removeItem('khrate_guest_cart');
+        console.log('Guest cart cleared from localStorage');
       }
-      
-      toast.success('Cart cleared');
     } catch (error) {
       console.error('Error clearing cart:', error);
-      toast.error('Failed to clear cart');
+      throw error;
     } finally {
       setLoading(false);
     }
