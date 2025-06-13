@@ -93,9 +93,14 @@ export const useCheckoutForm = (props?: UseCheckoutFormProps) => {
         console.log('Order saved successfully:', savedOrder);
         
         setOrderDetails({
-          orderNumber: savedOrder.id,
+          orderId: savedOrder.id,
           phoneNumber: formData.phoneNumber,
-          totalAmount: getCartTotal()
+          totalAmount: getCartTotal(),
+          items: cart.map(item => ({
+            name: item.product_name,
+            quantity: item.quantity,
+            price: item.product_price
+          }))
         });
         
         // Clear the cart after successful order

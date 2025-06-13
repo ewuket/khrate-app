@@ -99,14 +99,16 @@ export const useCart = () => {
       // Open cart to show the added item
       setIsCartOpen(true);
       
-      toast.success(`${item.name} added to cart!`);
+      toast.success(`${item.name || item.title} added to cart!`);
       
     } catch (error) {
       console.error('Error in addToCart:', error);
       toast.error('Failed to add item to cart');
     } finally {
-      // Clear the adding state immediately
-      clearAdding(itemKey);
+      // Clear the adding state after a short delay to ensure UI updates
+      setTimeout(() => {
+        clearAdding(itemKey);
+      }, 500);
     }
   };
 
@@ -137,9 +139,9 @@ export const useCart = () => {
 
   const clearCart = async () => {
     try {
-      clearAllAdding(); // Clear all adding states
+      clearAllAdding();
       await operations.clearCart();
-      setCart([]); // Immediately clear cart state
+      setCart([]);
       toast.success('Cart cleared');
     } catch (error) {
       console.error('Error clearing cart:', error);
