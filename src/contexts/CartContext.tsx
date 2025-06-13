@@ -12,11 +12,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return cartOperations.cart.reduce((total, item) => total + item.quantity, 0);
   };
 
+  const contextValue = {
+    ...cartOperations,
+    getCartCount
+  };
+
   return (
-    <CartContext.Provider value={{
-      ...cartOperations,
-      getCartCount
-    }}>
+    <CartContext.Provider value={contextValue}>
       {children}
     </CartContext.Provider>
   );

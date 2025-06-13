@@ -34,8 +34,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <AdminProvider>
-            <CartProvider>
+          <CartProvider>
+            <AdminProvider>
               <GroupBuyingProvider>
                 <div className="flex flex-col min-h-screen">
                   <Navbar />
@@ -60,8 +60,8 @@ const App = () => (
                   <ChatAssistant />
                 </div>
               </GroupBuyingProvider>
-            </CartProvider>
-          </AdminProvider>
+            </AdminProvider>
+          </CartProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
