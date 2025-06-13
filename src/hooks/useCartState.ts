@@ -24,9 +24,14 @@ export const useCartState = () => {
     setAdding(itemKey, false);
   };
 
+  const clearAllAdding = () => {
+    setAddingItems(new Set());
+  };
+
   return {
     setAdding,
     isAdding,
-    clearAdding
+    clearAdding,
+    clearAllAdding
   };
 };

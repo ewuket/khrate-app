@@ -3,6 +3,7 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface OrderSuccessModalProps {
   open: boolean;
@@ -26,10 +27,16 @@ const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
   orderDetails,
   formatPrice
 }) => {
+  const navigate = useNavigate();
+
   const handleContinue = () => {
     onOpenChange(false);
-    // Optionally redirect to home or orders page
-    window.location.href = '/';
+    navigate('/');
+  };
+
+  const handleViewOrders = () => {
+    onOpenChange(false);
+    navigate('/orders');
   };
 
   return (
@@ -75,10 +82,17 @@ const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
           </div>
         </div>
         
-        <div className="flex justify-center pt-4">
+        <div className="flex gap-2 pt-4">
+          <Button 
+            onClick={handleViewOrders}
+            variant="outline"
+            className="flex-1"
+          >
+            View Orders
+          </Button>
           <Button 
             onClick={handleContinue}
-            className="bg-khrate-500 hover:bg-khrate-600 px-8"
+            className="bg-khrate-500 hover:bg-khrate-600 flex-1"
           >
             Continue Shopping
           </Button>

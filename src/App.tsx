@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { GroupBuyingProvider } from "@/contexts/GroupBuyingContext";
+import { AdminProvider } from "@/contexts/AdminContext";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ChatAssistant from "@/components/chat/ChatAssistant";
@@ -33,32 +34,34 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <CartProvider>
-            <GroupBuyingProvider>
-              <div className="flex flex-col min-h-screen">
-                <Navbar />
-                <main className="flex-1">
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/bundles" element={<Bundles />} />
-                    <Route path="/custom-buy" element={<CustomBuy />} />
-                    <Route path="/group-buy" element={<GroupBuy />} />
-                    <Route path="/contact" element={<Contact />} />
-                    <Route path="/about" element={<About />} />
-                    <Route path="/terms" element={<Terms />} />
-                    <Route path="/profile" element={<Profile />} />
-                    <Route path="/orders" element={<Orders />} />
-                    <Route path="/admin/login" element={<AdminLogin />} />
-                    <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                    <Route path="/auth/callback" element={<AuthCallback />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </main>
-                <Footer />
-                <ChatAssistant />
-              </div>
-            </GroupBuyingProvider>
-          </CartProvider>
+          <AdminProvider>
+            <CartProvider>
+              <GroupBuyingProvider>
+                <div className="flex flex-col min-h-screen">
+                  <Navbar />
+                  <main className="flex-1">
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/bundles" element={<Bundles />} />
+                      <Route path="/custom-buy" element={<CustomBuy />} />
+                      <Route path="/group-buy" element={<GroupBuy />} />
+                      <Route path="/contact" element={<Contact />} />
+                      <Route path="/about" element={<About />} />
+                      <Route path="/terms" element={<Terms />} />
+                      <Route path="/profile" element={<Profile />} />
+                      <Route path="/orders" element={<Orders />} />
+                      <Route path="/admin/login" element={<AdminLogin />} />
+                      <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                      <Route path="/auth/callback" element={<AuthCallback />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </main>
+                  <Footer />
+                  <ChatAssistant />
+                </div>
+              </GroupBuyingProvider>
+            </CartProvider>
+          </AdminProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

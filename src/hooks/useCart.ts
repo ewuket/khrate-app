@@ -13,7 +13,7 @@ export const useCart = () => {
   const [loading, setLoading] = useState(false);
   const { user, isAuthenticated } = useAuth();
   const operations = useCartOperations();
-  const { setAdding, isAdding, clearAdding } = useCartState();
+  const { setAdding, isAdding, clearAdding, clearAllAdding } = useCartState();
 
   const syncCart = async () => {
     setLoading(true);
@@ -105,10 +105,10 @@ export const useCart = () => {
       console.error('Error in addToCart:', error);
       toast.error('Failed to add item to cart');
     } finally {
-      // Clear the adding state immediately to reset button
+      // Clear the adding state after a short delay to show feedback
       setTimeout(() => {
         clearAdding(itemKey);
-      }, 500);
+      }, 300);
     }
   };
 
@@ -139,6 +139,7 @@ export const useCart = () => {
 
   const clearCart = async () => {
     try {
+      clearAllAdding(); // Clear all adding states
       await operations.clearCart();
       await syncCart();
       toast.success('Cart cleared');

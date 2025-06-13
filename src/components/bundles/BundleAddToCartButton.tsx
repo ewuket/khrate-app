@@ -41,7 +41,7 @@ const BundleAddToCartButton: React.FC<BundleAddToCartButtonProps> = ({
       onClick={handleClick}
       onTouchStart={handleTouchStart}
       disabled={isAdding}
-      className={`bg-khrate-500 hover:bg-khrate-600 text-white font-medium py-2 px-4 transition-colors disabled:opacity-50 touch-manipulation active:scale-95 min-h-[44px] ${className}`}
+      className={`${isAdding ? 'opacity-50 cursor-not-allowed' : 'bg-khrate-500 hover:bg-khrate-600'} text-white font-medium py-2 px-4 transition-colors min-h-[44px] ${className}`}
       style={{
         touchAction: 'manipulation',
         WebkitUserSelect: 'none',

@@ -8,18 +8,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, LogOut } from "lucide-react";
+import { User, LogOut, ShoppingBag, UserCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const ProfileDropdown = () => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const handleSignOut = async () => {
     try {
       await signOut();
-      // Force page reload for clean state
-      window.location.href = '/';
+      // Navigate to home page after sign out
+      navigate('/');
     } catch (error) {
       console.error('Error signing out:', error);
     }
@@ -39,8 +40,14 @@ const ProfileDropdown = () => {
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link to="/profile" className="flex items-center cursor-pointer">
-            <User className="mr-2 h-4 w-4" />
-            Profile & Orders
+            <UserCircle className="mr-2 h-4 w-4" />
+            Profile
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/orders" className="flex items-center cursor-pointer">
+            <ShoppingBag className="mr-2 h-4 w-4" />
+            Orders
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
