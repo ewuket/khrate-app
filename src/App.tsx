@@ -32,29 +32,27 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <CartProvider>
-            <AdminProvider>
+          <AdminProvider>
+            <CartProvider>
               <GroupBuyingProvider>
-                <Layout>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/bundles" element={<Bundles />} />
-                    <Route path="/custom-buy" element={<CustomBuy />} />
-                    <Route path="/group-buy" element={<GroupBuy />} />
-                    <Route path="/contact" element={<Contact />} />
-                    <Route path="/about" element={<About />} />
-                    <Route path="/terms" element={<Terms />} />
-                    <Route path="/profile" element={<Profile />} />
-                    <Route path="/orders" element={<Orders />} />
-                    <Route path="/admin/login" element={<AdminLogin />} />
-                    <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                    <Route path="/auth/callback" element={<AuthCallback />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Layout>
+                <Routes>
+                  <Route path="/" element={<Layout><Index /></Layout>} />
+                  <Route path="/bundles" element={<Bundles />} />
+                  <Route path="/custom-buy" element={<Layout><CustomBuy /></Layout>} />
+                  <Route path="/group-buy" element={<Layout><GroupBuy /></Layout>} />
+                  <Route path="/contact" element={<Layout><Contact /></Layout>} />
+                  <Route path="/about" element={<Layout><About /></Layout>} />
+                  <Route path="/terms" element={<Layout><Terms /></Layout>} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/orders" element={<Orders />} />
+                  <Route path="/admin/login" element={<Layout><AdminLogin /></Layout>} />
+                  <Route path="/admin/dashboard" element={<Layout><AdminDashboard /></Layout>} />
+                  <Route path="/auth/callback" element={<Layout><AuthCallback /></Layout>} />
+                  <Route path="*" element={<Layout><NotFound /></Layout>} />
+                </Routes>
               </GroupBuyingProvider>
-            </AdminProvider>
-          </CartProvider>
+            </CartProvider>
+          </AdminProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

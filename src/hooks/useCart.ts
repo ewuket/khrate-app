@@ -87,28 +87,44 @@ export const useCart = () => {
     try {
       console.log('Adding item to cart:', item);
       
-      // Add to backend first
+      // Optimistically add to cart first for immediate UI feedback
+      const optimisticItem: CartItem = {
+        id: `temp-${Date.now()}`,
+        product_id: item.id,
+        product_name: item.name || item.title,
+        product_price: item.price,
+        quantity: 1,
+        product_unit: item.unit || 'bundle',
+        product_type: type,
+        product_items: item.items
+      };
+      
+      setCart(prevCart => [...prevCart, optimisticItem]);
+      
+      // Open cart immediately for instant feedback
+      setIsCartOpen(true);
+      
+      // Add to backend
       await operations.addToCart({
         ...item,
         type: type
       });
       
-      // Then sync cart to get updated state
+      // Sync cart to get real data
       await syncCart();
-      
-      // Open cart to show the added item
-      setIsCartOpen(true);
       
       toast.success(`${item.name || item.title} added to cart!`);
       
     } catch (error) {
       console.error('Error in addToCart:', error);
+      // Remove optimistic item on error
+      setCart(prevCart => prevCart.filter(cartItem => !cartItem.id.toString().startsWith('temp-')));
       toast.error('Failed to add item to cart');
     } finally {
-      // Clear the adding state after a short delay to ensure UI updates
+      // Clear the adding state after a short delay
       setTimeout(() => {
         clearAdding(itemKey);
-      }, 500);
+      }, 300);
     }
   };
 
