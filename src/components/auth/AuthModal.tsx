@@ -67,6 +67,7 @@ const AuthModal = () => {
                 
                 <LoginForm 
                   onSwitchToSignup={handleSwitchToSignup}
+                  onClose={closeAuthModal}
                 />
               </div>
             </TabsContent>
