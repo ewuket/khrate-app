@@ -1,136 +1,170 @@
 
 import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCartContext } from '@/contexts/CartContext';
-import { useOrderOperations } from '@/hooks/useOrderOperations';
 import { toast } from 'sonner';
 
-interface UseCheckoutFormProps {
-  onSuccess?: () => void;
-  onOpenChange?: (open: boolean) => void;
+interface CheckoutFormData {
+  phoneNumber: string;
+  paymentMethod: 'momo' | 'bank_transfer' | 'cash_on_delivery';
+  deliveryDate: string;
+  timeSlot: string;
+  deliveryAddress: string;
 }
 
-export const useCheckoutForm = (props?: UseCheckoutFormProps) => {
+interface OrderDetails {
+  orderNumber: string;
+  phoneNumber: string;
+}
+
+interface UseCheckoutFormProps {
+  onSuccess: () => void;
+  onOpenChange: (open: boolean) => void;
+}
+
+export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProps) => {
   const { user, isAuthenticated } = useAuth();
-  const { cart, clearCart, getCartTotal } = useCartContext();
-  const { saveOrder } = useOrderOperations();
-  
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [orderDetails, setOrderDetails] = useState<any>(null);
+  const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   
-  const [formData, setFormData] = useState({
-    deliveryAddress: '',
+  const [formData, setFormData] = useState<CheckoutFormData>({
     phoneNumber: '',
+    paymentMethod: 'momo',
     deliveryDate: '',
     timeSlot: '',
-    paymentMethod: 'cash'
+    deliveryAddress: ''
   });
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: keyof CheckoutFormData, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
   };
 
-  const validateForm = () => {
-    if (!formData.deliveryAddress.trim()) {
-      toast.error('Please enter delivery address');
-      return false;
-    }
+  const validateForm = (): boolean => {
     if (!formData.phoneNumber.trim()) {
-      toast.error('Please enter phone number');
+      toast.error('Phone number is required');
       return false;
     }
     if (!formData.deliveryDate) {
-      toast.error('Please select delivery date');
+      toast.error('Delivery date is required');
       return false;
     }
     if (!formData.timeSlot) {
-      toast.error('Please select time slot');
+      toast.error('Time slot is required');
+      return false;
+    }
+    if (!formData.deliveryAddress.trim()) {
+      toast.error('Delivery address is required');
       return false;
     }
     return true;
   };
 
-  const handlePayment = async (e?: React.FormEvent) => {
-    if (e) {
-      e.preventDefault();
+  const saveOrderToDatabase = async (orderData: any) => {
+    try {
+      console.log('Saving order to database:', orderData);
+      
+      const { error } = await supabase
+        .from('orders')
+        .insert({
+          user_id: user?.id || null,
+          items: JSON.stringify(orderData.items),
+          total_amount: orderData.total_amount,
+          original_amount: orderData.original_amount || orderData.total_amount,
+          discount_applied: orderData.discount_applied || 0,
+          discount_percentage: orderData.discount_percentage || 0,
+          delivery_date: orderData.delivery_date,
+          delivery_time_slot: orderData.delivery_time_slot,
+          delivery_address: orderData.delivery_address,
+          payment_method: orderData.payment_method,
+          payment_status: 'pending',
+          phone_number: orderData.phone_number,
+          status: 'pending'
+        });
+
+      if (error) {
+        console.error('Error saving order to database:', error);
+        throw error;
+      }
+
+      console.log('Order successfully saved to database');
+      return true;
+    } catch (error) {
+      console.error('Failed to save order to database:', error);
+      // Don't throw error to prevent breaking the checkout flow
+      // Just log it for debugging
+      return false;
     }
-    
-    if (!validateForm()) return false;
-    
+  };
+
+  const handlePayment = async (cartItems: any[], getCartTotal: () => number) => {
+    if (!validateForm()) return;
+
     setIsProcessing(true);
     
     try {
-      const totalAmount = getCartTotal();
+      const orderNumber = `ORD-${Date.now()}`;
+      const total = getCartTotal();
       
+      // Prepare order data
       const orderData = {
-        user_id: user?.id,
-        items: cart.map(item => ({
-          id: item.product_id,
-          name: item.product_name,
-          price: item.product_price,
+        items: cartItems.map(item => ({
+          id: item.id,
+          name: item.product_name || item.name,
+          price: item.product_price || item.price,
           quantity: item.quantity,
-          unit: item.product_unit,
-          type: item.product_type as 'bundle' | 'custom' | 'group',
-          items: item.product_items
+          unit: item.product_unit || item.unit || 'item'
         })),
-        total_amount: totalAmount,
-        original_amount: totalAmount,
-        status: 'pending' as const,
-        delivery_address: formData.deliveryAddress,
+        total_amount: total,
+        original_amount: total,
         delivery_date: formData.deliveryDate,
         delivery_time_slot: formData.timeSlot,
+        delivery_address: formData.deliveryAddress,
         payment_method: formData.paymentMethod,
-        payment_status: 'pending' as const,
         phone_number: formData.phoneNumber
       };
 
-      console.log('Submitting order:', orderData);
-      const savedOrder = await saveOrder(orderData);
-      
-      if (savedOrder) {
-        console.log('Order saved successfully:', savedOrder);
-        
-        setOrderDetails({
-          orderId: savedOrder.id,
-          orderNumber: savedOrder.id,
-          phoneNumber: formData.phoneNumber,
-          totalAmount: totalAmount,
-          items: cart.map(item => ({
-            name: item.product_name,
-            quantity: item.quantity,
-            price: item.product_price
-          }))
-        });
-        
-        // Clear the cart after successful order
-        await clearCart();
-        
-        // Close checkout dialog
-        if (props?.onOpenChange) {
-          props.onOpenChange(false);
-        }
-        
-        // Show success modal
-        setShowSuccessModal(true);
-        
-        toast.success('Order placed successfully!');
-        
-        if (props?.onSuccess) {
-          props.onSuccess();
-        }
-        
-        return true;
+      // Save to database for admin visibility
+      await saveOrderToDatabase(orderData);
+
+      // Save to localStorage as backup
+      const localOrderData = {
+        id: orderNumber,
+        ...orderData,
+        status: 'pending',
+        payment_status: 'pending',
+        created_at: new Date().toISOString()
+      };
+
+      if (isAuthenticated && user) {
+        const existingOrders = JSON.parse(localStorage.getItem(`khrate_orders_${user.id}`) || '[]');
+        existingOrders.unshift(localOrderData);
+        localStorage.setItem(`khrate_orders_${user.id}`, JSON.stringify(existingOrders));
       } else {
-        throw new Error('Failed to save order');
+        const existingOrders = JSON.parse(localStorage.getItem('khrate_orders_guest') || '[]');
+        existingOrders.unshift(localOrderData);
+        localStorage.setItem('khrate_orders_guest', JSON.stringify(existingOrders));
       }
+
+      // Set order details for success modal
+      setOrderDetails({
+        orderNumber,
+        phoneNumber: formData.phoneNumber
+      });
+
+      // Call success callback and show success modal
+      onSuccess();
+      onOpenChange(false);
+      setShowSuccessModal(true);
+
+      toast.success('Order placed successfully!');
+      
     } catch (error) {
-      console.error('Error processing order:', error);
-      toast.error('Failed to process order. Please try again.');
-      return false;
+      console.error('Error processing payment:', error);
+      toast.error('Payment processing failed. Please try again.');
     } finally {
       setIsProcessing(false);
     }
@@ -139,11 +173,10 @@ export const useCheckoutForm = (props?: UseCheckoutFormProps) => {
   return {
     formData,
     isProcessing,
-    handleInputChange,
-    handlePayment,
     showSuccessModal,
-    setShowSuccessModal,
     orderDetails,
-    validateForm
+    setShowSuccessModal,
+    handleInputChange,
+    handlePayment
   };
 };

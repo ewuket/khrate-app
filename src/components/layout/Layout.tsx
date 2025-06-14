@@ -1,7 +1,6 @@
 
 import React from 'react';
 import Navbar from './Navbar';
-import Footer from './Footer';
 import ChatAssistant from '@/components/chat/ChatAssistant';
 import CartSidebar from '@/components/cart/CartSidebar';
 import AuthModal from '@/components/auth/AuthModal';
@@ -17,7 +16,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <main className="flex-1">
         {children}
       </main>
-      <Footer />
       <ChatAssistant />
       <CartSidebar />
       <AuthModal />

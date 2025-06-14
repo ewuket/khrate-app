@@ -2,7 +2,6 @@
 import React from "react";
 import { Mail, Phone } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import Footer from "@/components/layout/Footer";
 
 const Contact = () => {
   const contactEmails = [
@@ -75,8 +74,6 @@ const Contact = () => {
           </div>
         </div>
       </main>
-      
-      <Footer />
     </div>
   );
 };

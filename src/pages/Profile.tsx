@@ -1,8 +1,6 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import { toast } from "sonner";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileTabs from "@/components/profile/ProfileTabs";
@@ -128,8 +126,6 @@ const Profile = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar />
-      
       <main className="flex-1">
         <ProfileHeader
           profileData={profileData}
@@ -153,8 +149,6 @@ const Profile = () => {
           </div>
         </section>
       </main>
-      
-      <Footer />
     </div>
   );
 };
