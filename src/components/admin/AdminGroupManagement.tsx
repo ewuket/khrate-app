@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from '@/integrations/supabase/client';
 
 interface GroupSession {
   id: string;
@@ -24,7 +25,7 @@ interface GroupSession {
 const AdminGroupManagement = () => {
   const [groups, setGroups] = useState<GroupSession[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [editingGroup, setEditingGroup] = useState<GroupSession | null>(null);
+  const [loading, setLoading] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -33,6 +34,28 @@ const AdminGroupManagement = () => {
     min_participants: 3,
     max_participants: 10
   });
+
+  const loadGroups = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('group_sessions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setGroups(data || []);
+    } catch (error) {
+      console.error('Error loading groups:', error);
+      toast.error('Failed to load groups');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadGroups();
+  }, []);
 
   const generateJoinCode = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -44,20 +67,33 @@ const AdminGroupManagement = () => {
   };
 
   const handleCreateGroup = async () => {
+    if (!formData.name.trim()) {
+      toast.error('Group name is required');
+      return;
+    }
+
     try {
-      const newGroup: GroupSession = {
-        id: `group-${Date.now()}`,
+      setLoading(true);
+      
+      const newGroup = {
         name: formData.name,
         description: formData.description,
         discount_percentage: formData.discount_percentage,
         min_participants: formData.min_participants,
         max_participants: formData.max_participants,
         status: 'active',
-        created_at: new Date().toISOString(),
         join_code: generateJoinCode()
       };
 
-      setGroups(prev => [newGroup, ...prev]);
+      const { data, error } = await supabase
+        .from('group_sessions')
+        .insert(newGroup)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setGroups(prev => [data, ...prev]);
       setFormData({
         name: '',
         description: '',
@@ -70,11 +106,20 @@ const AdminGroupManagement = () => {
     } catch (error) {
       console.error('Error creating group:', error);
       toast.error('Failed to create group');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDeleteGroup = async (groupId: string) => {
     try {
+      const { error } = await supabase
+        .from('group_sessions')
+        .delete()
+        .eq('id', groupId);
+
+      if (error) throw error;
+
       setGroups(prev => prev.filter(group => group.id !== groupId));
       toast.success('Group deleted successfully!');
     } catch (error) {
@@ -85,9 +130,21 @@ const AdminGroupManagement = () => {
 
   const toggleGroupStatus = async (groupId: string) => {
     try {
+      const group = groups.find(g => g.id === groupId);
+      if (!group) return;
+
+      const newStatus = group.status === 'active' ? 'inactive' : 'active';
+      
+      const { error } = await supabase
+        .from('group_sessions')
+        .update({ status: newStatus })
+        .eq('id', groupId);
+
+      if (error) throw error;
+
       setGroups(prev => prev.map(group => 
         group.id === groupId 
-          ? { ...group, status: group.status === 'active' ? 'inactive' : 'active' }
+          ? { ...group, status: newStatus }
           : group
       ));
       toast.success('Group status updated!');
@@ -107,6 +164,7 @@ const AdminGroupManagement = () => {
         <Button 
           onClick={() => setShowCreateForm(true)}
           className="bg-khrate-500 hover:bg-khrate-600"
+          disabled={loading}
         >
           <Plus className="h-4 w-4 mr-2" />
           Create Group
@@ -136,8 +194,10 @@ const AdminGroupManagement = () => {
                 <Input
                   id="discount"
                   type="number"
+                  min="0"
+                  max="100"
                   value={formData.discount_percentage}
-                  onChange={(e) => setFormData(prev => ({ ...prev, discount_percentage: parseInt(e.target.value) }))}
+                  onChange={(e) => setFormData(prev => ({ ...prev, discount_percentage: parseInt(e.target.value) || 0 }))}
                   placeholder="10"
                 />
               </div>
@@ -147,8 +207,9 @@ const AdminGroupManagement = () => {
                 <Input
                   id="minParticipants"
                   type="number"
+                  min="2"
                   value={formData.min_participants}
-                  onChange={(e) => setFormData(prev => ({ ...prev, min_participants: parseInt(e.target.value) }))}
+                  onChange={(e) => setFormData(prev => ({ ...prev, min_participants: parseInt(e.target.value) || 2 }))}
                   placeholder="3"
                 />
               </div>
@@ -158,8 +219,9 @@ const AdminGroupManagement = () => {
                 <Input
                   id="maxParticipants"
                   type="number"
+                  min="2"
                   value={formData.max_participants}
-                  onChange={(e) => setFormData(prev => ({ ...prev, max_participants: parseInt(e.target.value) }))}
+                  onChange={(e) => setFormData(prev => ({ ...prev, max_participants: parseInt(e.target.value) || 2 }))}
                   placeholder="10"
                 />
               </div>
@@ -179,13 +241,14 @@ const AdminGroupManagement = () => {
               <Button 
                 onClick={handleCreateGroup}
                 className="bg-khrate-500 hover:bg-khrate-600"
-                disabled={!formData.name}
+                disabled={!formData.name.trim() || loading}
               >
-                Create Group
+                {loading ? 'Creating...' : 'Create Group'}
               </Button>
               <Button 
                 variant="outline" 
                 onClick={() => setShowCreateForm(false)}
+                disabled={loading}
               >
                 Cancel
               </Button>
@@ -236,20 +299,15 @@ const AdminGroupManagement = () => {
                     size="sm"
                     variant="outline"
                     onClick={() => toggleGroupStatus(group.id)}
+                    disabled={loading}
                   >
                     {group.status === 'active' ? 'Deactivate' : 'Activate'}
                   </Button>
                   <Button
                     size="sm"
-                    variant="outline"
-                    onClick={() => setEditingGroup(group)}
-                  >
-                    <Edit className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    size="sm"
                     variant="destructive"
                     onClick={() => handleDeleteGroup(group.id)}
+                    disabled={loading}
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
@@ -259,7 +317,7 @@ const AdminGroupManagement = () => {
           </Card>
         ))}
         
-        {groups.length === 0 && (
+        {groups.length === 0 && !loading && (
           <Card>
             <CardContent className="p-12 text-center">
               <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />

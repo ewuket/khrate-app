@@ -87,24 +87,55 @@ export const useCart = () => {
     try {
       console.log('Adding item to cart:', item);
       
-      // Add to backend first
+      // Create optimistic cart item for immediate UI feedback
+      const optimisticItem: CartItem = {
+        id: `temp-${Date.now()}`,
+        product_id: item.id,
+        product_name: item.name || item.title,
+        product_price: item.price,
+        quantity: 1,
+        product_unit: item.unit || 'bundle',
+        product_type: type,
+        product_items: item.items
+      };
+      
+      // Update cart immediately for instant feedback
+      setCart(prevCart => {
+        const existingItemIndex = prevCart.findIndex(cartItem => 
+          cartItem.product_id === item.id && cartItem.product_type === type
+        );
+        
+        if (existingItemIndex >= 0) {
+          // Update quantity if item exists
+          const updatedCart = [...prevCart];
+          updatedCart[existingItemIndex].quantity += 1;
+          return updatedCart;
+        } else {
+          // Add new item
+          return [...prevCart, optimisticItem];
+        }
+      });
+      
+      // Open cart immediately to show the added item
+      setTimeout(() => {
+        setIsCartOpen(true);
+      }, 100);
+      
+      // Add to backend
       await operations.addToCart({
         ...item,
         type: type
       });
       
-      // Then sync cart to get updated state
+      // Sync cart to get correct IDs and ensure consistency
       await syncCart();
-      
-      // Open cart to show the added item with a slight delay to ensure state update
-      setTimeout(() => {
-        setIsCartOpen(true);
-      }, 100);
       
       toast.success(`${item.name || item.title} added to cart!`);
       
     } catch (error) {
       console.error('Error in addToCart:', error);
+      // Revert optimistic update on error
+      await syncCart();
       toast.error('Failed to add item to cart');
     } finally {
       // Clear the adding state after operation completes

@@ -35,23 +35,30 @@ const App = () => (
           <CartProvider>
             <AdminProvider>
               <GroupBuyingProvider>
-                <Layout>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/bundles" element={<Bundles />} />
-                    <Route path="/custom-buy" element={<CustomBuy />} />
-                    <Route path="/group-buy" element={<GroupBuy />} />
-                    <Route path="/contact" element={<Contact />} />
-                    <Route path="/about" element={<About />} />
-                    <Route path="/terms" element={<Terms />} />
-                    <Route path="/profile" element={<Profile />} />
-                    <Route path="/orders" element={<Orders />} />
-                    <Route path="/admin/login" element={<AdminLogin />} />
-                    <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                    <Route path="/auth/callback" element={<AuthCallback />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Layout>
+                <Routes>
+                  {/* Admin routes without Layout wrapper */}
+                  <Route path="/admin/login" element={<AdminLogin />} />
+                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                  
+                  {/* All other routes with Layout wrapper */}
+                  <Route path="/*" element={
+                    <Layout>
+                      <Routes>
+                        <Route path="/" element={<Index />} />
+                        <Route path="/bundles" element={<Bundles />} />
+                        <Route path="/custom-buy" element={<CustomBuy />} />
+                        <Route path="/group-buy" element={<GroupBuy />} />
+                        <Route path="/contact" element={<Contact />} />
+                        <Route path="/about" element={<About />} />
+                        <Route path="/terms" element={<Terms />} />
+                        <Route path="/profile" element={<Profile />} />
+                        <Route path="/orders" element={<Orders />} />
+                        <Route path="/auth/callback" element={<AuthCallback />} />
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </Layout>
+                  } />
+                </Routes>
               </GroupBuyingProvider>
             </AdminProvider>
           </CartProvider>

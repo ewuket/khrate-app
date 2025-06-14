@@ -1,8 +1,6 @@
-
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import BundleCard from "@/components/bundles/BundleCard";
-import Footer from "@/components/layout/Footer";
 
 const bundlesData = [
   {
@@ -240,8 +238,6 @@ const Bundles = () => {
           </CardContent>
         </Card>
       </main>
-      
-      <Footer />
     </div>
   );
 };
