@@ -26,7 +26,7 @@ interface CheckoutPaymentProps {
   setDeliverySchedule: (schedule: { date: string; timeSlot: string }) => void;
   deliveryAddress: string;
   setDeliveryAddress: (address: string) => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (e: React.FormEvent, cartItems: any[], getCartTotal: () => number) => void;
 }
 
 const CheckoutPayment: React.FC<CheckoutPaymentProps> = ({
@@ -51,8 +51,12 @@ const CheckoutPayment: React.FC<CheckoutPaymentProps> = ({
     });
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    onSubmit(e, cartItems, getCartTotal);
+  };
+
   return (
-    <form onSubmit={onSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Order Summary</h3>
         <div className="space-y-2">
@@ -90,7 +94,7 @@ const CheckoutPayment: React.FC<CheckoutPaymentProps> = ({
         onPhoneNumberChange={setPhoneNumber}
       />
 
-      {(paymentMethod === "mtn" || paymentMethod === "airtel") && (
+      {(paymentMethod === "momo") && (
         <div className="bg-blue-50 border border-blue-200 p-4 rounded-md text-blue-800">
           <p className="font-medium">Payment Instructions</p>
           <p className="text-sm mt-1">

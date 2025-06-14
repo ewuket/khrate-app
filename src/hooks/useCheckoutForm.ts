@@ -170,6 +170,11 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
     }
   };
 
+  const handleFormSubmit = (e: React.FormEvent, cartItems: any[], getCartTotal: () => number) => {
+    e.preventDefault();
+    handlePayment(cartItems, getCartTotal);
+  };
+
   return {
     formData,
     isProcessing,
@@ -177,6 +182,7 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
     orderDetails,
     setShowSuccessModal,
     handleInputChange,
-    handlePayment
+    handlePayment,
+    handleFormSubmit
   };
 };

@@ -65,7 +65,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
             }}
             deliveryAddress={checkoutForm.formData.deliveryAddress}
             setDeliveryAddress={(address) => checkoutForm.handleInputChange('deliveryAddress', address)}
-            onSubmit={checkoutForm.handlePayment}
+            onSubmit={checkoutForm.handleFormSubmit}
           />
         </DialogContent>
       </Dialog>

@@ -63,6 +63,10 @@ const CustomBuyCheckoutDialog = ({
     checkoutForm.handleInputChange('deliveryDate', schedule.date ? schedule.date.toISOString().split('T')[0] : '');
     checkoutForm.handleInputChange('timeSlot', schedule.timeSlot);
   };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    checkoutForm.handleFormSubmit(e, cart, getCartTotal);
+  };
   
   return (
     <>
@@ -87,7 +91,7 @@ const CustomBuyCheckoutDialog = ({
             </div>
           </DialogHeader>
           
-          <form onSubmit={checkoutForm.handlePayment}>
+          <form onSubmit={handleSubmit}>
             <div className="grid gap-6 py-4">
               {!isAuthenticated && (
                 <div className="mb-4">
@@ -127,7 +131,7 @@ const CustomBuyCheckoutDialog = ({
                 }}
               />
 
-              {(checkoutForm.formData.paymentMethod === "mtn" || checkoutForm.formData.paymentMethod === "airtel") && (
+              {(checkoutForm.formData.paymentMethod === "momo") && (
                 <div className="bg-blue-50 border border-blue-200 p-4 rounded-md text-blue-800">
                   <p className="font-medium">Payment Instructions</p>
                   <p className="text-sm mt-1">
