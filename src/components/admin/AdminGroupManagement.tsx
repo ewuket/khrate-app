@@ -9,10 +9,11 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
-interface GroupSession {
+interface AdminGroupSession {
   id: string;
-  name: string;
+  name: string | null;
   description?: string;
   discount_percentage: number;
   min_participants: number;
@@ -20,12 +21,19 @@ interface GroupSession {
   status: 'active' | 'inactive';
   created_at: string;
   join_code: string;
+  leader_id: string;
+  group_type: string;
+  order_status: string | null;
+  is_public: boolean;
+  items: any;
+  updated_at: string;
 }
 
 const AdminGroupManagement = () => {
-  const [groups, setGroups] = useState<GroupSession[]>([]);
+  const [groups, setGroups] = useState<AdminGroupSession[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -44,7 +52,14 @@ const AdminGroupManagement = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setGroups(data || []);
+      
+      // Type cast the data to match our interface
+      const typedGroups = (data || []).map(group => ({
+        ...group,
+        status: group.status as 'active' | 'inactive'
+      }));
+      
+      setGroups(typedGroups);
     } catch (error) {
       console.error('Error loading groups:', error);
       toast.error('Failed to load groups');
@@ -72,17 +87,22 @@ const AdminGroupManagement = () => {
       return;
     }
 
+    if (!user) {
+      toast.error('You must be logged in to create groups');
+      return;
+    }
+
     try {
       setLoading(true);
       
       const newGroup = {
         name: formData.name,
-        description: formData.description,
         discount_percentage: formData.discount_percentage,
         min_participants: formData.min_participants,
         max_participants: formData.max_participants,
-        status: 'active',
-        join_code: generateJoinCode()
+        status: 'active' as const,
+        join_code: generateJoinCode(),
+        leader_id: user.id
       };
 
       const { data, error } = await supabase
@@ -93,7 +113,13 @@ const AdminGroupManagement = () => {
 
       if (error) throw error;
 
-      setGroups(prev => [data, ...prev]);
+      // Type cast the returned data
+      const typedGroup = {
+        ...data,
+        status: data.status as 'active' | 'inactive'
+      };
+
+      setGroups(prev => [typedGroup, ...prev]);
       setFormData({
         name: '',
         description: '',
@@ -264,15 +290,11 @@ const AdminGroupManagement = () => {
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-lg font-semibold">{group.name}</h3>
+                    <h3 className="text-lg font-semibold">{group.name || 'Unnamed Group'}</h3>
                     <Badge variant={group.status === 'active' ? 'default' : 'secondary'}>
                       {group.status}
                     </Badge>
                   </div>
-                  
-                  {group.description && (
-                    <p className="text-sm text-muted-foreground mb-3">{group.description}</p>
-                  )}
                   
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
