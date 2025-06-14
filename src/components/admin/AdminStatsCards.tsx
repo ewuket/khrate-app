@@ -12,9 +12,30 @@ import { AdminStats } from "@/types/admin";
 
 interface AdminStatsCardsProps {
   stats: AdminStats | null;
+  loading?: boolean;
 }
 
-const AdminStatsCards = ({ stats }: AdminStatsCardsProps) => {
+const AdminStatsCards = ({ stats, loading = false }: AdminStatsCardsProps) => {
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+        {[...Array(5)].map((_, index) => (
+          <Card key={index}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Loading...</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center">
+                <div className="h-4 w-4 bg-gray-200 rounded mr-2 animate-pulse" />
+                <span className="text-2xl font-bold bg-gray-200 rounded animate-pulse">--</span>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
       <Card>
