@@ -151,33 +151,59 @@ export const useCart = () => {
 
   const removeFromCart = async (itemId: string) => {
     try {
+      console.log('Removing item from cart:', itemId);
+      
+      // Optimistically update the UI
+      setCart(prevCart => prevCart.filter(item => item.id !== itemId));
+      
       await operations.removeFromCart(itemId);
-      await syncCart();
+      await syncCart(); // Ensure consistency
       toast.success('Item removed from cart');
     } catch (error) {
       console.error('Error removing from cart:', error);
+      await syncCart(); // Revert on error
       toast.error('Failed to remove item');
     }
   };
 
   const updateQuantity = async (itemId: string, quantity: number) => {
     try {
+      console.log('Updating quantity for item:', itemId, 'to:', quantity);
+      
+      if (quantity <= 0) {
+        await removeFromCart(itemId);
+        return;
+      }
+      
+      // Optimistically update the UI
+      setCart(prevCart => 
+        prevCart.map(item => 
+          item.id === itemId ? { ...item, quantity } : item
+        )
+      );
+      
       await operations.updateQuantity(itemId, quantity);
-      await syncCart();
+      await syncCart(); // Ensure consistency
     } catch (error) {
       console.error('Error updating quantity:', error);
+      await syncCart(); // Revert on error
       toast.error('Failed to update quantity');
     }
   };
 
   const clearCart = async () => {
     try {
-      clearAllAdding();
-      await operations.clearCart();
+      console.log('Clearing cart...');
+      
+      // Optimistically clear the cart
       setCart([]);
+      clearAllAdding();
+      
+      await operations.clearCart();
       toast.success('Cart cleared');
     } catch (error) {
       console.error('Error clearing cart:', error);
+      await syncCart(); // Revert on error
       toast.error('Failed to clear cart');
     }
   };

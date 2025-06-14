@@ -9,15 +9,41 @@ import AdminHeader from "./AdminHeader";
 import AdminNotifications from "./AdminNotifications";
 import { useAdminData } from "@/hooks/useAdminData";
 import { useAdminOperations } from "@/hooks/useAdminOperations";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 const AdminDashboard = () => {
   const { orders, groupSessions, stats, loading, loadOrders, loadGroupSessions, loadStats } = useAdminData();
   const { updateOrderStatus, updatePaymentStatus } = useAdminOperations();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const refreshAllData = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        loadOrders(),
+        loadGroupSessions(),
+        loadStats()
+      ]);
+      console.log('All admin data refreshed');
+    } catch (error) {
+      console.error('Error refreshing admin data:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    loadOrders();
-    loadGroupSessions();
-    loadStats();
+    console.log('Admin dashboard initializing...');
+    refreshAllData();
+    
+    // Set up auto-refresh every 30 seconds
+    const interval = setInterval(() => {
+      console.log('Auto-refreshing admin data...');
+      refreshAllData();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleUpdateOrderStatus = async (orderId: string, currentStatus: string) => {
@@ -28,6 +54,7 @@ const AdminDashboard = () => {
     const success = await updateOrderStatus(orderId, nextStatus);
     if (success) {
       loadOrders();
+      loadStats(); // Update stats when order status changes
     }
   };
 
@@ -36,6 +63,7 @@ const AdminDashboard = () => {
     const success = await updatePaymentStatus(orderId, newStatus);
     if (success) {
       loadOrders();
+      loadStats(); // Update stats when payment status changes
     }
   };
 
@@ -45,8 +73,21 @@ const AdminDashboard = () => {
       
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-          <p className="text-gray-600">Manage your e-commerce platform</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
+              <p className="text-gray-600">Manage your e-commerce platform</p>
+            </div>
+            <Button
+              onClick={refreshAllData}
+              disabled={refreshing}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              {refreshing ? 'Refreshing...' : 'Refresh Data'}
+            </Button>
+          </div>
         </div>
 
         <AdminNotifications />

@@ -15,6 +15,7 @@ interface CheckoutFormData {
 interface OrderDetails {
   orderNumber: string;
   phoneNumber: string;
+  totalAmount: number;
 }
 
 interface UseCheckoutFormProps {
@@ -67,7 +68,7 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
     try {
       console.log('Saving order to database:', orderData);
       
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('orders')
         .insert({
           user_id: user?.id || null,
@@ -83,20 +84,20 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
           payment_status: 'pending',
           phone_number: orderData.phone_number,
           status: 'pending'
-        });
+        })
+        .select()
+        .single();
 
       if (error) {
         console.error('Error saving order to database:', error);
         throw error;
       }
 
-      console.log('Order successfully saved to database');
-      return true;
+      console.log('Order successfully saved to database:', data);
+      return data;
     } catch (error) {
       console.error('Failed to save order to database:', error);
-      // Don't throw error to prevent breaking the checkout flow
-      // Just log it for debugging
-      return false;
+      throw error;
     }
   };
 
@@ -127,12 +128,12 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
         phone_number: formData.phoneNumber
       };
 
-      // Save to database for admin visibility
-      await saveOrderToDatabase(orderData);
+      // Save to database (this will make it visible to admin immediately)
+      const savedOrder = await saveOrderToDatabase(orderData);
 
-      // Save to localStorage as backup
+      // Save to localStorage as backup for user's order history
       const localOrderData = {
-        id: orderNumber,
+        id: savedOrder?.id || orderNumber,
         ...orderData,
         status: 'pending',
         payment_status: 'pending',
@@ -152,15 +153,18 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
       // Set order details for success modal
       setOrderDetails({
         orderNumber,
-        phoneNumber: formData.phoneNumber
+        phoneNumber: formData.phoneNumber,
+        totalAmount: total
       });
 
-      // Call success callback and show success modal
+      // Call success callback and close checkout
       onSuccess();
       onOpenChange(false);
+      
+      // Show success modal immediately
       setShowSuccessModal(true);
 
-      toast.success('Order placed successfully!');
+      toast.success(`Order placed successfully! Total: ${total.toLocaleString()} RWF`);
       
     } catch (error) {
       console.error('Error processing payment:', error);
