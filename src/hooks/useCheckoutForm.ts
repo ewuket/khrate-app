@@ -64,6 +64,8 @@ export const useCheckoutForm = (props?: UseCheckoutFormProps) => {
     setIsProcessing(true);
     
     try {
+      const totalAmount = getCartTotal();
+      
       const orderData = {
         user_id: user?.id,
         items: cart.map(item => ({
@@ -75,8 +77,8 @@ export const useCheckoutForm = (props?: UseCheckoutFormProps) => {
           type: item.product_type as 'bundle' | 'custom' | 'group',
           items: item.product_items
         })),
-        total_amount: getCartTotal(),
-        original_amount: getCartTotal(),
+        total_amount: totalAmount,
+        original_amount: totalAmount,
         status: 'pending' as const,
         delivery_address: formData.deliveryAddress,
         delivery_date: formData.deliveryDate,
@@ -94,8 +96,9 @@ export const useCheckoutForm = (props?: UseCheckoutFormProps) => {
         
         setOrderDetails({
           orderId: savedOrder.id,
+          orderNumber: savedOrder.id,
           phoneNumber: formData.phoneNumber,
-          totalAmount: getCartTotal(),
+          totalAmount: totalAmount,
           items: cart.map(item => ({
             name: item.product_name,
             quantity: item.quantity,
@@ -133,41 +136,14 @@ export const useCheckoutForm = (props?: UseCheckoutFormProps) => {
     }
   };
 
-  // Helper getters for backward compatibility
-  const paymentMethod = formData.paymentMethod;
-  const setPaymentMethod = (method: string) => handleInputChange('paymentMethod', method);
-  const phoneNumber = formData.phoneNumber;
-  const setPhoneNumber = (phone: string) => handleInputChange('phoneNumber', phone);
-  const deliverySchedule = {
-    date: formData.deliveryDate,
-    timeSlot: formData.timeSlot
-  };
-  const setDeliverySchedule = (schedule: { date: string; timeSlot: string }) => {
-    handleInputChange('deliveryDate', schedule.date);
-    handleInputChange('timeSlot', schedule.timeSlot);
-  };
-  const deliveryAddress = formData.deliveryAddress;
-  const setDeliveryAddress = (address: string) => handleInputChange('deliveryAddress', address);
-  const processingPayment = isProcessing;
-
   return {
     formData,
     isProcessing,
-    processingPayment,
     handleInputChange,
-    processOrder: handlePayment,
-    validateForm,
-    paymentMethod,
-    setPaymentMethod,
-    phoneNumber,
-    setPhoneNumber,
-    deliverySchedule,
-    setDeliverySchedule,
-    deliveryAddress,
-    setDeliveryAddress,
     handlePayment,
     showSuccessModal,
     setShowSuccessModal,
-    orderDetails
+    orderDetails,
+    validateForm
   };
 };

@@ -55,7 +55,7 @@ const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
           <div className="text-center bg-green-50 p-4 rounded-lg">
             <p className="text-sm text-gray-600 mb-2">Order ID: #{orderDetails.orderId}</p>
             <p className="text-2xl font-bold text-green-700">
-              {formatPrice(orderDetails.totalAmount)} RWF
+              {orderDetails.totalAmount.toLocaleString()} RWF
             </p>
             <p className="text-sm text-gray-600 mt-1">Phone: {orderDetails.phoneNumber}</p>
           </div>
@@ -66,7 +66,7 @@ const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
               {orderDetails.items.map((item, index) => (
                 <div key={index} className="flex justify-between items-center py-1">
                   <span className="text-gray-700">{item.name} × {item.quantity}</span>
-                  <span className="font-medium">{formatPrice(item.price * item.quantity)} RWF</span>
+                  <span className="font-medium">{(item.price * item.quantity).toLocaleString()} RWF</span>
                 </div>
               ))}
             </div>

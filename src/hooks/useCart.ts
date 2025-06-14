@@ -96,8 +96,10 @@ export const useCart = () => {
       // Then sync cart to get updated state
       await syncCart();
       
-      // Open cart to show the added item
-      setIsCartOpen(true);
+      // Open cart to show the added item with a slight delay to ensure state update
+      setTimeout(() => {
+        setIsCartOpen(true);
+      }, 100);
       
       toast.success(`${item.name || item.title} added to cart!`);
       
@@ -105,10 +107,10 @@ export const useCart = () => {
       console.error('Error in addToCart:', error);
       toast.error('Failed to add item to cart');
     } finally {
-      // Clear the adding state after a short delay to ensure UI updates
+      // Clear the adding state after operation completes
       setTimeout(() => {
         clearAdding(itemKey);
-      }, 500);
+      }, 300);
     }
   };
 

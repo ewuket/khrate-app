@@ -1,239 +1,93 @@
 
-import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import AdminStatsCards from "./AdminStatsCards";
+import AdminOrdersList from "./AdminOrdersList";
+import AdminGroupsList from "./AdminGroupsList";
+import AdminGroupManagement from "./AdminGroupManagement";
+import AdminHeader from "./AdminHeader";
+import AdminNotifications from "./AdminNotifications";
 import { useAdminData } from "@/hooks/useAdminData";
-import { AdminStats, AdminOrder, AdminGroupSession } from "@/types/admin";
-import { Package, Users, DollarSign, Clock, Eye, CheckCircle, XCircle } from "lucide-react";
-import { toast } from "sonner";
+import { useAdminOperations } from "@/hooks/useAdminOperations";
 
 const AdminDashboard = () => {
-  const { orders, groupSessions, stats, loadOrders, loadGroupSessions, loadStats } = useAdminData();
-  const [isLoading, setIsLoading] = useState(true);
+  const { orders, groupSessions, stats, loading, loadOrders, loadGroupSessions, loadStats } = useAdminData();
+  const { updateOrderStatus, updatePaymentStatus } = useAdminOperations();
 
   useEffect(() => {
-    const loadAllData = async () => {
-      try {
-        setIsLoading(true);
-        await Promise.all([
-          loadOrders(),
-          loadGroupSessions(),
-          loadStats()
-        ]);
-      } catch (error) {
-        console.error('Error loading admin data:', error);
-        toast.error('Failed to load admin data');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    loadOrders();
+    loadGroupSessions();
+    loadStats();
+  }, []);
 
-    loadAllData();
-  }, [loadOrders, loadGroupSessions, loadStats]);
-
-  const formatCurrency = (amount: number) => {
-    return `RWF ${amount.toLocaleString()}`;
+  const handleUpdateOrderStatus = async (orderId: string, currentStatus: string) => {
+    const statusOptions = ['pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'];
+    const currentIndex = statusOptions.indexOf(currentStatus);
+    const nextStatus = statusOptions[(currentIndex + 1) % statusOptions.length];
+    
+    const success = await updateOrderStatus(orderId, nextStatus);
+    if (success) {
+      loadOrders();
+    }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const handleUpdatePaymentStatus = async (orderId: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'pending' ? 'completed' : 'pending';
+    const success = await updatePaymentStatus(orderId, newStatus);
+    if (success) {
+      loadOrders();
+    }
   };
-
-  const getStatusBadge = (status: string) => {
-    const variants = {
-      'pending': 'outline',
-      'confirmed': 'default',
-      'delivered': 'default',
-      'cancelled': 'destructive',
-      'active': 'default',
-      'completed': 'default',
-      'collecting': 'outline'
-    } as const;
-
-    const colors = {
-      'pending': 'text-yellow-600',
-      'confirmed': 'text-blue-600',
-      'delivered': 'text-green-600 bg-green-100',
-      'cancelled': 'text-red-600',
-      'active': 'text-blue-600',
-      'completed': 'text-green-600 bg-green-100',
-      'collecting': 'text-orange-600'
-    } as const;
-
-    return (
-      <Badge variant={variants[status as keyof typeof variants] || 'outline'} className={colors[status as keyof typeof colors] || ''}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </Badge>
-    );
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-khrate-500 mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading admin dashboard...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.total_orders || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats?.pending_orders || 0} pending
-            </p>
-          </CardContent>
-        </Card>
+    <div className="min-h-screen bg-gray-50">
+      <AdminHeader />
+      
+      <main className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
+          <p className="text-gray-600">Manage your e-commerce platform</p>
+        </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(stats?.total_revenue || 0)}</div>
-            <p className="text-xs text-muted-foreground">
-              All time revenue
-            </p>
-          </CardContent>
-        </Card>
+        <AdminNotifications />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Groups</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.active_groups || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Currently active
-            </p>
-          </CardContent>
-        </Card>
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="orders">Orders</TabsTrigger>
+            <TabsTrigger value="groups">Group Sessions</TabsTrigger>
+            <TabsTrigger value="group-management">Group Management</TabsTrigger>
+          </TabsList>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.total_users || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Registered users
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+          <TabsContent value="overview" className="space-y-6">
+            <AdminStatsCards stats={stats} loading={loading} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <AdminOrdersList 
+                orders={orders.slice(0, 5)} 
+                onUpdateOrderStatus={handleUpdateOrderStatus}
+                onUpdatePaymentStatus={handleUpdatePaymentStatus}
+              />
+              <AdminGroupsList groupSessions={groupSessions.slice(0, 5)} />
+            </div>
+          </TabsContent>
 
-      {/* Main Content Tabs */}
-      <Tabs defaultValue="orders" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="orders">Orders</TabsTrigger>
-          <TabsTrigger value="groups">Group Sessions</TabsTrigger>
-        </TabsList>
+          <TabsContent value="orders">
+            <AdminOrdersList 
+              orders={orders}
+              onUpdateOrderStatus={handleUpdateOrderStatus}
+              onUpdatePaymentStatus={handleUpdatePaymentStatus}
+            />
+          </TabsContent>
 
-        <TabsContent value="orders" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Orders</CardTitle>
-              <CardDescription>Manage customer orders and deliveries</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {orders.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">No orders found</p>
-                ) : (
-                  orders.slice(0, 10).map((order: AdminOrder) => (
-                    <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="space-y-1">
-                        <div className="flex items-center space-x-2">
-                          <span className="font-medium">
-                            {order.user_profile?.full_name || 'Unknown User'}
-                          </span>
-                          {getStatusBadge(order.status)}
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {formatCurrency(order.total_amount)} • {formatDate(order.created_at)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {order.user_profile?.email}
-                        </p>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        {order.status === 'pending' && (
-                          <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Confirm
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+          <TabsContent value="groups">
+            <AdminGroupsList groupSessions={groupSessions} />
+          </TabsContent>
 
-        <TabsContent value="groups" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Group Sessions</CardTitle>
-              <CardDescription>Monitor group buying activities</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {groupSessions.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">No group sessions found</p>
-                ) : (
-                  groupSessions.slice(0, 10).map((session: AdminGroupSession) => (
-                    <div key={session.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="space-y-1">
-                        <div className="flex items-center space-x-2">
-                          <span className="font-medium">{session.name}</span>
-                          {getStatusBadge(session.status)}
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {session.member_count} members • {formatCurrency(session.total_amount)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Code: {session.join_code} • Created {formatDate(session.created_at)}
-                        </p>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="group-management">
+            <AdminGroupManagement />
+          </TabsContent>
+        </Tabs>
+      </main>
     </div>
   );
 };
