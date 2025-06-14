@@ -161,10 +161,12 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
       onSuccess();
       onOpenChange(false);
       
-      // Show success modal immediately
+      // Show success modal immediately with proper RWF formatting
       setShowSuccessModal(true);
 
       toast.success(`Order placed successfully! Total: ${total.toLocaleString()} RWF`);
+      
+      console.log('Order processed successfully and will appear in admin dashboard');
       
     } catch (error) {
       console.error('Error processing payment:', error);
