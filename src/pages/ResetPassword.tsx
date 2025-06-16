@@ -232,7 +232,7 @@ const ResetPassword = () => {
                 className="text-sm text-khrate-500 hover:underline"
               >
                 Back to Home
-              </Button>
+              </button>
             </div>
           </form>
         </CardContent>
