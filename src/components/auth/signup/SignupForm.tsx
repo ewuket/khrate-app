@@ -21,17 +21,7 @@ const SignupForm = ({ onSwitchToLogin, onSuccess }: SignupFormProps) => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { signUp } = useAuth();
-
-  const isFormValid = () => {
-    return (
-      formData.fullName.trim() !== "" &&
-      formData.email.trim() !== "" &&
-      formData.password.length >= 6 &&
-      formData.password === formData.confirmPassword
-    );
-  };
+  const { signUp, loading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,21 +30,9 @@ const SignupForm = ({ onSwitchToLogin, onSuccess }: SignupFormProps) => {
       return;
     }
     
-    if (!isFormValid()) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    
-    try {
-      const result = await signUp(formData.email, formData.password, formData.fullName);
-      if (result && !result.error) {
-        onSuccess();
-      }
-    } catch (error) {
-      console.error('Signup error:', error);
-    } finally {
-      setIsSubmitting(false);
+    const result = await signUp(formData.email, formData.password, formData.fullName);
+    if (result && !result.error) {
+      onSuccess();
     }
   };
 
@@ -142,7 +120,7 @@ const SignupForm = ({ onSwitchToLogin, onSuccess }: SignupFormProps) => {
               value={formData.password}
               onChange={handleChange}
               required
-              placeholder="Create a strong password (min 6 characters)"
+              placeholder="Create a strong password"
               className="pl-10 pr-10 py-3 bg-white border-gray-300 focus:border-khrate-500 focus:ring-khrate-500"
             />
             <Button
@@ -195,16 +173,12 @@ const SignupForm = ({ onSwitchToLogin, onSuccess }: SignupFormProps) => {
           <p className="text-sm text-red-600">Passwords do not match</p>
         )}
 
-        {formData.password && formData.password.length < 6 && (
-          <p className="text-sm text-red-600">Password must be at least 6 characters long</p>
-        )}
-
         <Button 
           type="submit" 
           className="w-full bg-khrate-500 hover:bg-khrate-600 text-white py-3 text-lg font-semibold"
-          disabled={isSubmitting || !isFormValid()}
+          disabled={loading || formData.password !== formData.confirmPassword}
         >
-          {isSubmitting ? "Creating Account..." : "Create Account"}
+          {loading ? "Creating Account..." : "Create Account"}
         </Button>
       </form>
 

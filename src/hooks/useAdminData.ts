@@ -11,8 +11,9 @@ export const useAdminData = () => {
   const [loading, setLoading] = useState(false);
 
   const loadOrders = useCallback(async () => {
+    setLoading(true);
     try {
-      console.log('Loading orders...');
+      console.log('Loading orders from database...');
       
       const { data, error } = await supabase
         .from('orders')
@@ -23,9 +24,10 @@ export const useAdminData = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error loading orders:', error);
-        toast.error('Failed to load orders');
-        return [];
+        console.error('Error loading orders from database:', error);
+        toast.error('Failed to load orders from database');
+        setOrders([]);
+        return;
       }
 
       const formattedOrders = data?.map((order: any) => ({
@@ -34,15 +36,18 @@ export const useAdminData = () => {
         user_profile: order.user_profile || {}
       })) || [];
 
-      console.log('Orders loaded successfully:', formattedOrders.length);
       setOrders(formattedOrders);
-      return formattedOrders;
+      console.log('Orders loaded successfully from database:', formattedOrders.length);
       
+      if (formattedOrders.length === 0) {
+        console.log('No orders found in database');
+      }
     } catch (error) {
       console.error('Error loading orders:', error);
       toast.error('Failed to load orders');
       setOrders([]);
-      return [];
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -56,9 +61,9 @@ export const useAdminData = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error loading group sessions:', error);
-        toast.error('Failed to load group sessions');
-        return [];
+        console.error('Error loading group sessions from database:', error);
+        setGroupSessions([]);
+        return;
       }
       
       const formattedGroupSessions: AdminGroupSession[] = (data || []).map(session => ({
@@ -73,87 +78,60 @@ export const useAdminData = () => {
         created_at: session.created_at
       }));
 
-      console.log('Group sessions loaded successfully:', formattedGroupSessions.length);
       setGroupSessions(formattedGroupSessions);
-      return formattedGroupSessions;
+      console.log('Group sessions loaded successfully:', formattedGroupSessions.length);
     } catch (error) {
       console.error('Error loading group sessions:', error);
       toast.error('Failed to load group sessions');
       setGroupSessions([]);
-      return [];
     }
   }, []);
 
   const loadStats = useCallback(async () => {
     try {
-      console.log('Loading stats...');
+      console.log('Loading admin stats...');
       
-      // Get orders data
-      const { data: ordersData, error: ordersError } = await supabase
+      const [ordersCount, revenue, groupsCount, usersCount] = await Promise.allSettled([
+        supabase.from('orders').select('*', { count: 'exact', head: true }),
+        supabase.from('orders').select('total_amount'),
+        supabase.from('group_sessions').select('*', { count: 'exact', head: true }),
+        supabase.from('user_profiles').select('*', { count: 'exact', head: true })
+      ]);
+
+      const totalRevenue = revenue.status === 'fulfilled' && revenue.value.data 
+        ? revenue.value.data.reduce((sum, order) => sum + Number(order.total_amount), 0) 
+        : 0;
+
+      const pendingOrders = await supabase
         .from('orders')
-        .select('total_amount, status, payment_status');
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending');
 
-      if (ordersError) {
-        console.error('Error loading orders for stats:', ordersError);
-        throw ordersError;
-      }
-
-      // Get users count
-      const { count: usersCount, error: usersError } = await supabase
-        .from('user_profiles')
-        .select('*', { count: 'exact', head: true });
-
-      if (usersError) {
-        console.error('Error loading users count:', usersError);
-        throw usersError;
-      }
-
-      // Get groups count
-      const { count: groupsCount, error: groupsError } = await supabase
-        .from('group_sessions')
-        .select('*', { count: 'exact', head: true });
-
-      if (groupsError) {
-        console.error('Error loading groups count:', groupsError);
-        throw groupsError;
-      }
-
-      const totalOrders = ordersData?.length || 0;
-      const pendingOrders = ordersData?.filter(order => 
-        order.status === 'pending' || order.payment_status === 'pending'
-      ).length || 0;
-      const totalRevenue = ordersData?.reduce((sum, order) => 
-        sum + Number(order.total_amount || 0), 0
-      ) || 0;
-
-      const calculatedStats = {
-        total_orders: totalOrders,
-        pending_orders: pendingOrders,
+      setStats({
+        total_orders: ordersCount.status === 'fulfilled' ? ordersCount.value.count || 0 : 0,
+        pending_orders: pendingOrders.count || 0,
         total_revenue: totalRevenue,
-        active_groups: groupsCount || 0,
-        total_users: usersCount || 0
-      };
+        active_groups: groupsCount.status === 'fulfilled' ? groupsCount.value.count || 0 : 0,
+        total_users: usersCount.status === 'fulfilled' ? usersCount.value.count || 0 : 0
+      });
 
-      console.log('Stats calculated:', calculatedStats);
-      setStats(calculatedStats);
-      return calculatedStats;
+      console.log('Stats loaded successfully');
     } catch (error) {
-      console.error('Error loading stats:', error);
-      toast.error('Failed to load statistics');
-      const fallbackStats = {
+      console.error('Error loading stats from database:', error);
+      // Set fallback stats to 0 to show real state
+      setStats({
         total_orders: 0,
         pending_orders: 0,
         total_revenue: 0,
         active_groups: 0,
         total_users: 0
-      };
-      setStats(fallbackStats);
-      return fallbackStats;
+      });
     }
   }, []);
 
+  // Set up real-time subscription for orders
   const subscribeToOrders = useCallback(() => {
-    console.log('Setting up real-time subscription...');
+    console.log('Setting up real-time subscription for orders...');
     
     const channel = supabase
       .channel('orders-changes')
@@ -164,37 +142,18 @@ export const useAdminData = () => {
           table: 'orders' 
         }, 
         (payload) => {
-          console.log('Real-time update received:', payload);
+          console.log('Real-time order update received:', payload);
+          // Reload orders when any change occurs
           loadOrders();
           loadStats();
         })
       .subscribe();
 
     return () => {
-      console.log('Cleaning up subscription');
+      console.log('Cleaning up real-time subscription');
       supabase.removeChannel(channel);
     };
   }, [loadOrders, loadStats]);
-
-  const refreshAllData = useCallback(async () => {
-    console.log('Refreshing all data...');
-    setLoading(true);
-    try {
-      const [ordersData, groupsData, statsData] = await Promise.all([
-        loadOrders(),
-        loadGroupSessions(),
-        loadStats()
-      ]);
-      console.log('All data refreshed successfully');
-      return { orders: ordersData, groups: groupsData, stats: statsData };
-    } catch (error) {
-      console.error('Error refreshing data:', error);
-      toast.error('Failed to refresh data');
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [loadOrders, loadGroupSessions, loadStats]);
 
   return {
     orders,
@@ -204,7 +163,6 @@ export const useAdminData = () => {
     loadOrders,
     loadGroupSessions,
     loadStats,
-    subscribeToOrders,
-    refreshAllData
+    subscribeToOrders
   };
 };

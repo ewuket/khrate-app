@@ -32,12 +32,8 @@ const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
 
   const handleContinueShopping = () => {
     onOpenChange(false);
+    // Navigate to bundles page
     window.location.href = '/bundles';
-  };
-
-  // Format the amount properly in RWF
-  const formatRWF = (amount: number) => {
-    return `${amount.toLocaleString()} RWF`;
   };
 
   return (
@@ -77,7 +73,7 @@ const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
               <div className="flex justify-between items-center p-3 bg-white rounded-md shadow-sm">
                 <span className="text-gray-600 font-medium">Total Amount:</span>
                 <span className="font-bold text-2xl text-green-600">
-                  {formatRWF(orderDetails.totalAmount)}
+                  {orderDetails.totalAmount.toLocaleString()} RWF
                 </span>
               </div>
               <div className="flex justify-between items-center p-3 bg-white rounded-md shadow-sm">
@@ -101,7 +97,7 @@ const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
                     <span className="text-sm text-gray-600">Quantity: {item.quantity}</span>
                   </div>
                   <span className="text-sm font-bold text-khrate-600">
-                    {formatRWF(item.price * item.quantity)}
+                    {(item.price * item.quantity).toLocaleString()} RWF
                   </span>
                 </div>
               ))}
@@ -116,7 +112,7 @@ const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
             </div>
             <div className="text-sm text-blue-700 space-y-2">
               <p>📱 Send payment to: <span className="font-bold text-lg text-blue-800">0795754391</span></p>
-              <p>💰 Amount: <span className="font-bold text-lg text-blue-800">{formatRWF(orderDetails.totalAmount)}</span></p>
+              <p>💰 Amount: <span className="font-bold text-lg text-blue-800">{orderDetails.totalAmount.toLocaleString()} RWF</span></p>
               <div className="bg-blue-100 p-3 rounded-lg mt-3">
                 <p className="text-xs font-medium text-blue-800">
                   ✅ Your order will be confirmed once payment is received

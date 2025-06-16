@@ -24,7 +24,7 @@ interface UseCheckoutFormProps {
 }
 
 export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProps) => {
-  const { user, isAuthenticated, openAuthModal } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
@@ -68,40 +68,40 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
     try {
       console.log('Saving order to database:', orderData);
       
-      const orderPayload = {
-        user_id: user?.id || null,
-        items: JSON.stringify(orderData.items),
-        total_amount: Number(orderData.total_amount),
-        original_amount: Number(orderData.original_amount || orderData.total_amount),
-        discount_applied: Number(orderData.discount_applied || 0),
-        discount_percentage: Number(orderData.discount_percentage || 0),
-        delivery_date: orderData.delivery_date,
-        delivery_time_slot: orderData.delivery_time_slot,
-        delivery_address: orderData.delivery_address,
-        payment_method: orderData.payment_method,
-        payment_status: 'pending',
-        phone_number: orderData.phone_number,
-        status: 'pending'
-      };
-
-      console.log('Order payload being sent:', orderPayload);
-
       const { data, error } = await supabase
         .from('orders')
-        .insert(orderPayload)
+        .insert({
+          user_id: user?.id || null,
+          items: JSON.stringify(orderData.items),
+          total_amount: orderData.total_amount,
+          original_amount: orderData.original_amount || orderData.total_amount,
+          discount_applied: orderData.discount_applied || 0,
+          discount_percentage: orderData.discount_percentage || 0,
+          delivery_date: orderData.delivery_date,
+          delivery_time_slot: orderData.delivery_time_slot,
+          delivery_address: orderData.delivery_address,
+          payment_method: orderData.payment_method,
+          payment_status: 'pending',
+          phone_number: orderData.phone_number,
+          status: 'pending'
+        })
         .select()
         .single();
 
       if (error) {
-        console.error('Database error details:', error);
-        throw new Error(`Database error: ${error.message}`);
-      }
-
-      if (!data) {
-        throw new Error('No data returned from database insert');
+        console.error('Error saving order to database:', error);
+        throw error;
       }
 
       console.log('Order successfully saved to database:', data);
+      
+      // Trigger real-time notification for admin
+      await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', data.id)
+        .single();
+
       return data;
     } catch (error) {
       console.error('Failed to save order to database:', error);
@@ -110,43 +110,21 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
   };
 
   const handlePayment = async (cartItems: any[], getCartTotal: () => number) => {
-    // Check authentication first
-    if (!isAuthenticated || !user) {
-      toast.error('Please log in to place your order');
-      openAuthModal();
-      return;
-    }
-
     if (!validateForm()) return;
 
     setIsProcessing(true);
     
     try {
+      const orderNumber = `KHR-${Date.now()}`;
       const total = getCartTotal();
       
-      // Validate total amount
-      if (!total || total <= 0) {
-        throw new Error('Invalid cart total. Please check your items.');
-      }
-
-      // Validate cart items
-      if (!cartItems || cartItems.length === 0) {
-        throw new Error('No items in cart');
-      }
-
-      console.log('Processing checkout with:', {
-        user: user.id,
-        total,
-        itemCount: cartItems.length,
-        formData
-      });
-      
+      // Prepare order data with all required fields for admin
       const orderData = {
         items: cartItems.map(item => ({
           id: item.id,
           name: item.product_name || item.name,
-          price: Number(item.product_price || item.price),
-          quantity: Number(item.quantity),
+          price: item.product_price || item.price,
+          quantity: item.quantity,
           unit: item.product_unit || item.unit || 'item',
           type: item.product_type || item.type || 'bundle'
         })),
@@ -159,25 +137,25 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
         phone_number: formData.phoneNumber
       };
 
-      console.log('Attempting to save order:', orderData);
+      console.log('Processing order:', orderData);
 
+      // Save to Supabase database (this makes it immediately visible to admin)
       const savedOrder = await saveOrderToDatabase(orderData);
       
-      if (!savedOrder || !savedOrder.id) {
-        throw new Error('Failed to save order - no ID returned');
+      if (!savedOrder) {
+        throw new Error('Failed to save order to database');
       }
 
-      console.log('Order saved successfully with ID:', savedOrder.id);
-
+      // Set order details for success modal
       setOrderDetails({
-        orderNumber: savedOrder.id,
+        orderNumber: savedOrder.id || orderNumber,
         phoneNumber: formData.phoneNumber,
         totalAmount: total
       });
 
-      // Save to localStorage as backup
+      // Save to localStorage as backup for user's order history
       const localOrderData = {
-        id: savedOrder.id,
+        id: savedOrder.id || orderNumber,
         ...orderData,
         status: 'pending',
         payment_status: 'pending',
@@ -188,17 +166,26 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
         const existingOrders = JSON.parse(localStorage.getItem(`khrate_orders_${user.id}`) || '[]');
         existingOrders.unshift(localOrderData);
         localStorage.setItem(`khrate_orders_${user.id}`, JSON.stringify(existingOrders));
+      } else {
+        const existingOrders = JSON.parse(localStorage.getItem('khrate_orders_guest') || '[]');
+        existingOrders.unshift(localOrderData);
+        localStorage.setItem('khrate_orders_guest', JSON.stringify(existingOrders));
       }
 
+      // Call success callback and close checkout
       onSuccess();
       onOpenChange(false);
+      
+      // Show success modal with order confirmation
       setShowSuccessModal(true);
 
       toast.success(`Order placed successfully! Order ID: ${savedOrder.id}`);
       
-    } catch (error: any) {
+      console.log('Order processed successfully and saved to database with ID:', savedOrder.id);
+      
+    } catch (error) {
       console.error('Error processing payment:', error);
-      toast.error(error.message || 'Failed to place order. Please try again.');
+      toast.error('Failed to place order. Please try again.');
     } finally {
       setIsProcessing(false);
     }
