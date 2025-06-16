@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { GroupBuyingProvider } from "@/contexts/GroupBuyingContext";
+import { AdminProvider } from "@/contexts/AdminContext";
 import Layout from "@/components/layout/Layout";
 import Index from "./pages/Index";
 import Bundles from "./pages/Bundles";
@@ -30,32 +31,34 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
-          <CartProvider>
-            <GroupBuyingProvider>
-              <Toaster />
-              <BrowserRouter>
-                <Routes>
-                  <Route path="/" element={<Layout><Outlet /></Layout>}>
-                    <Route index element={<Index />} />
-                    <Route path="bundles" element={<Bundles />} />
-                    <Route path="custom-buy" element={<CustomBuy />} />
-                    <Route path="group-buy" element={<GroupBuy />} />
-                    <Route path="contact" element={<Contact />} />
-                    <Route path="about" element={<About />} />
-                    <Route path="terms" element={<Terms />} />
-                    <Route path="orders" element={<Orders />} />
-                    <Route path="profile" element={<Profile />} />
-                  </Route>
-                  <Route path="/admin/login" element={<AdminLogin />} />
-                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                  <Route path="/auth/callback" element={<AuthCallback />} />
-                  <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route path="/auth/reset-password" element={<ResetPassword />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </BrowserRouter>
-            </GroupBuyingProvider>
-          </CartProvider>
+          <AdminProvider>
+            <CartProvider>
+              <GroupBuyingProvider>
+                <Toaster />
+                <BrowserRouter>
+                  <Routes>
+                    <Route path="/" element={<Layout><Outlet /></Layout>}>
+                      <Route index element={<Index />} />
+                      <Route path="bundles" element={<Bundles />} />
+                      <Route path="custom-buy" element={<CustomBuy />} />
+                      <Route path="group-buy" element={<GroupBuy />} />
+                      <Route path="contact" element={<Contact />} />
+                      <Route path="about" element={<About />} />
+                      <Route path="terms" element={<Terms />} />
+                      <Route path="orders" element={<Orders />} />
+                      <Route path="profile" element={<Profile />} />
+                    </Route>
+                    <Route path="/admin/login" element={<AdminLogin />} />
+                    <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                    <Route path="/auth/callback" element={<AuthCallback />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/auth/reset-password" element={<ResetPassword />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </BrowserRouter>
+              </GroupBuyingProvider>
+            </CartProvider>
+          </AdminProvider>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
