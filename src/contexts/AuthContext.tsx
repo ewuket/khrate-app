@@ -153,7 +153,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
       setLoading(true);
-      const redirectUrl = `${window.location.origin}/`;
+      // Use the correct production domain for password reset
+      const redirectUrl = 'https://www.khrate.com/auth/callback';
 
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -215,8 +216,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const resetPassword = async (email: string) => {
     try {
+      // Use the correct production domain for password reset
+      const resetUrl = 'https://www.khrate.com/reset-password';
+      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`
+        redirectTo: resetUrl
       });
 
       if (error) {
@@ -225,7 +229,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return { error };
       }
 
-      toast.success('Password reset email sent!');
+      toast.success('Password reset email sent! Check your inbox.');
       return { error: null };
     } catch (error: any) {
       console.error('Password reset exception:', error);

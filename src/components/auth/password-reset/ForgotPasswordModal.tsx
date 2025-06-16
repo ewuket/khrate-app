@@ -38,6 +38,9 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
     
     setLoading(true);
     try {
+      // Use the current domain for the redirect URL
+      const currentDomain = window.location.origin;
+      
       const { error } = await resetPassword(email);
       
       if (error) {
