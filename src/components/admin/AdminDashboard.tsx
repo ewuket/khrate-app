@@ -19,29 +19,17 @@ const AdminDashboard = () => {
     groupSessions, 
     stats, 
     loading, 
-    loadOrders, 
-    loadGroupSessions, 
-    loadStats,
-    subscribeToOrders 
+    subscribeToOrders,
+    refreshAllData
   } = useAdminData();
   const { updateOrderStatus, updatePaymentStatus } = useAdminOperations();
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
 
-  const refreshAllData = async () => {
+  const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      console.log('Refreshing all admin data...');
-      await Promise.all([
-        loadOrders(),
-        loadGroupSessions(),
-        loadStats()
-      ]);
-      console.log('All admin data refreshed successfully');
-      toast.success('Data refreshed successfully');
-    } catch (error) {
-      console.error('Error refreshing admin data:', error);
-      toast.error('Failed to refresh data');
+      await refreshAllData();
     } finally {
       setRefreshing(false);
     }
@@ -50,7 +38,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     console.log('Admin dashboard initializing...');
     
-    // Load initial data
+    // Load initial data immediately
     refreshAllData();
     
     // Set up real-time subscription
@@ -59,15 +47,14 @@ const AdminDashboard = () => {
     // Set up periodic refresh every 30 seconds
     const interval = setInterval(() => {
       console.log('Periodic refresh of admin data...');
-      loadOrders();
-      loadStats();
+      refreshAllData();
     }, 30000);
 
     return () => {
       clearInterval(interval);
       unsubscribe();
     };
-  }, []);
+  }, [refreshAllData, subscribeToOrders]);
 
   const handleUpdateOrderStatus = async (orderId: string, currentStatus: string) => {
     const statusOptions = ['pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'];
@@ -76,8 +63,7 @@ const AdminDashboard = () => {
     
     const success = await updateOrderStatus(orderId, nextStatus);
     if (success) {
-      await loadOrders();
-      await loadStats();
+      await refreshAllData();
       toast.success(`Order status updated to ${nextStatus}`);
     }
   };
@@ -86,8 +72,7 @@ const AdminDashboard = () => {
     const newStatus = currentStatus === 'pending' ? 'completed' : 'pending';
     const success = await updatePaymentStatus(orderId, newStatus);
     if (success) {
-      await loadOrders();
-      await loadStats();
+      await refreshAllData();
       toast.success(`Payment status updated to ${newStatus}`);
     }
   };
@@ -122,13 +107,13 @@ const AdminDashboard = () => {
                 Settings
               </Button>
               <Button
-                onClick={refreshAllData}
-                disabled={refreshing}
+                onClick={handleRefresh}
+                disabled={refreshing || loading}
                 variant="outline"
                 className="flex items-center gap-2"
               >
-                <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-                {refreshing ? 'Refreshing...' : 'Refresh Data'}
+                <RefreshCw className={`h-4 w-4 ${refreshing || loading ? 'animate-spin' : ''}`} />
+                {refreshing || loading ? 'Refreshing...' : 'Refresh Data'}
               </Button>
             </div>
           </div>
@@ -166,12 +151,12 @@ const AdminDashboard = () => {
                   onUpdateOrderStatus={handleUpdateOrderStatus}
                   onUpdatePaymentStatus={handleUpdatePaymentStatus}
                 />
-                {orders.length === 0 && (
+                {orders.length === 0 && !loading && (
                   <div className="text-center py-8">
                     <ShoppingBag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-500">No orders yet. Orders will appear here in real-time when users place them.</p>
                     <Button 
-                      onClick={refreshAllData} 
+                      onClick={handleRefresh} 
                       variant="outline" 
                       className="mt-4"
                       size="sm"
@@ -181,12 +166,24 @@ const AdminDashboard = () => {
                     </Button>
                   </div>
                 )}
+                {loading && (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-khrate-500 mx-auto mb-4"></div>
+                    <p className="text-gray-500">Loading orders...</p>
+                  </div>
+                )}
               </div>
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <h3 className="text-lg font-semibold mb-4">Active Groups</h3>
                 <AdminGroupsList groupSessions={groupSessions.slice(0, 5)} />
-                {groupSessions.length === 0 && (
+                {groupSessions.length === 0 && !loading && (
                   <p className="text-gray-500 text-center py-8">No active groups yet.</p>
+                )}
+                {loading && (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-khrate-500 mx-auto mb-4"></div>
+                    <p className="text-gray-500">Loading groups...</p>
+                  </div>
                 )}
               </div>
             </div>
@@ -207,14 +204,20 @@ const AdminDashboard = () => {
                 onUpdateOrderStatus={handleUpdateOrderStatus}
                 onUpdatePaymentStatus={handleUpdatePaymentStatus}
               />
-              {orders.length === 0 && (
+              {orders.length === 0 && !loading && (
                 <div className="p-8 text-center">
                   <ShoppingBag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-500 mb-4">No orders yet. Orders will appear here in real-time when users place them.</p>
-                  <Button onClick={refreshAllData} variant="outline">
+                  <Button onClick={handleRefresh} variant="outline">
                     <RefreshCw className="h-4 w-4 mr-2" />
                     Check for New Orders
                   </Button>
+                </div>
+              )}
+              {loading && (
+                <div className="p-8 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-khrate-500 mx-auto mb-4"></div>
+                  <p className="text-gray-500">Loading orders...</p>
                 </div>
               )}
             </div>
@@ -223,10 +226,16 @@ const AdminDashboard = () => {
           <TabsContent value="groups">
             <div className="bg-white rounded-lg shadow-sm">
               <AdminGroupsList groupSessions={groupSessions} />
-              {groupSessions.length === 0 && (
+              {groupSessions.length === 0 && !loading && (
                 <div className="p-8 text-center">
                   <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-500">No group sessions yet.</p>
+                </div>
+              )}
+              {loading && (
+                <div className="p-8 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-khrate-500 mx-auto mb-4"></div>
+                  <p className="text-gray-500">Loading groups...</p>
                 </div>
               )}
             </div>

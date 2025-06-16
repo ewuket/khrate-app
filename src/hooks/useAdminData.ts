@@ -11,18 +11,8 @@ export const useAdminData = () => {
   const [loading, setLoading] = useState(false);
 
   const loadOrders = useCallback(async () => {
-    setLoading(true);
     try {
       console.log('Loading orders from database...');
-      
-      // First check authentication
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) {
-        console.error('Authentication required for admin access');
-        toast.error('Please log in to access admin features');
-        setOrders([]);
-        return;
-      }
       
       const { data, error } = await supabase
         .from('orders')
@@ -48,15 +38,10 @@ export const useAdminData = () => {
       setOrders(formattedOrders);
       console.log('Orders loaded successfully from database:', formattedOrders.length);
       
-      if (formattedOrders.length === 0) {
-        console.log('No orders found in database');
-      }
     } catch (error) {
       console.error('Error loading orders:', error);
       toast.error('Failed to load orders');
       setOrders([]);
-    } finally {
-      setLoading(false);
     }
   }, []);
 
@@ -161,6 +146,25 @@ export const useAdminData = () => {
     };
   }, [loadOrders, loadStats]);
 
+  const refreshAllData = useCallback(async () => {
+    setLoading(true);
+    try {
+      console.log('Refreshing all admin data...');
+      await Promise.all([
+        loadOrders(),
+        loadGroupSessions(),
+        loadStats()
+      ]);
+      console.log('All admin data refreshed successfully');
+      toast.success('Data refreshed successfully');
+    } catch (error) {
+      console.error('Error refreshing admin data:', error);
+      toast.error('Failed to refresh data');
+    } finally {
+      setLoading(false);
+    }
+  }, [loadOrders, loadGroupSessions, loadStats]);
+
   return {
     orders,
     groupSessions,
@@ -169,6 +173,7 @@ export const useAdminData = () => {
     loadOrders,
     loadGroupSessions,
     loadStats,
-    subscribeToOrders
+    subscribeToOrders,
+    refreshAllData
   };
 };
