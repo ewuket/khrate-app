@@ -24,8 +24,8 @@ export const useAdminData = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.warn('Error loading orders from database:', error);
-        // Return empty array instead of mock data to show real state
+        console.error('Error loading orders from database:', error);
+        toast.error('Failed to load orders from database');
         setOrders([]);
         return;
       }
@@ -37,7 +37,11 @@ export const useAdminData = () => {
       })) || [];
 
       setOrders(formattedOrders);
-      console.log('Orders loaded successfully:', formattedOrders.length);
+      console.log('Orders loaded successfully from database:', formattedOrders.length);
+      
+      if (formattedOrders.length === 0) {
+        console.log('No orders found in database');
+      }
     } catch (error) {
       console.error('Error loading orders:', error);
       toast.error('Failed to load orders');
@@ -57,7 +61,7 @@ export const useAdminData = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.warn('Error loading group sessions from database:', error);
+        console.error('Error loading group sessions from database:', error);
         setGroupSessions([]);
         return;
       }
@@ -113,7 +117,7 @@ export const useAdminData = () => {
 
       console.log('Stats loaded successfully');
     } catch (error) {
-      console.warn('Error loading stats from database:', error);
+      console.error('Error loading stats from database:', error);
       // Set fallback stats to 0 to show real state
       setStats({
         total_orders: 0,
@@ -125,6 +129,32 @@ export const useAdminData = () => {
     }
   }, []);
 
+  // Set up real-time subscription for orders
+  const subscribeToOrders = useCallback(() => {
+    console.log('Setting up real-time subscription for orders...');
+    
+    const channel = supabase
+      .channel('orders-changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'orders' 
+        }, 
+        (payload) => {
+          console.log('Real-time order update received:', payload);
+          // Reload orders when any change occurs
+          loadOrders();
+          loadStats();
+        })
+      .subscribe();
+
+    return () => {
+      console.log('Cleaning up real-time subscription');
+      supabase.removeChannel(channel);
+    };
+  }, [loadOrders, loadStats]);
+
   return {
     orders,
     groupSessions,
@@ -132,6 +162,7 @@ export const useAdminData = () => {
     loading,
     loadOrders,
     loadGroupSessions,
-    loadStats
+    loadStats,
+    subscribeToOrders
   };
 };

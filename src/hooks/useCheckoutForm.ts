@@ -94,6 +94,14 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
       }
 
       console.log('Order successfully saved to database:', data);
+      
+      // Trigger real-time notification for admin
+      await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', data.id)
+        .single();
+
       return data;
     } catch (error) {
       console.error('Failed to save order to database:', error);
@@ -107,17 +115,18 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
     setIsProcessing(true);
     
     try {
-      const orderNumber = `ORD-${Date.now()}`;
+      const orderNumber = `KHR-${Date.now()}`;
       const total = getCartTotal();
       
-      // Prepare order data
+      // Prepare order data with all required fields for admin
       const orderData = {
         items: cartItems.map(item => ({
           id: item.id,
           name: item.product_name || item.name,
           price: item.product_price || item.price,
           quantity: item.quantity,
-          unit: item.product_unit || item.unit || 'item'
+          unit: item.product_unit || item.unit || 'item',
+          type: item.product_type || item.type || 'bundle'
         })),
         total_amount: total,
         original_amount: total,
@@ -128,12 +137,25 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
         phone_number: formData.phoneNumber
       };
 
-      // Save to database (this will make it visible to admin immediately)
+      console.log('Processing order:', orderData);
+
+      // Save to Supabase database (this makes it immediately visible to admin)
       const savedOrder = await saveOrderToDatabase(orderData);
+      
+      if (!savedOrder) {
+        throw new Error('Failed to save order to database');
+      }
+
+      // Set order details for success modal
+      setOrderDetails({
+        orderNumber: savedOrder.id || orderNumber,
+        phoneNumber: formData.phoneNumber,
+        totalAmount: total
+      });
 
       // Save to localStorage as backup for user's order history
       const localOrderData = {
-        id: savedOrder?.id || orderNumber,
+        id: savedOrder.id || orderNumber,
         ...orderData,
         status: 'pending',
         payment_status: 'pending',
@@ -150,27 +172,20 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
         localStorage.setItem('khrate_orders_guest', JSON.stringify(existingOrders));
       }
 
-      // Set order details for success modal
-      setOrderDetails({
-        orderNumber,
-        phoneNumber: formData.phoneNumber,
-        totalAmount: total
-      });
-
       // Call success callback and close checkout
       onSuccess();
       onOpenChange(false);
       
-      // Show success modal immediately with proper RWF formatting
+      // Show success modal with order confirmation
       setShowSuccessModal(true);
 
-      toast.success(`Order placed successfully! Total: ${total.toLocaleString()} RWF`);
+      toast.success(`Order placed successfully! Order ID: ${savedOrder.id}`);
       
-      console.log('Order processed successfully and will appear in admin dashboard');
+      console.log('Order processed successfully and saved to database with ID:', savedOrder.id);
       
     } catch (error) {
       console.error('Error processing payment:', error);
-      toast.error('Payment processing failed. Please try again.');
+      toast.error('Failed to place order. Please try again.');
     } finally {
       setIsProcessing(false);
     }

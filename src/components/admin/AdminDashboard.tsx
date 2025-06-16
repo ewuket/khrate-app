@@ -10,11 +10,20 @@ import AdminNotifications from "./AdminNotifications";
 import { useAdminData } from "@/hooks/useAdminData";
 import { useAdminOperations } from "@/hooks/useAdminOperations";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Settings, Users, ShoppingBag, BarChart3 } from "lucide-react";
+import { RefreshCw, Settings, Users, ShoppingBag, BarChart3, Bell } from "lucide-react";
 import { toast } from "sonner";
 
 const AdminDashboard = () => {
-  const { orders, groupSessions, stats, loading, loadOrders, loadGroupSessions, loadStats } = useAdminData();
+  const { 
+    orders, 
+    groupSessions, 
+    stats, 
+    loading, 
+    loadOrders, 
+    loadGroupSessions, 
+    loadStats,
+    subscribeToOrders 
+  } = useAdminData();
   const { updateOrderStatus, updatePaymentStatus } = useAdminOperations();
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
@@ -40,15 +49,24 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     console.log('Admin dashboard initializing...');
+    
+    // Load initial data
     refreshAllData();
     
-    // Set up auto-refresh every 30 seconds for real-time updates
+    // Set up real-time subscription
+    const unsubscribe = subscribeToOrders();
+    
+    // Set up periodic refresh every 30 seconds
     const interval = setInterval(() => {
-      console.log('Auto-refreshing admin data...');
-      refreshAllData();
+      console.log('Periodic refresh of admin data...');
+      loadOrders();
+      loadStats();
     }, 30000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      unsubscribe();
+    };
   }, []);
 
   const handleUpdateOrderStatus = async (orderId: string, currentStatus: string) => {
@@ -59,7 +77,8 @@ const AdminDashboard = () => {
     const success = await updateOrderStatus(orderId, nextStatus);
     if (success) {
       await loadOrders();
-      await loadStats(); // Update stats when order status changes
+      await loadStats();
+      toast.success(`Order status updated to ${nextStatus}`);
     }
   };
 
@@ -68,12 +87,13 @@ const AdminDashboard = () => {
     const success = await updatePaymentStatus(orderId, newStatus);
     if (success) {
       await loadOrders();
-      await loadStats(); // Update stats when payment status changes
+      await loadStats();
+      toast.success(`Payment status updated to ${newStatus}`);
     }
   };
 
   const handleSettingsClick = () => {
-    toast.info('Settings panel opened');
+    toast.info('Settings panel - feature coming soon');
     console.log('Settings button clicked - functionality can be expanded here');
   };
 
@@ -86,7 +106,11 @@ const AdminDashboard = () => {
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-              <p className="text-gray-600">Manage your e-commerce platform with real-time data</p>
+              <p className="text-gray-600">Manage your Khrate platform with real-time data</p>
+              <div className="mt-2 flex items-center gap-2 text-sm text-green-600">
+                <Bell className="h-4 w-4" />
+                <span>Real-time order tracking active</span>
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <Button
@@ -143,7 +167,19 @@ const AdminDashboard = () => {
                   onUpdatePaymentStatus={handleUpdatePaymentStatus}
                 />
                 {orders.length === 0 && (
-                  <p className="text-gray-500 text-center py-8">No orders yet. Orders will appear here in real-time.</p>
+                  <div className="text-center py-8">
+                    <ShoppingBag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">No orders yet. Orders will appear here in real-time when users place them.</p>
+                    <Button 
+                      onClick={refreshAllData} 
+                      variant="outline" 
+                      className="mt-4"
+                      size="sm"
+                    >
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Check for Orders
+                    </Button>
+                  </div>
                 )}
               </div>
               <div className="bg-white rounded-lg shadow-sm p-6">
@@ -158,6 +194,14 @@ const AdminDashboard = () => {
 
           <TabsContent value="orders">
             <div className="bg-white rounded-lg shadow-sm">
+              <div className="p-6 border-b">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-semibold">All Orders</h2>
+                  <div className="text-sm text-gray-500">
+                    Total: {orders.length} orders
+                  </div>
+                </div>
+              </div>
               <AdminOrdersList 
                 orders={orders}
                 onUpdateOrderStatus={handleUpdateOrderStatus}
@@ -166,7 +210,11 @@ const AdminDashboard = () => {
               {orders.length === 0 && (
                 <div className="p-8 text-center">
                   <ShoppingBag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No orders yet. Orders will appear here in real-time when users place them.</p>
+                  <p className="text-gray-500 mb-4">No orders yet. Orders will appear here in real-time when users place them.</p>
+                  <Button onClick={refreshAllData} variant="outline">
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Check for New Orders
+                  </Button>
                 </div>
               )}
             </div>
