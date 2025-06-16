@@ -24,26 +24,27 @@ const ResetPassword = () => {
   useEffect(() => {
     const checkSession = async () => {
       try {
+        console.log('Checking reset session...');
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Error checking session:', error);
           toast.error('Invalid or expired reset link');
-          navigate('/');
+          navigate('/', { replace: true });
           return;
         }
 
         if (session) {
-          setIsValidToken(true);
           console.log('Valid reset session found');
+          setIsValidToken(true);
         } else {
           toast.error('Invalid or expired reset link');
-          navigate('/');
+          navigate('/', { replace: true });
         }
       } catch (error) {
         console.error('Error in reset password flow:', error);
         toast.error('Something went wrong');
-        navigate('/');
+        navigate('/', { replace: true });
       } finally {
         setCheckingToken(false);
       }
@@ -96,7 +97,7 @@ const ResetPassword = () => {
 
       toast.success('Password updated successfully!');
       
-      // Sign out and redirect to login
+      // Sign out and redirect to home
       await supabase.auth.signOut();
       navigate('/', { replace: true });
       
@@ -231,7 +232,7 @@ const ResetPassword = () => {
                 className="text-sm text-khrate-500 hover:underline"
               >
                 Back to Home
-              </button>
+              </Button>
             </div>
           </form>
         </CardContent>

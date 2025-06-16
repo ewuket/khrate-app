@@ -12,7 +12,8 @@ export const useAdminData = () => {
 
   const loadOrders = useCallback(async () => {
     try {
-      console.log('Loading orders from database...');
+      console.log('Loading orders...');
+      setLoading(true);
       
       const { data, error } = await supabase
         .from('orders')
@@ -23,8 +24,7 @@ export const useAdminData = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error loading orders from database:', error);
-        toast.error('Failed to load orders from database');
+        console.error('Error loading orders:', error);
         setOrders([]);
         return;
       }
@@ -36,12 +36,13 @@ export const useAdminData = () => {
       })) || [];
 
       setOrders(formattedOrders);
-      console.log('Orders loaded successfully from database:', formattedOrders.length);
+      console.log('Orders loaded:', formattedOrders.length);
       
     } catch (error) {
       console.error('Error loading orders:', error);
-      toast.error('Failed to load orders');
       setOrders([]);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -55,7 +56,7 @@ export const useAdminData = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error loading group sessions from database:', error);
+        console.error('Error loading group sessions:', error);
         setGroupSessions([]);
         return;
       }
@@ -73,45 +74,59 @@ export const useAdminData = () => {
       }));
 
       setGroupSessions(formattedGroupSessions);
-      console.log('Group sessions loaded successfully:', formattedGroupSessions.length);
+      console.log('Group sessions loaded:', formattedGroupSessions.length);
     } catch (error) {
       console.error('Error loading group sessions:', error);
-      toast.error('Failed to load group sessions');
       setGroupSessions([]);
     }
   }, []);
 
   const loadStats = useCallback(async () => {
     try {
-      console.log('Loading admin stats...');
+      console.log('Loading stats...');
       
-      const [ordersCount, revenue, groupsCount, usersCount] = await Promise.allSettled([
-        supabase.from('orders').select('*', { count: 'exact', head: true }),
-        supabase.from('orders').select('total_amount'),
-        supabase.from('group_sessions').select('*', { count: 'exact', head: true }),
-        supabase.from('user_profiles').select('*', { count: 'exact', head: true })
-      ]);
-
-      const totalRevenue = revenue.status === 'fulfilled' && revenue.value.data 
-        ? revenue.value.data.reduce((sum, order) => sum + Number(order.total_amount), 0) 
-        : 0;
-
-      const pendingOrders = await supabase
+      // Get orders count and revenue
+      const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending');
+        .select('total_amount, status');
+
+      if (ordersError) {
+        console.error('Error loading orders for stats:', ordersError);
+      }
+
+      // Get users count
+      const { count: usersCount, error: usersError } = await supabase
+        .from('user_profiles')
+        .select('*', { count: 'exact', head: true });
+
+      if (usersError) {
+        console.error('Error loading users count:', usersError);
+      }
+
+      // Get groups count
+      const { count: groupsCount, error: groupsError } = await supabase
+        .from('group_sessions')
+        .select('*', { count: 'exact', head: true });
+
+      if (groupsError) {
+        console.error('Error loading groups count:', groupsError);
+      }
+
+      const totalOrders = ordersData?.length || 0;
+      const pendingOrders = ordersData?.filter(order => order.status === 'pending').length || 0;
+      const totalRevenue = ordersData?.reduce((sum, order) => sum + Number(order.total_amount || 0), 0) || 0;
 
       setStats({
-        total_orders: ordersCount.status === 'fulfilled' ? ordersCount.value.count || 0 : 0,
-        pending_orders: pendingOrders.count || 0,
+        total_orders: totalOrders,
+        pending_orders: pendingOrders,
         total_revenue: totalRevenue,
-        active_groups: groupsCount.status === 'fulfilled' ? groupsCount.value.count || 0 : 0,
-        total_users: usersCount.status === 'fulfilled' ? usersCount.value.count || 0 : 0
+        active_groups: groupsCount || 0,
+        total_users: usersCount || 0
       });
 
       console.log('Stats loaded successfully');
     } catch (error) {
-      console.error('Error loading stats from database:', error);
+      console.error('Error loading stats:', error);
       setStats({
         total_orders: 0,
         pending_orders: 0,
@@ -123,7 +138,7 @@ export const useAdminData = () => {
   }, []);
 
   const subscribeToOrders = useCallback(() => {
-    console.log('Setting up real-time subscription for orders...');
+    console.log('Setting up real-time subscription...');
     
     const channel = supabase
       .channel('orders-changes')
@@ -134,31 +149,30 @@ export const useAdminData = () => {
           table: 'orders' 
         }, 
         (payload) => {
-          console.log('Real-time order update received:', payload);
+          console.log('Real-time update received:', payload);
           loadOrders();
           loadStats();
         })
       .subscribe();
 
     return () => {
-      console.log('Cleaning up real-time subscription');
+      console.log('Cleaning up subscription');
       supabase.removeChannel(channel);
     };
   }, [loadOrders, loadStats]);
 
   const refreshAllData = useCallback(async () => {
+    console.log('Refreshing all data...');
     setLoading(true);
     try {
-      console.log('Refreshing all admin data...');
       await Promise.all([
         loadOrders(),
         loadGroupSessions(),
         loadStats()
       ]);
-      console.log('All admin data refreshed successfully');
-      toast.success('Data refreshed successfully');
+      console.log('All data refreshed');
     } catch (error) {
-      console.error('Error refreshing admin data:', error);
+      console.error('Error refreshing data:', error);
       toast.error('Failed to refresh data');
     } finally {
       setLoading(false);
