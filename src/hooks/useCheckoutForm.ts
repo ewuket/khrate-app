@@ -24,7 +24,7 @@ interface UseCheckoutFormProps {
 }
 
 export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProps) => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, openAuthModal } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
@@ -94,14 +94,6 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
       }
 
       console.log('Order successfully saved to database:', data);
-      
-      // Trigger real-time notification for admin
-      await supabase
-        .from('orders')
-        .select('*')
-        .eq('id', data.id)
-        .single();
-
       return data;
     } catch (error) {
       console.error('Failed to save order to database:', error);
@@ -110,6 +102,13 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
   };
 
   const handlePayment = async (cartItems: any[], getCartTotal: () => number) => {
+    // Check authentication first
+    if (!isAuthenticated || !user) {
+      toast.error('Please log in to place your order');
+      openAuthModal();
+      return;
+    }
+
     if (!validateForm()) return;
 
     setIsProcessing(true);
@@ -118,7 +117,11 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
       const orderNumber = `KHR-${Date.now()}`;
       const total = getCartTotal();
       
-      // Prepare order data with all required fields for admin
+      // Ensure we have a valid total
+      if (!total || total <= 0) {
+        throw new Error('Invalid cart total. Please check your items.');
+      }
+      
       const orderData = {
         items: cartItems.map(item => ({
           id: item.id,
@@ -139,21 +142,19 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
 
       console.log('Processing order:', orderData);
 
-      // Save to Supabase database (this makes it immediately visible to admin)
       const savedOrder = await saveOrderToDatabase(orderData);
       
       if (!savedOrder) {
         throw new Error('Failed to save order to database');
       }
 
-      // Set order details for success modal
       setOrderDetails({
         orderNumber: savedOrder.id || orderNumber,
         phoneNumber: formData.phoneNumber,
-        totalAmount: total
+        totalAmount: total // Pass the actual total here
       });
 
-      // Save to localStorage as backup for user's order history
+      // Save to localStorage as backup
       const localOrderData = {
         id: savedOrder.id || orderNumber,
         ...orderData,
@@ -172,11 +173,8 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
         localStorage.setItem('khrate_orders_guest', JSON.stringify(existingOrders));
       }
 
-      // Call success callback and close checkout
       onSuccess();
       onOpenChange(false);
-      
-      // Show success modal with order confirmation
       setShowSuccessModal(true);
 
       toast.success(`Order placed successfully! Order ID: ${savedOrder.id}`);

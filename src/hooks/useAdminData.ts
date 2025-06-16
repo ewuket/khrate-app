@@ -15,6 +15,15 @@ export const useAdminData = () => {
     try {
       console.log('Loading orders from database...');
       
+      // First check authentication
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        console.error('Authentication required for admin access');
+        toast.error('Please log in to access admin features');
+        setOrders([]);
+        return;
+      }
+      
       const { data, error } = await supabase
         .from('orders')
         .select(`
@@ -118,7 +127,6 @@ export const useAdminData = () => {
       console.log('Stats loaded successfully');
     } catch (error) {
       console.error('Error loading stats from database:', error);
-      // Set fallback stats to 0 to show real state
       setStats({
         total_orders: 0,
         pending_orders: 0,
@@ -129,7 +137,6 @@ export const useAdminData = () => {
     }
   }, []);
 
-  // Set up real-time subscription for orders
   const subscribeToOrders = useCallback(() => {
     console.log('Setting up real-time subscription for orders...');
     
@@ -143,7 +150,6 @@ export const useAdminData = () => {
         }, 
         (payload) => {
           console.log('Real-time order update received:', payload);
-          // Reload orders when any change occurs
           loadOrders();
           loadStats();
         })
