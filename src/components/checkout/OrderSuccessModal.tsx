@@ -2,7 +2,7 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Package, Clock, MapPin } from 'lucide-react';
+import { CheckCircle, Package, Clock, MapPin, CreditCard } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface OrderSuccessModalProps {
@@ -31,44 +31,61 @@ const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'To be scheduled';
     return new Date(dateString).toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
+      weekday: 'short',
+      month: 'short',
       day: 'numeric'
     });
+  };
+
+  const generateOrderId = (id: string) => {
+    return id.slice(0, 8).toUpperCase();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <div className="flex items-center justify-center mb-4">
+          <div className="flex flex-col items-center text-center space-y-4">
             <CheckCircle className="h-16 w-16 text-green-500" />
+            <DialogTitle className="text-xl text-green-600">
+              Order Placed Successfully!
+            </DialogTitle>
+            <p className="text-khrate-600 font-medium">
+              Thank you for ordering with Khrate!
+            </p>
           </div>
-          <DialogTitle className="text-center text-xl">
-            Order Placed Successfully!
-          </DialogTitle>
         </DialogHeader>
         
         {orderData && (
-          <div className="space-y-4">
-            <div className="text-center">
-              <p className="text-gray-600 mb-2">Order ID</p>
-              <Badge variant="secondary" className="text-sm font-mono">
-                {orderData.id.slice(0, 8).toUpperCase()}
+          <div className="space-y-4 mt-4">
+            <div className="text-center bg-gray-50 p-4 rounded-lg">
+              <p className="text-gray-600 mb-2 text-sm">Order ID</p>
+              <Badge variant="secondary" className="text-lg font-mono px-4 py-2">
+                {generateOrderId(orderData.id)}
               </Badge>
             </div>
 
-            <div className="border-t pt-4 space-y-3">
+            <div className="bg-khrate-50 p-4 rounded-lg">
+              <div className="flex justify-between items-center mb-2">
+                <span className="font-medium text-khrate-700">Total Amount</span>
+                <span className="text-xl font-bold text-khrate-600">
+                  {formatPrice(orderData.total_amount)}
+                </span>
+              </div>
+              <p className="text-sm text-khrate-600">
+                Payment: {orderData.payment_method.replace('_', ' ').toUpperCase()}
+              </p>
+            </div>
+
+            <div className="space-y-3 border-t pt-4">
               <div className="flex items-start gap-3">
-                <Package className="h-5 w-5 text-khrate-500 mt-0.5" />
+                <Package className="h-5 w-5 text-khrate-500 mt-0.5 flex-shrink-0" />
                 <div className="flex-1">
-                  <p className="font-medium">Items Ordered</p>
-                  <div className="text-sm text-gray-600">
+                  <p className="font-medium text-sm">Items Ordered</p>
+                  <div className="text-xs text-gray-600 space-y-1">
                     {orderData.items.map((item, index) => (
-                      <div key={index} className="flex justify-between">
-                        <span>{item.name} x{item.quantity}</span>
-                        <span>{formatPrice(item.price * item.quantity)}</span>
+                      <div key={index}>
+                        {item.name} x{item.quantity}
                       </div>
                     ))}
                   </div>
@@ -76,47 +93,37 @@ const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
               </div>
 
               <div className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-khrate-500 mt-0.5" />
+                <MapPin className="h-5 w-5 text-khrate-500 mt-0.5 flex-shrink-0" />
                 <div className="flex-1">
-                  <p className="font-medium">Delivery Address</p>
-                  <p className="text-sm text-gray-600">{orderData.delivery_address}</p>
+                  <p className="font-medium text-sm">Delivery Address</p>
+                  <p className="text-xs text-gray-600">{orderData.delivery_address}</p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3">
-                <Clock className="h-5 w-5 text-khrate-500 mt-0.5" />
-                <div className="flex-1">
-                  <p className="font-medium">Delivery Schedule</p>
-                  <p className="text-sm text-gray-600">
-                    {formatDate(orderData.delivery_date)}
-                    {orderData.delivery_time_slot && (
-                      <span className="block">{orderData.delivery_time_slot}</span>
-                    )}
-                  </p>
+              {(orderData.delivery_date || orderData.delivery_time_slot) && (
+                <div className="flex items-start gap-3">
+                  <Clock className="h-5 w-5 text-khrate-500 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">Delivery Schedule</p>
+                    <p className="text-xs text-gray-600">
+                      {formatDate(orderData.delivery_date)}
+                      {orderData.delivery_time_slot && (
+                        <span className="block">{orderData.delivery_time_slot}</span>
+                      )}
+                    </p>
+                  </div>
                 </div>
-              </div>
-
-              <div className="border-t pt-3">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">Total Amount</span>
-                  <span className="text-lg font-bold text-khrate-600">
-                    {formatPrice(orderData.total_amount)}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-600 mt-1">
-                  Payment Method: {orderData.payment_method}
-                </p>
-              </div>
+              )}
             </div>
 
-            <div className="bg-green-50 p-4 rounded-lg">
-              <p className="text-sm text-green-800 text-center">
-                We'll send you updates about your order via email. 
-                You can also track your order in the Orders section.
+            <div className="bg-blue-50 p-3 rounded-lg">
+              <p className="text-xs text-blue-800 text-center">
+                We'll contact you shortly to confirm your order details. 
+                You can track your order status in your profile.
               </p>
             </div>
 
-            <Button onClick={onClose} className="w-full">
+            <Button onClick={onClose} className="w-full bg-khrate-500 hover:bg-khrate-600">
               Continue Shopping
             </Button>
           </div>

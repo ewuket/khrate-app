@@ -34,7 +34,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
   const [phoneNumber, setPhoneNumber] = useState('');
   const [deliveryDate, setDeliveryDate] = useState('');
   const [deliveryTimeSlot, setDeliveryTimeSlot] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('cash_on_delivery');
+  const [paymentMethod, setPaymentMethod] = useState('mobile_money');
   const [orderSuccess, setOrderSuccess] = useState<any>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -73,7 +73,19 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
     const result = await submitOrder(orderData);
     
     if (result.success && result.order) {
-      setOrderSuccess(result.order);
+      setOrderSuccess({
+        id: result.order.id,
+        items: items.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        total_amount: total,
+        delivery_address: deliveryAddress,
+        delivery_date: deliveryDate,
+        delivery_time_slot: deliveryTimeSlot,
+        payment_method: paymentMethod
+      });
       onSuccess?.();
     }
   };
@@ -92,14 +104,17 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Complete Your Order</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-center">Complete Your Order</DialogTitle>
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Order Summary */}
-            <Card>
+            <Card className="bg-gray-50">
               <CardContent className="p-4">
-                <h3 className="font-semibold mb-3">Order Summary</h3>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Order Summary
+                </h3>
                 <div className="space-y-2">
                   {items.map((item, index) => (
                     <div key={index} className="flex justify-between text-sm">
@@ -107,7 +122,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
                       <span>{formatPrice(item.price * item.quantity)}</span>
                     </div>
                   ))}
-                  <div className="border-t pt-2 flex justify-between font-semibold">
+                  <div className="border-t pt-2 flex justify-between font-semibold text-lg">
                     <span>Total</span>
                     <span className="text-khrate-600">{formatPrice(total)}</span>
                   </div>
@@ -115,42 +130,27 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
               </CardContent>
             </Card>
 
-            {/* Contact Information */}
-            <div className="space-y-4">
-              <h3 className="font-semibold flex items-center gap-2">
-                <Phone className="h-5 w-5" />
-                Contact Information
-              </h3>
-              <div>
-                <Label htmlFor="phone">Phone Number *</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="e.g., +250 123 456 789"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Delivery Information */}
+            {/* Delivery Address */}
             <div className="space-y-4">
               <h3 className="font-semibold flex items-center gap-2">
                 <MapPin className="h-5 w-5" />
-                Delivery Information
+                Delivery Address
               </h3>
-              <div>
-                <Label htmlFor="address">Delivery Address *</Label>
-                <Textarea
-                  id="address"
-                  value={deliveryAddress}
-                  onChange={(e) => setDeliveryAddress(e.target.value)}
-                  placeholder="Enter your full delivery address including landmarks"
-                  required
-                />
-              </div>
-              
+              <Textarea
+                value={deliveryAddress}
+                onChange={(e) => setDeliveryAddress(e.target.value)}
+                placeholder="Enter your full delivery address including landmarks"
+                required
+                className="min-h-[80px]"
+              />
+            </div>
+
+            {/* Delivery Schedule */}
+            <div className="space-y-4">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Scheduled Delivery
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="date">Preferred Date</Label>
@@ -163,7 +163,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="time">Preferred Time</Label>
+                  <Label htmlFor="time">Time Slot</Label>
                   <Input
                     id="time"
                     value={deliveryTimeSlot}
@@ -182,18 +182,38 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
               </h3>
               <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="cash_on_delivery" id="cod" />
-                  <Label htmlFor="cod">Cash on Delivery</Label>
-                </div>
-                <div className="flex items-center space-x-2">
                   <RadioGroupItem value="mobile_money" id="momo" />
                   <Label htmlFor="momo">Mobile Money</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="cash_on_delivery" id="cod" />
+                  <Label htmlFor="cod">Cash on Delivery</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="bank_transfer" id="bank" />
                   <Label htmlFor="bank">Bank Transfer</Label>
                 </div>
               </RadioGroup>
+            </div>
+
+            {/* Phone Number */}
+            <div className="space-y-4">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Phone className="h-5 w-5" />
+                Phone Number
+              </h3>
+              <Input
+                type="tel"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="e.g., +250 123 456 789"
+                required
+              />
+              {paymentMethod === 'mobile_money' && (
+                <p className="text-sm text-blue-600">
+                  This number will be used for mobile money payment
+                </p>
+              )}
             </div>
 
             <div className="flex gap-3 pt-4">

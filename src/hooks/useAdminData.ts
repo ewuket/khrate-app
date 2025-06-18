@@ -24,7 +24,8 @@ export const useAdminData = () => {
 
       if (error) {
         console.error('Error loading orders:', error);
-        toast.error('Failed to load orders');
+        // Continue with empty array instead of throwing
+        setOrders([]);
         return [];
       }
 
@@ -40,7 +41,6 @@ export const useAdminData = () => {
       
     } catch (error) {
       console.error('Error loading orders:', error);
-      toast.error('Failed to load orders');
       setOrders([]);
       return [];
     }
@@ -57,7 +57,7 @@ export const useAdminData = () => {
 
       if (error) {
         console.error('Error loading group sessions:', error);
-        toast.error('Failed to load group sessions');
+        setGroupSessions([]);
         return [];
       }
       
@@ -78,7 +78,6 @@ export const useAdminData = () => {
       return formattedGroupSessions;
     } catch (error) {
       console.error('Error loading group sessions:', error);
-      toast.error('Failed to load group sessions');
       setGroupSessions([]);
       return [];
     }
@@ -88,34 +87,31 @@ export const useAdminData = () => {
     try {
       console.log('Loading stats...');
       
-      // Get orders data
+      // Get orders data with fallback
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select('total_amount, status, payment_status');
 
       if (ordersError) {
         console.error('Error loading orders for stats:', ordersError);
-        throw ordersError;
       }
 
-      // Get users count
+      // Get users count with fallback
       const { count: usersCount, error: usersError } = await supabase
         .from('user_profiles')
         .select('*', { count: 'exact', head: true });
 
       if (usersError) {
         console.error('Error loading users count:', usersError);
-        throw usersError;
       }
 
-      // Get groups count
+      // Get groups count with fallback
       const { count: groupsCount, error: groupsError } = await supabase
         .from('group_sessions')
         .select('*', { count: 'exact', head: true });
 
       if (groupsError) {
         console.error('Error loading groups count:', groupsError);
-        throw groupsError;
       }
 
       const totalOrders = ordersData?.length || 0;
@@ -139,7 +135,6 @@ export const useAdminData = () => {
       return calculatedStats;
     } catch (error) {
       console.error('Error loading stats:', error);
-      toast.error('Failed to load statistics');
       const fallbackStats = {
         total_orders: 0,
         pending_orders: 0,
@@ -189,8 +184,8 @@ export const useAdminData = () => {
       return { orders: ordersData, groups: groupsData, stats: statsData };
     } catch (error) {
       console.error('Error refreshing data:', error);
-      toast.error('Failed to refresh data');
-      throw error;
+      // Don't show error toast, let the dashboard show with default data
+      console.log('Continuing with default data due to error');
     } finally {
       setLoading(false);
     }

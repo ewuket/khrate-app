@@ -51,13 +51,17 @@ export const useOrderOperations = () => {
     try {
       console.log('Submitting order:', orderData);
 
+      // Ensure items is properly serialized
+      const orderPayload = {
+        ...orderData,
+        items: JSON.stringify(orderData.items),
+        status: 'pending',
+        payment_status: 'pending'
+      };
+
       const { data, error } = await supabase
         .from('orders')
-        .insert([{
-          ...orderData,
-          status: 'pending',
-          payment_status: 'pending'
-        }])
+        .insert([orderPayload])
         .select()
         .single();
 
