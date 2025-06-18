@@ -7,12 +7,14 @@ interface BundleAddToCartButtonProps {
   onAddToCart: (e: React.MouseEvent) => void;
   isAdding: boolean;
   className?: string;
+  size?: "sm" | "default" | "lg" | "icon";
 }
 
 const BundleAddToCartButton: React.FC<BundleAddToCartButtonProps> = ({
   onAddToCart,
   isAdding,
-  className = ""
+  className = "",
+  size = "default"
 }) => {
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -26,6 +28,7 @@ const BundleAddToCartButton: React.FC<BundleAddToCartButtonProps> = ({
     <Button 
       onClick={handleClick}
       disabled={isAdding}
+      size={size}
       className={`${
         isAdding 
           ? 'opacity-75 cursor-not-allowed bg-gray-400' 
