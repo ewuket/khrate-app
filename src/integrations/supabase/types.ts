@@ -9,6 +9,80 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      bundle_items: {
+        Row: {
+          bundle_id: number | null
+          created_at: string | null
+          id: number
+          item_name: string
+          quantity: number
+          unit: string | null
+        }
+        Insert: {
+          bundle_id?: number | null
+          created_at?: string | null
+          id?: number
+          item_name: string
+          quantity: number
+          unit?: string | null
+        }
+        Update: {
+          bundle_id?: number | null
+          created_at?: string | null
+          id?: number
+          item_name?: string
+          quantity?: number
+          unit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bundle_items_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "bundles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bundles: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: number
+          image_url: string | null
+          is_active: boolean | null
+          is_featured: boolean | null
+          original_price: number | null
+          price: number
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          image_url?: string | null
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          original_price?: number | null
+          price: number
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          image_url?: string | null
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          original_price?: number | null
+          price?: number
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       cart_items: {
         Row: {
           created_at: string | null

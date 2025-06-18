@@ -4,13 +4,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AdminStatsCards from "./AdminStatsCards";
 import AdminOrdersList from "./AdminOrdersList";
 import AdminGroupsList from "./AdminGroupsList";
-import AdminGroupManagement from "./AdminGroupManagement";
+import AdminBundleManagement from "./AdminBundleManagement";
 import AdminHeader from "./AdminHeader";
 import AdminNotifications from "./AdminNotifications";
 import { useAdminData } from "@/hooks/useAdminData";
 import { useAdminOperations } from "@/hooks/useAdminOperations";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Settings, Users, ShoppingBag, BarChart3 } from "lucide-react";
+import { RefreshCw, Settings, Users, ShoppingBag, BarChart3, Package } from "lucide-react";
 import { toast } from "sonner";
 
 const AdminDashboard = () => {
@@ -46,14 +46,11 @@ const AdminDashboard = () => {
       setInitializing(true);
       
       try {
-        // Load initial data
         await refreshAllData();
         console.log('Initial data loaded successfully');
         
-        // Set up real-time subscription
         const unsubscribe = subscribeToOrders();
         
-        // Cleanup function
         return () => {
           console.log('Cleaning up dashboard subscriptions');
           unsubscribe();
@@ -126,7 +123,7 @@ const AdminDashboard = () => {
           </div>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 bg-white shadow-sm">
+            <TabsList className="grid w-full grid-cols-5 bg-white shadow-sm">
               <TabsTrigger value="overview" className="flex items-center gap-2">
                 <BarChart3 className="h-4 w-4" />
                 Overview
@@ -134,6 +131,10 @@ const AdminDashboard = () => {
               <TabsTrigger value="orders" className="flex items-center gap-2">
                 <ShoppingBag className="h-4 w-4" />
                 Orders ({orders.length})
+              </TabsTrigger>
+              <TabsTrigger value="bundles" className="flex items-center gap-2">
+                <Package className="h-4 w-4" />
+                Bundles
               </TabsTrigger>
               <TabsTrigger value="groups" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
@@ -200,6 +201,12 @@ const AdminDashboard = () => {
                     </Button>
                   </div>
                 )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="bundles">
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <AdminBundleManagement />
               </div>
             </TabsContent>
 

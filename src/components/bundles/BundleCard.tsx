@@ -88,19 +88,19 @@ const BundleCard: React.FC<BundleCardProps> = ({
   return (
     <>
       <Card 
-        className="cursor-pointer hover:shadow-lg transition-shadow duration-200 h-full flex flex-col"
+        className="cursor-pointer hover:shadow-xl transition-all duration-300 h-full flex flex-col group overflow-hidden"
         onClick={onClick}
       >
         <CardHeader className="pb-3">
           <div className="flex justify-between items-start mb-2">
             <div className="flex-1">
-              <CardTitle className="text-lg font-semibold text-gray-900 mb-1">
+              <CardTitle className="text-xl font-bold text-gray-900 mb-2 group-hover:text-khrate-600 transition-colors">
                 {title}
               </CardTitle>
-              <p className="text-sm text-gray-600 line-clamp-2">{description}</p>
+              <p className="text-sm text-gray-600 leading-relaxed">{description}</p>
             </div>
             {discount > 0 && (
-              <Badge variant="destructive" className="ml-2 bg-red-500 text-white">
+              <Badge variant="destructive" className="ml-2 bg-red-500 text-white font-semibold">
                 -{discount}%
               </Badge>
             )}
@@ -108,57 +108,41 @@ const BundleCard: React.FC<BundleCardProps> = ({
         </CardHeader>
 
         <CardContent className="flex-1">
-          <div className="aspect-video bg-gray-100 rounded-lg mb-4 overflow-hidden relative">
+          <div className="relative aspect-video bg-gradient-to-br from-khrate-50 to-khrate-100 rounded-xl mb-4 overflow-hidden group-hover:shadow-lg transition-shadow">
             <img 
               src={image} 
               alt={title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
             <Button
               onClick={handlePreview}
-              className="absolute top-2 right-2 bg-black/70 hover:bg-black/90 text-white p-2 h-8 w-8"
+              className="absolute top-3 right-3 bg-white/90 hover:bg-white text-khrate-600 shadow-lg backdrop-blur-sm p-2 h-9 w-9 rounded-full"
               size="sm"
             >
               <Eye className="h-4 w-4" />
             </Button>
           </div>
 
-          <div className="space-y-3">
-            <div>
-              <h4 className="font-medium text-gray-900 mb-2">What's included:</h4>
-              <ul className="text-sm text-gray-600 space-y-1">
-                {items.slice(0, 4).map((item, index) => (
-                  <li key={index} className="flex items-center">
-                    <span className="w-1.5 h-1.5 bg-khrate-500 rounded-full mr-2 flex-shrink-0"></span>
-                    {item}
-                  </li>
+          {features.length > 0 && (
+            <div className="mb-4">
+              <div className="flex flex-wrap gap-1">
+                {features.slice(0, 3).map((feature, index) => (
+                  <Badge key={index} variant="outline" className="text-xs">
+                    {feature}
+                  </Badge>
                 ))}
-                {items.length > 4 && (
-                  <li className="text-khrate-600 font-medium">
-                    +{items.length - 4} more items
-                  </li>
+                {features.length > 3 && (
+                  <Badge variant="outline" className="text-xs text-khrate-600">
+                    +{features.length - 3} more
+                  </Badge>
                 )}
-              </ul>
-            </div>
-
-            {features.length > 0 && (
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">Features:</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  {features.map((feature, index) => (
-                    <li key={index} className="flex items-center">
-                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-2 flex-shrink-0"></span>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </CardContent>
 
-        <CardFooter className="pt-4 border-t bg-gray-50">
-          <div className="w-full space-y-3">
+        <CardFooter className="pt-4 border-t bg-gradient-to-r from-gray-50 to-gray-100">
+          <div className="w-full space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <div className="flex items-center space-x-2">
@@ -179,16 +163,17 @@ const BundleCard: React.FC<BundleCardProps> = ({
               <Button
                 onClick={handlePreview}
                 variant="outline"
-                className="flex-1 text-sm"
+                className="flex-1 text-sm border-khrate-200 hover:bg-khrate-50"
                 size="sm"
               >
+                <Eye className="h-4 w-4 mr-2" />
                 Preview
               </Button>
               <div className="flex-1">
                 <BundleAddToCartButton
                   onAddToCart={handleAddToCart}
                   isAdding={isAdding}
-                  className="w-full text-sm"
+                  className="w-full text-sm shadow-md"
                   size="sm"
                 />
               </div>

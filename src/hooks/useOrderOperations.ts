@@ -1,126 +1,67 @@
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { Order } from '@/types/order';
 import { toast } from 'sonner';
 
+export interface OrderData {
+  user_id?: string;
+  items: any[];
+  total_amount: number;
+  original_amount: number;
+  discount_applied?: number;
+  discount_percentage?: number;
+  delivery_address: string;
+  delivery_date?: string;
+  delivery_time_slot?: string;
+  payment_method: string;
+  phone_number?: string;
+}
+
 export const useOrderOperations = () => {
-  const { user, isAuthenticated } = useAuth();
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const fetchOrders = async () => {
-    if (!user?.id) {
-      console.log('No user ID, checking localStorage for guest orders');
-      const guestOrders = JSON.parse(localStorage.getItem(`khrate_orders_guest`) || '[]');
-      setOrders(guestOrders);
-      return;
-    }
-
+  const submitOrder = async (orderData: OrderData) => {
+    setIsSubmitting(true);
     try {
-      setLoading(true);
-      console.log('Fetching orders for user:', user.id);
+      console.log('Submitting order:', orderData);
 
-      // Fetch from Supabase first
-      const { data: supabaseOrders, error } = await supabase
+      const { data, error } = await supabase
         .from('orders')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .insert([{
+          ...orderData,
+          status: 'pending',
+          payment_status: 'pending'
+        }])
+        .select()
+        .single();
 
       if (error) {
-        console.error('Supabase query error:', error);
+        console.error('Order submission error:', error);
         throw error;
       }
 
-      console.log('Supabase orders:', supabaseOrders);
-
-      // Also check localStorage as backup
-      const localOrders = JSON.parse(localStorage.getItem(`khrate_orders_${user.id}`) || '[]');
-      console.log('Local storage orders:', localOrders);
-
-      // Combine and deduplicate orders
-      const allOrders = [...(supabaseOrders || []), ...localOrders];
-      const uniqueOrders = allOrders.reduce((acc, current) => {
-        const existingOrder = acc.find(order => order.id === current.id);
-        if (!existingOrder) {
-          acc.push(current);
-        }
-        return acc;
-      }, [] as Order[]);
-
-      console.log('Combined unique orders:', uniqueOrders);
-
-      // Sort by creation date
-      uniqueOrders.sort((a, b) => 
-        new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime()
-      );
-
-      setOrders(uniqueOrders);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
+      console.log('Order submitted successfully:', data);
+      toast.success('Order placed successfully!');
       
-      // Fallback to localStorage only
-      const localOrders = JSON.parse(localStorage.getItem(`khrate_orders_${user.id}`) || '[]');
-      console.log('Fallback to localStorage orders:', localOrders);
-      setOrders(localOrders);
-      
-      if (localOrders.length === 0) {
-        toast.error('Failed to load orders');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const saveOrder = async (orderData: Omit<Order, 'id' | 'created_at' | 'updated_at'>) => {
-    try {
-      const newOrder: Order = {
-        ...orderData,
-        id: `order-${Date.now()}`,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+      return {
+        success: true,
+        order: data
       };
-
-      if (isAuthenticated && user) {
-        // Convert items to JSON format for Supabase
-        const orderForSupabase = {
-          ...newOrder,
-          items: JSON.stringify(newOrder.items) as any
-        };
-        
-        // Save to Supabase
-        const { error } = await supabase
-          .from('orders')
-          .insert(orderForSupabase);
-
-        if (error) throw error;
-        
-        console.log('Order saved to Supabase');
-      } else {
-        // Save to localStorage for guest users
-        const existingOrders = JSON.parse(localStorage.getItem('khrate_orders_guest') || '[]');
-        existingOrders.unshift(newOrder);
-        localStorage.setItem('khrate_orders_guest', JSON.stringify(existingOrders));
-        console.log('Order saved to localStorage');
-      }
-
-      // Update local state
-      setOrders(prevOrders => [newOrder, ...prevOrders]);
-      
-      return newOrder;
     } catch (error) {
-      console.error('Error saving order:', error);
-      toast.error('Failed to save order');
-      return null;
+      console.error('Error submitting order:', error);
+      toast.error('Failed to place order. Please try again.');
+      
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return {
-    orders,
-    loading,
-    fetchOrders,
-    saveOrder
+    submitOrder,
+    isSubmitting
   };
 };
