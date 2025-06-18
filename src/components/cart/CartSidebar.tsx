@@ -150,19 +150,20 @@ const CartSidebar = () => {
       />
 
       <CheckoutDialog
-        open={checkoutOpen}
-        onOpenChange={setCheckoutOpen}
-        cartItems={cart.map(item => ({
+        isOpen={checkoutOpen}
+        onClose={() => setCheckoutOpen(false)}
+        items={cart.map(item => ({
           id: parseInt(item.product_id.toString()),
           name: item.product_name,
           price: item.product_price,
           quantity: item.quantity,
           unit: item.product_unit
         }))}
-        getCartTotal={getCartTotal}
-        formatPrice={formatPrice}
-        clearCart={clearCart}
-        saveOrder={saveOrder}
+        total={getCartTotal()}
+        onSuccess={() => {
+          clearCart();
+          setCheckoutOpen(false);
+        }}
       />
     </>
   );

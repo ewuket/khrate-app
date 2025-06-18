@@ -225,13 +225,14 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
       </Dialog>
 
       <CheckoutDialog
-        open={checkoutOpen}
-        onOpenChange={setCheckoutOpen}
-        getCartTotal={() => bundle.price}
-        formatPrice={formatPrice}
-        cartItems={[bundleCartItem]}
-        clearCart={() => {}}
-        saveOrder={() => {}}
+        isOpen={checkoutOpen}
+        onClose={() => setCheckoutOpen(false)}
+        items={[bundleCartItem]}
+        total={bundle.price}
+        onSuccess={() => {
+          setCheckoutOpen(false);
+          onClose();
+        }}
       />
     </>
   );

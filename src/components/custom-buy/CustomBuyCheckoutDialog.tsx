@@ -160,19 +160,21 @@ const CustomBuyCheckoutDialog = ({
 
       {checkoutForm.orderDetails && (
         <OrderSuccessModal
-          open={checkoutForm.showSuccessModal}
-          onOpenChange={checkoutForm.setShowSuccessModal}
-          orderDetails={{
-            orderId: checkoutForm.orderDetails.orderNumber,
-            totalAmount: getCartTotal(),
-            phoneNumber: checkoutForm.orderDetails.phoneNumber,
+          isOpen={checkoutForm.showSuccessModal}
+          onClose={() => checkoutForm.setShowSuccessModal(false)}
+          orderData={{
+            id: checkoutForm.orderDetails.orderNumber,
             items: cart.map(item => ({
               name: item.name,
               quantity: item.quantity,
               price: item.price
-            }))
+            })),
+            total_amount: getCartTotal(),
+            delivery_address: checkoutForm.formData.deliveryAddress,
+            delivery_date: checkoutForm.formData.deliveryDate,
+            delivery_time_slot: checkoutForm.formData.timeSlot,
+            payment_method: checkoutForm.formData.paymentMethod
           }}
-          formatPrice={formatPrice}
         />
       )}
     </>

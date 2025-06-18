@@ -123,7 +123,7 @@ const AdminDashboard = () => {
           </div>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5 bg-white shadow-sm">
+            <TabsList className="grid w-full grid-cols-4 bg-white shadow-sm">
               <TabsTrigger value="overview" className="flex items-center gap-2">
                 <BarChart3 className="h-4 w-4" />
                 Overview
@@ -139,10 +139,6 @@ const AdminDashboard = () => {
               <TabsTrigger value="groups" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 Groups ({groupSessions.length})
-              </TabsTrigger>
-              <TabsTrigger value="management" className="flex items-center gap-2">
-                <Settings className="h-4 w-4" />
-                Management
               </TabsTrigger>
             </TabsList>
 
@@ -221,10 +217,6 @@ const AdminDashboard = () => {
                   </div>
                 )}
               </div>
-            </TabsContent>
-
-            <TabsContent value="management">
-              <AdminGroupManagement />
             </TabsContent>
           </Tabs>
         )}

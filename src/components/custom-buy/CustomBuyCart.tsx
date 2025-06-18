@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Trash2 } from "lucide-react";
@@ -145,14 +144,12 @@ const CustomBuyCart = ({
         </div>
       )}
       
-      <CheckoutDialog 
-        open={isCheckoutOpen}
-        onOpenChange={setIsCheckoutOpen}
-        getCartTotal={getCartTotal}
-        formatPrice={formatPrice}
-        cartItems={cartItems}
-        clearCart={clearLocalCart}
-        saveOrder={saveOrder}
+      <CheckoutDialog
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        items={cartItems}
+        total={getCartTotal()}
+        onSuccess={handleCheckoutSuccess}
       />
     </div>
   );

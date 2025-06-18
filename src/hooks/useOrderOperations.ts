@@ -1,7 +1,8 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface OrderData {
   user_id?: string;
@@ -19,6 +20,31 @@ export interface OrderData {
 
 export const useOrderOperations = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
+
+  const fetchOrders = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setOrders(data || []);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      toast.error('Failed to fetch orders');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const submitOrder = async (orderData: OrderData) => {
     setIsSubmitting(true);
@@ -43,6 +69,9 @@ export const useOrderOperations = () => {
       console.log('Order submitted successfully:', data);
       toast.success('Order placed successfully!');
       
+      // Refresh orders after successful submission
+      fetchOrders();
+      
       return {
         success: true,
         order: data
@@ -60,8 +89,17 @@ export const useOrderOperations = () => {
     }
   };
 
+  useEffect(() => {
+    if (user) {
+      fetchOrders();
+    }
+  }, [user]);
+
   return {
     submitOrder,
-    isSubmitting
+    isSubmitting,
+    orders,
+    loading,
+    fetchOrders
   };
 };
