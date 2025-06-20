@@ -24,11 +24,13 @@ export interface Bundle {
 
 export const useBundles = () => {
   const [bundles, setBundles] = useState<Bundle[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadBundles = async (featuredOnly = false) => {
-    setLoading(true);
     try {
+      setLoading(true);
+      setError(null);
       console.log('Loading bundles...', { featuredOnly });
 
       let query = supabase
@@ -48,15 +50,19 @@ export const useBundles = () => {
 
       if (error) {
         console.error('Error loading bundles:', error);
-        throw error;
+        setError('Failed to load bundles');
+        setBundles([]);
+        return [];
       }
 
       console.log('Bundles loaded successfully:', data?.length || 0);
-      setBundles(data || []);
-      return data || [];
+      const bundlesData = data || [];
+      setBundles(bundlesData);
+      return bundlesData;
     } catch (error) {
       console.error('Error loading bundles:', error);
-      toast.error('Failed to load bundles');
+      setError('Failed to load bundles');
+      setBundles([]);
       return [];
     } finally {
       setLoading(false);
@@ -133,6 +139,7 @@ export const useBundles = () => {
   return {
     bundles,
     loading,
+    error,
     loadBundles,
     updateBundle,
     updateBundleItems,

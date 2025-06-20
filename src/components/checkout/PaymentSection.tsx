@@ -44,6 +44,11 @@ const PaymentSection = ({
 
   return (
     <div className="space-y-4">
+      <div className="border-b pb-2 mb-4">
+        <h3 className="text-lg font-semibold text-gray-900">Payment Information</h3>
+        <p className="text-sm text-gray-600">Choose your preferred payment method</p>
+      </div>
+      
       {/* Payment Method Section */}
       <PaymentMethodSelector
         selectedMethod={paymentMethod}
@@ -53,33 +58,6 @@ const PaymentSection = ({
         onShowPaymentInstructions={handleShowPaymentInstructions}
         phoneNumberLabel="Enter the number you used to make the payment"
       />
-      
-      {/* Enhanced Payment Number Display */}
-      {(paymentMethod === "mtn" || paymentMethod === "airtel") && (
-        <Card className="border-2 border-blue-200 bg-blue-50">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-blue-900 text-sm">Send Payment To:</h3>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-xl font-bold text-blue-800">{paymentNumber}</span>
-                  <Button
-                    onClick={handleCopyNumber}
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-2 border-blue-300 hover:bg-blue-100"
-                  >
-                    {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                  </Button>
-                </div>
-              </div>
-            </div>
-            <p className="text-xs text-blue-700 mt-2">
-              After sending payment, enter the phone number you used above. Your order will be confirmed once payment is received.
-            </p>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };

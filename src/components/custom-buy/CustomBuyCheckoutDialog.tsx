@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { X } from "lucide-react";
+import { X, ShoppingBag, MapPin, Calendar, CreditCard } from "lucide-react";
 import ScheduledDelivery from "@/components/checkout/ScheduledDelivery";
 import { useAuth } from "@/contexts/AuthContext";
 import PaymentSection from "@/components/checkout/PaymentSection";
@@ -19,6 +19,7 @@ import GuestUserPrompt from "@/components/checkout/GuestUserPrompt";
 import OrderSuccessModal from "@/components/checkout/OrderSuccessModal";
 import DeliveryAddressInput from "@/components/checkout/DeliveryAddressInput";
 import { useCheckoutForm } from "@/hooks/useCheckoutForm";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface CartItem {
   id: number;
@@ -71,85 +72,120 @@ const CustomBuyCheckoutDialog = ({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center justify-between">
               <div>
-                <DialogTitle>Complete Your Order</DialogTitle>
-                <DialogDescription>
-                  Schedule your delivery and choose a payment method.
+                <DialogTitle className="text-xl font-bold">Complete Your Order</DialogTitle>
+                <DialogDescription className="text-sm text-gray-600">
+                  Review your items and provide delivery details
                 </DialogDescription>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => onOpenChange(false)}
-                className="h-6 w-6 p-0 hover:bg-gray-100"
+                className="h-8 w-8 p-0 hover:bg-gray-100"
               >
                 <X className="h-4 w-4" />
               </Button>
             </div>
           </DialogHeader>
           
-          <form onSubmit={handleSubmit}>
-            <div className="grid gap-6 py-4">
-              {!isAuthenticated && (
-                <div className="mb-4">
-                  <GuestUserPrompt 
-                    onSignInClick={() => {
-                      onOpenChange(false);
-                      openAuthModal();
-                    }} 
-                  />
-                </div>
-              )}
-              
-              <DeliveryAddressInput
-                value={checkoutForm.formData.deliveryAddress}
-                onChange={(address) => checkoutForm.handleInputChange('deliveryAddress', address)}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {!isAuthenticated && (
+              <GuestUserPrompt 
+                onSignInClick={() => {
+                  onOpenChange(false);
+                  openAuthModal();
+                }} 
               />
-              
-              <ScheduledDelivery 
-                onDeliveryScheduleChange={handleDeliveryScheduleChange} 
-              />
-              
-              <Separator />
-              
-              <PaymentSection
-                paymentMethod={checkoutForm.formData.paymentMethod}
-                onPaymentMethodChange={(method) => checkoutForm.handleInputChange('paymentMethod', method)}
-                phoneNumber={checkoutForm.formData.phoneNumber}
-                onPhoneNumberChange={(phone) => checkoutForm.handleInputChange('phoneNumber', phone)}
-              />
-              
-              <OrderSummary
-                total={getCartTotal()}
-                formatPrice={formatPrice}
-                deliverySchedule={{
-                  date: checkoutForm.formData.deliveryDate,
-                  timeSlot: checkoutForm.formData.timeSlot
-                }}
-              />
+            )}
 
-              {(checkoutForm.formData.paymentMethod === "mtn" || checkoutForm.formData.paymentMethod === "airtel") && (
-                <div className="bg-blue-50 border border-blue-200 p-4 rounded-md text-blue-800">
-                  <p className="font-medium">Payment Instructions</p>
-                  <p className="text-sm mt-1">
-                    Send payment to: <span className="font-bold">0795754391</span>
-                  </p>
-                  <p className="text-xs text-blue-600 mt-1">
-                    Your order will be confirmed once payment is received.
-                  </p>
+            {/* Order Summary Section */}
+            <Card className="border-2 border-khrate-100">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <ShoppingBag className="h-5 w-5 text-khrate-500" />
+                  Order Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {cart.map((item) => (
+                    <div key={item.id} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+                      <div>
+                        <span className="font-medium text-sm">{item.name}</span>
+                        <span className="text-gray-500 text-xs ml-2">x{item.quantity}</span>
+                      </div>
+                      <span className="font-semibold text-sm">{formatPrice(item.price * item.quantity)}</span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between items-center pt-3 border-t-2 border-khrate-200">
+                    <span className="font-bold text-lg">Total</span>
+                    <span className="font-bold text-lg text-khrate-600">{formatPrice(getCartTotal())}</span>
+                  </div>
                 </div>
-              )}
-            </div>
+              </CardContent>
+            </Card>
+
+            {/* Delivery Address Section */}
+            <Card className="border-2 border-gray-100">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <MapPin className="h-5 w-5 text-khrate-500" />
+                  Delivery Address
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DeliveryAddressInput
+                  value={checkoutForm.formData.deliveryAddress}
+                  onChange={(address) => checkoutForm.handleInputChange('deliveryAddress', address)}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Scheduled Delivery Section */}
+            <Card className="border-2 border-gray-100">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Calendar className="h-5 w-5 text-khrate-500" />
+                  Delivery Schedule
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ScheduledDelivery 
+                  onDeliveryScheduleChange={handleDeliveryScheduleChange} 
+                />
+              </CardContent>
+            </Card>
+
+            {/* Payment Section */}
+            <Card className="border-2 border-gray-100">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <CreditCard className="h-5 w-5 text-khrate-500" />
+                  Payment Method
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <PaymentSection
+                  paymentMethod={checkoutForm.formData.paymentMethod}
+                  onPaymentMethodChange={(method) => checkoutForm.handleInputChange('paymentMethod', method)}
+                  phoneNumber={checkoutForm.formData.phoneNumber}
+                  onPhoneNumberChange={(phone) => checkoutForm.handleInputChange('phoneNumber', phone)}
+                />
+              </CardContent>
+            </Card>
             
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <DialogFooter className="pt-6 border-t">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
               <Button 
                 type="submit" 
                 disabled={checkoutForm.isProcessing || !checkoutForm.formData.deliveryDate || !checkoutForm.formData.deliveryAddress.trim()}
-                className="bg-khrate-500 hover:bg-khrate-600"
+                className="bg-khrate-500 hover:bg-khrate-600 min-w-[120px]"
               >
                 {checkoutForm.isProcessing ? "Processing..." : "Place Order"}
               </Button>

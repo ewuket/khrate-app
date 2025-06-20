@@ -3,19 +3,64 @@ import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import BundleCard from "@/components/bundles/BundleCard";
 import { useBundles } from "@/hooks/useBundles";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Bundles = () => {
-  const { bundles, loading } = useBundles();
+  const { bundles, loading, error } = useBundles();
 
-  console.log('Bundles page render:', { bundlesCount: bundles.length, loading });
+  console.log('Bundles page render:', { bundlesCount: bundles.length, loading, error });
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-khrate-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading bundles...</p>
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-khrate-500 text-white py-12">
+          <div className="container mx-auto px-4 text-center">
+            <h1 className="text-4xl font-bold mb-4">Our Bundles</h1>
+            <p className="text-xl max-w-3xl mx-auto opacity-90">
+              Choose from our carefully curated bundles designed to meet your household needs. 
+              Save time and money with our pre-selected combinations of essential items.
+            </p>
+          </div>
         </div>
+        <main className="container mx-auto px-4 py-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="space-y-4">
+                <Skeleton className="h-48 w-full rounded-lg" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-6 w-1/3" />
+              </div>
+            ))}
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-khrate-500 text-white py-12">
+          <div className="container mx-auto px-4 text-center">
+            <h1 className="text-4xl font-bold mb-4">Our Bundles</h1>
+            <p className="text-xl max-w-3xl mx-auto opacity-90">
+              Choose from our carefully curated bundles designed to meet your household needs. 
+              Save time and money with our pre-selected combinations of essential items.
+            </p>
+          </div>
+        </div>
+        <main className="container mx-auto px-4 py-8">
+          <div className="text-center py-12">
+            <p className="text-red-600 mb-4">Error loading bundles: {error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-6 py-3 bg-khrate-500 text-white rounded-lg hover:bg-khrate-600"
+            >
+              Retry Loading
+            </button>
+          </div>
+        </main>
       </div>
     );
   }

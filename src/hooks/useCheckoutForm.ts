@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 interface CheckoutFormData {
   phoneNumber: string;
-  paymentMethod: 'mtn' | 'airtel' | 'card';
+  paymentMethod: 'mtn' | 'card' | 'bank_transfer';
   deliveryDate: string;
   timeSlot: string;
   deliveryAddress: string;

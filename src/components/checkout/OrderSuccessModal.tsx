@@ -1,163 +1,196 @@
 
-import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { CheckCircle, Package, Clock, MapPin, Copy, Check } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { useState } from 'react';
-import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { CheckCircle, Copy, Check, Package, Calendar, MapPin, CreditCard } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 interface OrderSuccessModalProps {
   isOpen: boolean;
   onClose: () => void;
-  orderData?: {
+  orderData: {
     id: string;
-    items: any[];
+    items: Array<{
+      name: string;
+      quantity: number;
+      price: number;
+    }>;
     total_amount: number;
     delivery_address: string;
-    delivery_date?: string;
-    delivery_time_slot?: string;
+    delivery_date: string;
+    delivery_time_slot: string;
     payment_method: string;
   };
 }
 
-const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
-  isOpen,
-  onClose,
-  orderData
-}) => {
-  const [copied, setCopied] = useState(false);
+const OrderSuccessModal = ({ isOpen, onClose, orderData }: OrderSuccessModalProps) => {
+  const [copiedOrderId, setCopiedOrderId] = useState(false);
 
   const formatPrice = (price: number) => {
     return `${price.toLocaleString()} RWF`;
   };
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'To be scheduled';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  const generateOrderId = (id: string) => {
-    return id.slice(0, 8).toUpperCase();
-  };
-
-  const handleCopyOrderId = async () => {
-    if (!orderData?.id) return;
-    
+  const copyOrderId = async () => {
     try {
-      await navigator.clipboard.writeText(generateOrderId(orderData.id));
-      setCopied(true);
+      await navigator.clipboard.writeText(orderData.id);
+      setCopiedOrderId(true);
       toast.success("Order ID copied!");
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopiedOrderId(false), 2000);
     } catch (error) {
-      toast.error("Failed to copy Order ID");
+      toast.error("Failed to copy order ID");
     }
+  };
+
+  const getPaymentMethodDisplay = (method: string) => {
+    switch (method) {
+      case 'mtn':
+        return 'MTN Mobile Money';
+      case 'card':
+        return 'Credit/Debit Card';
+      case 'bank_transfer':
+        return 'Bank Transfer';
+      default:
+        return method;
+    }
+  };
+
+  const formatTimeSlot = (slot: string) => {
+    const timeSlots: { [key: string]: string } = {
+      morning: "8AM–11AM",
+      midday: "11AM–2PM", 
+      afternoon: "2PM–5PM",
+      evening: "5PM–8PM"
+    };
+    return timeSlots[slot] || slot;
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <div className="flex flex-col items-center text-center space-y-4">
-            <div className="relative">
-              <CheckCircle className="h-16 w-16 text-green-500 animate-scale-in" />
-              <div className="absolute inset-0 h-16 w-16 bg-green-500 rounded-full opacity-20 animate-ping"></div>
-            </div>
-            <DialogTitle className="text-xl text-green-600">
-              Order Placed Successfully! 🎉
-            </DialogTitle>
-            <p className="text-khrate-600 font-medium">
-              Thank you for ordering with Khrate!
-            </p>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="text-center space-y-4">
+          <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+            <CheckCircle className="w-10 h-10 text-green-600" />
           </div>
+          <DialogTitle className="text-2xl font-bold text-green-800">
+            Order Placed Successfully! 🎉
+          </DialogTitle>
         </DialogHeader>
-        
-        {orderData && (
-          <div className="space-y-4 mt-4">
-            <div className="text-center bg-gradient-to-r from-khrate-50 to-blue-50 p-4 rounded-lg border border-khrate-200">
-              <p className="text-gray-600 mb-2 text-sm">Order ID</p>
-              <div className="flex items-center justify-center gap-2">
-                <Badge variant="secondary" className="text-lg font-mono px-4 py-2 bg-khrate-100 text-khrate-700">
-                  {generateOrderId(orderData.id)}
-                </Badge>
-                <Button
-                  onClick={handleCopyOrderId}
-                  variant="outline"
-                  size="sm"
-                  className="h-8 px-2"
-                >
-                  {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                </Button>
-              </div>
-            </div>
 
-            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-              <div className="flex justify-between items-center mb-2">
-                <span className="font-medium text-green-800">Total Amount</span>
-                <span className="text-xl font-bold text-green-700">
-                  {formatPrice(orderData.total_amount)}
-                </span>
+        <div className="space-y-6 py-4">
+          {/* Order ID Section */}
+          <Card className="border-2 border-green-200 bg-green-50">
+            <CardContent className="p-4">
+              <div className="text-center">
+                <h3 className="font-semibold text-green-900 mb-2">Your Order ID</h3>
+                <div className="flex items-center justify-center gap-2">
+                  <code className="text-lg font-mono bg-white px-3 py-1 rounded border">
+                    {orderData.id}
+                  </code>
+                  <Button
+                    onClick={copyOrderId}
+                    variant="outline"
+                    size="sm"
+                    className="h-8 px-2 border-green-300 hover:bg-green-100"
+                  >
+                    {copiedOrderId ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+                <p className="text-sm text-green-700 mt-2">
+                  Keep this ID for tracking your order
+                </p>
               </div>
-              <p className="text-sm text-green-700">
-                Payment: {orderData.payment_method.replace('_', ' ').toUpperCase()}
-              </p>
-            </div>
+            </CardContent>
+          </Card>
 
-            <div className="space-y-3 border-t pt-4">
-              <div className="flex items-start gap-3">
-                <Package className="h-5 w-5 text-khrate-500 mt-0.5 flex-shrink-0" />
-                <div className="flex-1">
-                  <p className="font-medium text-sm">Items Ordered</p>
-                  <div className="text-xs text-gray-600 space-y-1">
-                    {orderData.items.map((item, index) => (
-                      <div key={index}>
-                        {item.name} x{item.quantity}
-                      </div>
-                    ))}
+          {/* Order Details */}
+          <div className="space-y-4">
+            <h3 className="font-semibold text-lg flex items-center gap-2">
+              <Package className="h-5 w-5 text-khrate-500" />
+              Order Details
+            </h3>
+            
+            <Card>
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  {orderData.items.map((item, index) => (
+                    <div key={index} className="flex justify-between items-center">
+                      <span className="text-sm">{item.name} x{item.quantity}</span>
+                      <span className="font-medium text-sm">{formatPrice(item.price * item.quantity)}</span>
+                    </div>
+                  ))}
+                  
+                  <Separator />
+                  
+                  <div className="flex justify-between items-center font-bold text-lg">
+                    <span>Total Amount</span>
+                    <span className="text-khrate-600">{formatPrice(orderData.total_amount)}</span>
                   </div>
                 </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-khrate-500 mt-0.5 flex-shrink-0" />
-                <div className="flex-1">
-                  <p className="font-medium text-sm">Delivery Address</p>
-                  <p className="text-xs text-gray-600">{orderData.delivery_address}</p>
-                </div>
-              </div>
-
-              {(orderData.delivery_date || orderData.delivery_time_slot) && (
-                <div className="flex items-start gap-3">
-                  <Clock className="h-5 w-5 text-khrate-500 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">Delivery Schedule</p>
-                    <p className="text-xs text-gray-600">
-                      {formatDate(orderData.delivery_date)}
-                      {orderData.delivery_time_slot && (
-                        <span className="block">{orderData.delivery_time_slot}</span>
-                      )}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-              <p className="text-xs text-blue-800 text-center">
-                🚀 We'll contact you shortly to confirm your order details. 
-                You can track your order status in your profile.
-              </p>
-            </div>
-
-            <Button onClick={onClose} className="w-full bg-khrate-500 hover:bg-khrate-600 shadow-lg">
-              Continue Shopping
-            </Button>
+              </CardContent>
+            </Card>
           </div>
-        )}
+
+          {/* Delivery Information */}
+          <div className="space-y-4">
+            <h3 className="font-semibold text-lg flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-khrate-500" />
+              Delivery Information
+            </h3>
+            
+            <Card>
+              <CardContent className="p-4 space-y-3">
+                <div>
+                  <span className="font-medium text-sm text-gray-600">Address:</span>
+                  <p className="text-sm mt-1">{orderData.delivery_address}</p>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm">
+                    {new Date(orderData.delivery_date).toLocaleDateString()} • {formatTimeSlot(orderData.delivery_time_slot)}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Payment Method */}
+          <div className="space-y-4">
+            <h3 className="font-semibold text-lg flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-khrate-500" />
+              Payment Method
+            </h3>
+            
+            <Card>
+              <CardContent className="p-4">
+                <span className="text-sm font-medium">{getPaymentMethodDisplay(orderData.payment_method)}</span>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Thank You Message */}
+          <Card className="border-2 border-khrate-200 bg-khrate-50">
+            <CardContent className="p-6 text-center">
+              <h3 className="font-bold text-xl text-khrate-800 mb-2">
+                Thank you for using Khrate! 💚
+              </h3>
+              <p className="text-khrate-700">
+                We're preparing your order and will notify you once it's on the way.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="flex justify-center pt-4">
+          <Button 
+            onClick={onClose}
+            className="bg-khrate-500 hover:bg-khrate-600 px-8"
+          >
+            Continue Shopping
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
