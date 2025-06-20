@@ -22,11 +22,16 @@ interface OrderSuccessModalProps {
     delivery_date: string;
     delivery_time_slot: string;
     payment_method: string;
-  };
+  } | null;
 }
 
 const OrderSuccessModal = ({ isOpen, onClose, orderData }: OrderSuccessModalProps) => {
   const [copiedOrderId, setCopiedOrderId] = useState(false);
+
+  // Don't render if orderData is null
+  if (!orderData) {
+    return null;
+  }
 
   const formatPrice = (price: number) => {
     return `${price.toLocaleString()} RWF`;
