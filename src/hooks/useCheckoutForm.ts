@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 interface CheckoutFormData {
   phoneNumber: string;
-  paymentMethod: 'momo' | 'bank_transfer' | 'cash_on_delivery';
+  paymentMethod: 'mtn' | 'airtel' | 'card';
   deliveryDate: string;
   timeSlot: string;
   deliveryAddress: string;
@@ -31,9 +31,9 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
   
   const [formData, setFormData] = useState<CheckoutFormData>({
     phoneNumber: '',
-    paymentMethod: 'momo',
+    paymentMethod: 'mtn',
     deliveryDate: '',
-    timeSlot: '',
+    timeSlot: 'afternoon',
     deliveryAddress: ''
   });
 
@@ -102,6 +102,10 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
       }
 
       console.log('Order successfully saved to database:', data);
+      
+      // Show success immediately
+      toast.success('Order placed successfully! 🎉');
+      
       return data;
     } catch (error) {
       console.error('Failed to save order to database:', error);
@@ -193,8 +197,6 @@ export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProp
       onSuccess();
       onOpenChange(false);
       setShowSuccessModal(true);
-
-      toast.success(`Order placed successfully! Order ID: ${savedOrder.id}`);
       
     } catch (error: any) {
       console.error('Error processing payment:', error);

@@ -2,8 +2,10 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Package, Clock, MapPin, CreditCard } from 'lucide-react';
+import { CheckCircle, Package, Clock, MapPin, Copy, Check } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface OrderSuccessModalProps {
   isOpen: boolean;
@@ -24,6 +26,8 @@ const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
   onClose,
   orderData
 }) => {
+  const [copied, setCopied] = useState(false);
+
   const formatPrice = (price: number) => {
     return `${price.toLocaleString()} RWF`;
   };
@@ -41,14 +45,30 @@ const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
     return id.slice(0, 8).toUpperCase();
   };
 
+  const handleCopyOrderId = async () => {
+    if (!orderData?.id) return;
+    
+    try {
+      await navigator.clipboard.writeText(generateOrderId(orderData.id));
+      setCopied(true);
+      toast.success("Order ID copied!");
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      toast.error("Failed to copy Order ID");
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <div className="flex flex-col items-center text-center space-y-4">
-            <CheckCircle className="h-16 w-16 text-green-500" />
+            <div className="relative">
+              <CheckCircle className="h-16 w-16 text-green-500 animate-scale-in" />
+              <div className="absolute inset-0 h-16 w-16 bg-green-500 rounded-full opacity-20 animate-ping"></div>
+            </div>
             <DialogTitle className="text-xl text-green-600">
-              Order Placed Successfully!
+              Order Placed Successfully! 🎉
             </DialogTitle>
             <p className="text-khrate-600 font-medium">
               Thank you for ordering with Khrate!
@@ -58,21 +78,31 @@ const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
         
         {orderData && (
           <div className="space-y-4 mt-4">
-            <div className="text-center bg-gray-50 p-4 rounded-lg">
+            <div className="text-center bg-gradient-to-r from-khrate-50 to-blue-50 p-4 rounded-lg border border-khrate-200">
               <p className="text-gray-600 mb-2 text-sm">Order ID</p>
-              <Badge variant="secondary" className="text-lg font-mono px-4 py-2">
-                {generateOrderId(orderData.id)}
-              </Badge>
+              <div className="flex items-center justify-center gap-2">
+                <Badge variant="secondary" className="text-lg font-mono px-4 py-2 bg-khrate-100 text-khrate-700">
+                  {generateOrderId(orderData.id)}
+                </Badge>
+                <Button
+                  onClick={handleCopyOrderId}
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-2"
+                >
+                  {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                </Button>
+              </div>
             </div>
 
-            <div className="bg-khrate-50 p-4 rounded-lg">
+            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
               <div className="flex justify-between items-center mb-2">
-                <span className="font-medium text-khrate-700">Total Amount</span>
-                <span className="text-xl font-bold text-khrate-600">
+                <span className="font-medium text-green-800">Total Amount</span>
+                <span className="text-xl font-bold text-green-700">
                   {formatPrice(orderData.total_amount)}
                 </span>
               </div>
-              <p className="text-sm text-khrate-600">
+              <p className="text-sm text-green-700">
                 Payment: {orderData.payment_method.replace('_', ' ').toUpperCase()}
               </p>
             </div>
@@ -116,14 +146,14 @@ const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
               )}
             </div>
 
-            <div className="bg-blue-50 p-3 rounded-lg">
+            <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
               <p className="text-xs text-blue-800 text-center">
-                We'll contact you shortly to confirm your order details. 
+                🚀 We'll contact you shortly to confirm your order details. 
                 You can track your order status in your profile.
               </p>
             </div>
 
-            <Button onClick={onClose} className="w-full bg-khrate-500 hover:bg-khrate-600">
+            <Button onClick={onClose} className="w-full bg-khrate-500 hover:bg-khrate-600 shadow-lg">
               Continue Shopping
             </Button>
           </div>

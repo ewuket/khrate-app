@@ -29,6 +29,8 @@ export const useBundles = () => {
   const loadBundles = async (featuredOnly = false) => {
     setLoading(true);
     try {
+      console.log('Loading bundles...', { featuredOnly });
+
       let query = supabase
         .from('bundles')
         .select(`
@@ -44,8 +46,12 @@ export const useBundles = () => {
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading bundles:', error);
+        throw error;
+      }
 
+      console.log('Bundles loaded successfully:', data?.length || 0);
       setBundles(data || []);
       return data || [];
     } catch (error) {

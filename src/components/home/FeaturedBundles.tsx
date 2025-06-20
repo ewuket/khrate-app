@@ -5,6 +5,8 @@ import BundleCard from "@/components/bundles/BundleCard";
 const FeaturedBundles = () => {
   const { bundles, loading } = useBundles();
   
+  console.log('FeaturedBundles render:', { bundlesCount: bundles.length, loading });
+  
   // Filter only featured bundles
   const featuredBundles = bundles.filter(bundle => bundle.is_featured);
 
@@ -15,6 +17,19 @@ const FeaturedBundles = () => {
           <h2 className="text-3xl font-bold text-center mb-12">Featured Bundles</h2>
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-khrate-500"></div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (featuredBundles.length === 0) {
+    return (
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-12">Featured Bundles</h2>
+          <div className="text-center py-12">
+            <p className="text-gray-600">No featured bundles available at the moment.</p>
           </div>
         </div>
       </section>

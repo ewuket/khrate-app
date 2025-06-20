@@ -7,10 +7,36 @@ import { useBundles } from "@/hooks/useBundles";
 const Bundles = () => {
   const { bundles, loading } = useBundles();
 
+  console.log('Bundles page render:', { bundlesCount: bundles.length, loading });
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-khrate-500"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-khrate-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading bundles...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (bundles.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-khrate-500 text-white py-12">
+          <div className="container mx-auto px-4 text-center">
+            <h1 className="text-4xl font-bold mb-4">Our Bundles</h1>
+            <p className="text-xl max-w-3xl mx-auto opacity-90">
+              Choose from our carefully curated bundles designed to meet your household needs. 
+              Save time and money with our pre-selected combinations of essential items.
+            </p>
+          </div>
+        </div>
+        <main className="container mx-auto px-4 py-8">
+          <div className="text-center py-12">
+            <p className="text-gray-600">No bundles available at the moment. Please check back later!</p>
+          </div>
+        </main>
       </div>
     );
   }
