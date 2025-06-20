@@ -131,7 +131,7 @@ const CustomBuyCheckoutDialog = ({
                 }}
               />
 
-              {(checkoutForm.formData.paymentMethod === "momo") && (
+              {(checkoutForm.formData.paymentMethod === "mtn" || checkoutForm.formData.paymentMethod === "airtel") && (
                 <div className="bg-blue-50 border border-blue-200 p-4 rounded-md text-blue-800">
                   <p className="font-medium">Payment Instructions</p>
                   <p className="text-sm mt-1">
