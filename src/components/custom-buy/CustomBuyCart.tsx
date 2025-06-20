@@ -147,9 +147,6 @@ const CustomBuyCart = ({
       <CheckoutDialog
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
-        items={cartItems}
-        total={getCartTotal()}
-        onSuccess={handleCheckoutSuccess}
       />
     </div>
   );

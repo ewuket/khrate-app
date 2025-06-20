@@ -31,3 +31,6 @@ export const useCartContext = () => {
   }
   return context;
 };
+
+// Export useCart for backward compatibility
+export { useCart } from "@/hooks/useCart";

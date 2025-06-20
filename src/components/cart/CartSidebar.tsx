@@ -1,4 +1,3 @@
-
 import { ShoppingCart, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartContext } from "@/contexts/CartContext";
@@ -152,18 +151,6 @@ const CartSidebar = () => {
       <CheckoutDialog
         isOpen={checkoutOpen}
         onClose={() => setCheckoutOpen(false)}
-        items={cart.map(item => ({
-          id: parseInt(item.product_id.toString()),
-          name: item.product_name,
-          price: item.product_price,
-          quantity: item.quantity,
-          unit: item.product_unit
-        }))}
-        total={getCartTotal()}
-        onSuccess={() => {
-          clearCart();
-          setCheckoutOpen(false);
-        }}
       />
     </>
   );

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -54,14 +53,6 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
   const handleProceedToCheckout = () => {
     onClose();
     setCheckoutOpen(true);
-  };
-
-  const bundleCartItem = {
-    id: bundle.id,
-    name: bundle.title,
-    price: bundle.price,
-    quantity: 1,
-    unit: 'bundle'
   };
 
   return (
@@ -227,12 +218,6 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
       <CheckoutDialog
         isOpen={checkoutOpen}
         onClose={() => setCheckoutOpen(false)}
-        items={[bundleCartItem]}
-        total={bundle.price}
-        onSuccess={() => {
-          setCheckoutOpen(false);
-          onClose();
-        }}
       />
     </>
   );
