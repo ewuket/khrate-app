@@ -122,58 +122,58 @@ const CustomBuyCheckoutDialog = ({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto bg-gradient-to-br from-white via-khrate-50/30 to-white">
-          <DialogHeader className="text-center border-b pb-6 mb-6">
-            <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-khrate-600 to-khrate-800 bg-clip-text text-transparent">
+        <DialogContent className="sm:max-w-[700px] max-h-[85vh] overflow-y-auto bg-white">
+          <DialogHeader className="text-center border-b pb-4 mb-4">
+            <DialogTitle className="text-2xl font-bold text-khrate-600">
               Complete Your Custom Order
             </DialogTitle>
-            <p className="text-gray-600 mt-2">Just a few more details to get your custom items delivered</p>
+            <p className="text-gray-600 text-sm">Just a few details to get your items delivered</p>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Order Summary */}
-            <Card className="border-2 border-khrate-100 shadow-lg">
-              <CardHeader className="bg-gradient-to-r from-khrate-500 to-khrate-600 text-white rounded-t-lg">
-                <CardTitle className="flex items-center gap-3 text-xl">
-                  <Package className="h-6 w-6" />
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Order Summary - Compact */}
+            <Card className="border border-khrate-200">
+              <CardHeader className="bg-khrate-50 py-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Package className="h-5 w-5" />
                   Order Summary
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-6 space-y-4">
-                <div className="max-h-40 overflow-y-auto space-y-3">
+              <CardContent className="p-4 space-y-3">
+                <div className="max-h-32 overflow-y-auto space-y-2">
                   {cart.map((item, index) => (
-                    <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
-                      <div className="flex-1">
-                        <span className="font-medium text-gray-800">{item.name}</span>
-                        <span className="text-sm text-gray-500 ml-2">x{item.quantity} {item.unit}</span>
+                    <div key={index} className="flex justify-between items-center text-sm py-1">
+                      <div>
+                        <span className="font-medium">{item.name}</span>
+                        <span className="text-gray-500 ml-2">x{item.quantity} {item.unit}</span>
                       </div>
-                      <span className="font-bold text-khrate-600">
+                      <span className="font-semibold text-khrate-600">
                         {(item.price * item.quantity).toLocaleString()} RWF
                       </span>
                     </div>
                   ))}
                 </div>
-                <Separator className="my-4" />
-                <div className="flex justify-between items-center">
-                  <span className="text-xl font-bold text-gray-800">Total</span>
-                  <span className="text-2xl font-bold text-khrate-600">
+                <Separator />
+                <div className="flex justify-between items-center font-bold">
+                  <span>Total</span>
+                  <span className="text-lg text-khrate-600">
                     {getCartTotal().toLocaleString()} RWF
                   </span>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Delivery Information */}
-            <Card className="border-2 border-khrate-100 shadow-lg">
-              <CardHeader className="bg-gradient-to-r from-khrate-500 to-khrate-600 text-white rounded-t-lg">
-                <CardTitle className="flex items-center gap-3 text-xl">
-                  <MapPin className="h-6 w-6" />
+            {/* Delivery Information - Compact */}
+            <Card className="border border-khrate-200">
+              <CardHeader className="bg-khrate-50 py-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <MapPin className="h-5 w-5" />
                   Delivery Information
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-6 space-y-6">
+              <CardContent className="p-4 space-y-4">
                 <div>
-                  <Label htmlFor="address" className="text-base font-semibold text-gray-700">
+                  <Label htmlFor="address" className="text-sm font-medium">
                     Delivery Address *
                   </Label>
                   <Input
@@ -181,14 +181,14 @@ const CustomBuyCheckoutDialog = ({
                     value={deliveryAddress}
                     onChange={(e) => setDeliveryAddress(e.target.value)}
                     placeholder="Enter your full delivery address"
-                    className="mt-2 h-12 border-2 border-gray-200 focus:border-khrate-500"
+                    className="mt-1 h-10"
                     required
                   />
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label htmlFor="date" className="text-base font-semibold text-gray-700">
+                    <Label htmlFor="date" className="text-sm font-medium">
                       Delivery Date *
                     </Label>
                     <Input
@@ -197,23 +197,23 @@ const CustomBuyCheckoutDialog = ({
                       value={deliveryDate}
                       onChange={(e) => setDeliveryDate(e.target.value)}
                       min={new Date().toISOString().split('T')[0]}
-                      className="mt-2 h-12 border-2 border-gray-200 focus:border-khrate-500"
+                      className="mt-1 h-10"
                       required
                     />
                   </div>
                   
                   <div>
-                    <Label htmlFor="timeSlot" className="text-base font-semibold text-gray-700">
+                    <Label htmlFor="timeSlot" className="text-sm font-medium">
                       Time Slot *
                     </Label>
                     <select
                       id="timeSlot"
                       value={timeSlot}
                       onChange={(e) => setTimeSlot(e.target.value)}
-                      className="w-full mt-2 p-3 h-12 border-2 border-gray-200 rounded-md focus:border-khrate-500 focus:outline-none"
+                      className="w-full mt-1 p-2 h-10 border border-gray-300 rounded-md focus:border-khrate-500 focus:outline-none text-sm"
                       required
                     >
-                      <option value="">Select time slot</option>
+                      <option value="">Select time</option>
                       {timeSlots.map(slot => (
                         <option key={slot.value} value={slot.value}>
                           {slot.label}
@@ -225,37 +225,37 @@ const CustomBuyCheckoutDialog = ({
               </CardContent>
             </Card>
 
-            {/* Payment Information */}
-            <Card className="border-2 border-khrate-100 shadow-lg">
-              <CardHeader className="bg-gradient-to-r from-khrate-500 to-khrate-600 text-white rounded-t-lg">
-                <CardTitle className="flex items-center gap-3 text-xl">
-                  <CreditCard className="h-6 w-6" />
+            {/* Payment Information - Compact */}
+            <Card className="border border-khrate-200">
+              <CardHeader className="bg-khrate-50 py-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <CreditCard className="h-5 w-5" />
                   Payment Information
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-6">
+              <CardContent className="p-4">
                 <PaymentMethodSelector
                   selectedMethod={paymentMethod}
                   onMethodChange={setPaymentMethod}
                   phoneNumber={phoneNumber}
                   onPhoneNumberChange={setPhoneNumber}
                   onShowPaymentInstructions={() => {}}
-                  phoneNumberLabel="Phone Number Used for Payment"
+                  phoneNumberLabel="Phone Number for Payment"
                 />
               </CardContent>
             </Card>
 
             {/* Submit Button */}
-            <div className="sticky bottom-0 bg-white pt-6 border-t">
+            <div className="pt-4">
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-khrate-500 to-khrate-600 hover:from-khrate-600 hover:to-khrate-700 text-white py-4 text-lg font-bold shadow-lg transform transition-all duration-200 hover:scale-[1.02]"
+                className="w-full bg-khrate-500 hover:bg-khrate-600 text-white py-3 text-base font-semibold"
                 size="lg"
               >
                 {isLoading ? (
                   <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     Placing Order...
                   </div>
                 ) : (

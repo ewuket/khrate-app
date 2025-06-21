@@ -1,7 +1,7 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Copy, Check, Package, Calendar, MapPin, CreditCard } from "lucide-react";
+import { CheckCircle, Copy, Check, Package, Calendar, MapPin, CreditCard, Heart } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,7 +28,6 @@ interface OrderSuccessModalProps {
 const OrderSuccessModal = ({ isOpen, onClose, orderData }: OrderSuccessModalProps) => {
   const [copiedOrderId, setCopiedOrderId] = useState(false);
 
-  // Don't render if orderData is null
   if (!orderData) {
     return null;
   }
@@ -73,7 +72,7 @@ const OrderSuccessModal = ({ isOpen, onClose, orderData }: OrderSuccessModalProp
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader className="text-center space-y-4">
           <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
             <CheckCircle className="w-10 h-10 text-green-600" />
@@ -83,107 +82,96 @@ const OrderSuccessModal = ({ isOpen, onClose, orderData }: OrderSuccessModalProp
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
-          {/* Order ID Section */}
+        <div className="space-y-4 py-4">
+          {/* Thank You Message */}
           <Card className="border-2 border-green-200 bg-green-50">
+            <CardContent className="p-4 text-center">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Heart className="h-5 w-5 text-green-600" />
+                <h3 className="font-bold text-lg text-green-800">
+                  Thank you for using CRED! 💚
+                </h3>
+                <Heart className="h-5 w-5 text-green-600" />
+              </div>
+              <p className="text-green-700 text-sm">
+                We're preparing your order and will notify you once it's on the way.
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Order Amount */}
+          <Card className="border-2 border-khrate-200 bg-khrate-50">
+            <CardContent className="p-4 text-center">
+              <h3 className="font-semibold text-khrate-900 mb-2">Order Total</h3>
+              <div className="text-3xl font-bold text-khrate-600">
+                {formatPrice(orderData.total_amount)}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Order ID */}
+          <Card>
             <CardContent className="p-4">
               <div className="text-center">
-                <h3 className="font-semibold text-green-900 mb-2">Your Order ID</h3>
+                <h3 className="font-semibold text-gray-900 mb-2">Your Order ID</h3>
                 <div className="flex items-center justify-center gap-2">
-                  <code className="text-lg font-mono bg-white px-3 py-1 rounded border">
+                  <code className="text-sm font-mono bg-gray-100 px-2 py-1 rounded border">
                     {orderData.id}
                   </code>
                   <Button
                     onClick={copyOrderId}
                     variant="outline"
                     size="sm"
-                    className="h-8 px-2 border-green-300 hover:bg-green-100"
+                    className="h-7 px-2"
                   >
-                    {copiedOrderId ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    {copiedOrderId ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                   </Button>
                 </div>
-                <p className="text-sm text-green-700 mt-2">
+                <p className="text-xs text-gray-600 mt-1">
                   Keep this ID for tracking your order
                 </p>
               </div>
             </CardContent>
           </Card>
 
-          {/* Order Details */}
-          <div className="space-y-4">
-            <h3 className="font-semibold text-lg flex items-center gap-2">
-              <Package className="h-5 w-5 text-khrate-500" />
-              Order Details
-            </h3>
-            
-            <Card>
-              <CardContent className="p-4">
-                <div className="space-y-3">
-                  {orderData.items.map((item, index) => (
-                    <div key={index} className="flex justify-between items-center">
-                      <span className="text-sm">{item.name} x{item.quantity}</span>
-                      <span className="font-medium text-sm">{formatPrice(item.price * item.quantity)}</span>
-                    </div>
-                  ))}
-                  
-                  <Separator />
-                  
-                  <div className="flex justify-between items-center font-bold text-lg">
-                    <span>Total Amount</span>
-                    <span className="text-khrate-600">{formatPrice(orderData.total_amount)}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Delivery Information */}
-          <div className="space-y-4">
-            <h3 className="font-semibold text-lg flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-khrate-500" />
-              Delivery Information
-            </h3>
-            
-            <Card>
-              <CardContent className="p-4 space-y-3">
-                <div>
-                  <span className="font-medium text-sm text-gray-600">Address:</span>
-                  <p className="text-sm mt-1">{orderData.delivery_address}</p>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm">
-                    {new Date(orderData.delivery_date).toLocaleDateString()} • {formatTimeSlot(orderData.delivery_time_slot)}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Payment Method */}
-          <div className="space-y-4">
-            <h3 className="font-semibold text-lg flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-khrate-500" />
-              Payment Method
-            </h3>
-            
-            <Card>
-              <CardContent className="p-4">
-                <span className="text-sm font-medium">{getPaymentMethodDisplay(orderData.payment_method)}</span>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Thank You Message */}
-          <Card className="border-2 border-khrate-200 bg-khrate-50">
-            <CardContent className="p-6 text-center">
-              <h3 className="font-bold text-xl text-khrate-800 mb-2">
-                Thank you for using Khrate! 💚
+          {/* Order Summary */}
+          <Card>
+            <CardContent className="p-4">
+              <h3 className="font-semibold text-sm flex items-center gap-2 mb-3">
+                <Package className="h-4 w-4" />
+                Order Items
               </h3>
-              <p className="text-khrate-700">
-                We're preparing your order and will notify you once it's on the way.
-              </p>
+              <div className="space-y-2">
+                {orderData.items.map((item, index) => (
+                  <div key={index} className="flex justify-between items-center text-sm">
+                    <span>{item.name} x{item.quantity}</span>
+                    <span className="font-medium">{formatPrice(item.price * item.quantity)}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Delivery Info */}
+          <Card>
+            <CardContent className="p-4 space-y-2">
+              <div className="flex items-center gap-2 text-sm">
+                <MapPin className="h-4 w-4 text-gray-500" />
+                <span className="font-medium">Address:</span>
+              </div>
+              <p className="text-sm text-gray-700 ml-6">{orderData.delivery_address}</p>
+              
+              <div className="flex items-center gap-2 text-sm">
+                <Calendar className="h-4 w-4 text-gray-500" />
+                <span>
+                  {new Date(orderData.delivery_date).toLocaleDateString()} • {formatTimeSlot(orderData.delivery_time_slot)}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 text-sm">
+                <CreditCard className="h-4 w-4 text-gray-500" />
+                <span>{getPaymentMethodDisplay(orderData.payment_method)}</span>
+              </div>
             </CardContent>
           </Card>
         </div>

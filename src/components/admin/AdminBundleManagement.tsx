@@ -1,336 +1,367 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Edit, Trash2, Plus, Save, X } from 'lucide-react';
-import { useBundles, Bundle, BundleItem } from '@/hooks/useBundles';
-import { toast } from 'sonner';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Plus, Edit, Trash2, Save, X, Package } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+interface Bundle {
+  id: number;
+  title: string;
+  description: string;
+  price: number;
+  original_price?: number;
+  image_url: string;
+  is_active: boolean;
+  is_featured: boolean;
+}
+
+interface BundleItem {
+  id: number;
+  bundle_id: number;
+  item_name: string;
+  quantity: number;
+  unit: string;
+}
 
 const AdminBundleManagement = () => {
-  const { bundles, loading, updateBundle, updateBundleItems, deleteBundle } = useBundles();
-  const [editingBundle, setEditingBundle] = useState<Bundle | null>(null);
-  const [editingItems, setEditingItems] = useState<Omit<BundleItem, 'id'>[]>([]);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [bundles, setBundles] = useState<Bundle[]>([]);
+  const [bundleItems, setBundleItems] = useState<{ [key: number]: BundleItem[] }>({});
+  const [loading, setLoading] = useState(true);
+  const [editingBundle, setEditingBundle] = useState<number | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
 
-  const handleEditBundle = (bundle: Bundle) => {
-    setEditingBundle(bundle);
-    setEditingItems(bundle.items?.map(item => ({
-      item_name: item.item_name,
-      quantity: item.quantity,
-      unit: item.unit
-    })) || []);
-    setIsEditDialogOpen(true);
-  };
+  const [newBundle, setNewBundle] = useState({
+    title: '',
+    description: '',
+    price: 0,
+    original_price: 0,
+    image_url: '',
+    is_active: true,
+    is_featured: false
+  });
 
-  const handleSaveBundle = async () => {
-    if (!editingBundle) return;
+  useEffect(() => {
+    loadBundles();
+  }, []);
 
-    const bundleUpdates = {
-      title: editingBundle.title,
-      description: editingBundle.description,
-      price: editingBundle.price,
-      original_price: editingBundle.original_price,
-      image_url: editingBundle.image_url,
-      is_featured: editingBundle.is_featured,
-      is_active: editingBundle.is_active
-    };
+  const loadBundles = async () => {
+    try {
+      setLoading(true);
+      console.log('Loading bundles...');
+      
+      // Load bundles
+      const { data: bundlesData, error: bundlesError } = await supabase
+        .from('bundles')
+        .select('*')
+        .order('id', { ascending: true });
 
-    const success = await updateBundle(editingBundle.id, bundleUpdates);
-    if (success) {
-      await updateBundleItems(editingBundle.id, editingItems);
-      setIsEditDialogOpen(false);
-      setEditingBundle(null);
+      if (bundlesError) {
+        console.error('Error loading bundles:', bundlesError);
+        throw bundlesError;
+      }
+
+      console.log('Bundles loaded:', bundlesData);
+      setBundles(bundlesData || []);
+
+      // Load bundle items for each bundle
+      if (bundlesData && bundlesData.length > 0) {
+        const { data: itemsData, error: itemsError } = await supabase
+          .from('bundle_items')
+          .select('*')
+          .in('bundle_id', bundlesData.map(b => b.id));
+
+        if (itemsError) {
+          console.error('Error loading bundle items:', itemsError);
+          throw itemsError;
+        }
+
+        console.log('Bundle items loaded:', itemsData);
+        
+        // Group items by bundle_id
+        const itemsByBundle: { [key: number]: BundleItem[] } = {};
+        (itemsData || []).forEach(item => {
+          if (!itemsByBundle[item.bundle_id]) {
+            itemsByBundle[item.bundle_id] = [];
+          }
+          itemsByBundle[item.bundle_id].push(item);
+        });
+        
+        setBundleItems(itemsByBundle);
+      }
+
+      toast.success('Bundles loaded successfully');
+    } catch (error) {
+      console.error('Error loading bundles:', error);
+      toast.error('Failed to load bundles');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleDeleteBundle = async (id: number) => {
-    if (confirm('Are you sure you want to delete this bundle?')) {
-      await deleteBundle(id);
+  const handleAddBundle = async () => {
+    try {
+      if (!newBundle.title || !newBundle.price) {
+        toast.error('Please fill in required fields');
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('bundles')
+        .insert([{
+          ...newBundle,
+          original_price: newBundle.original_price || null
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setBundles(prev => [...prev, data]);
+      setNewBundle({
+        title: '',
+        description: '',
+        price: 0,
+        original_price: 0,
+        image_url: '',
+        is_active: true,
+        is_featured: false
+      });
+      setShowAddForm(false);
+      toast.success('Bundle added successfully');
+    } catch (error) {
+      console.error('Error adding bundle:', error);
+      toast.error('Failed to add bundle');
     }
   };
 
-  const addNewItem = () => {
-    setEditingItems([...editingItems, { item_name: '', quantity: 1, unit: 'pieces' }]);
+  const handleDeleteBundle = async (bundleId: number) => {
+    try {
+      // First delete bundle items
+      const { error: itemsError } = await supabase
+        .from('bundle_items')
+        .delete()
+        .eq('bundle_id', bundleId);
+
+      if (itemsError) throw itemsError;
+
+      // Then delete bundle
+      const { error: bundleError } = await supabase
+        .from('bundles')
+        .delete()
+        .eq('id', bundleId);
+
+      if (bundleError) throw bundleError;
+
+      setBundles(prev => prev.filter(b => b.id !== bundleId));
+      setBundleItems(prev => {
+        const updated = { ...prev };
+        delete updated[bundleId];
+        return updated;
+      });
+      
+      toast.success('Bundle deleted successfully');
+    } catch (error) {
+      console.error('Error deleting bundle:', error);
+      toast.error('Failed to delete bundle');
+    }
   };
 
-  const updateItem = (index: number, field: keyof Omit<BundleItem, 'id'>, value: string | number) => {
-    const newItems = [...editingItems];
-    newItems[index] = { ...newItems[index], [field]: value };
-    setEditingItems(newItems);
-  };
+  const toggleBundleActive = async (bundleId: number, isActive: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('bundles')
+        .update({ is_active: !isActive })
+        .eq('id', bundleId);
 
-  const removeItem = (index: number) => {
-    setEditingItems(editingItems.filter((_, i) => i !== index));
-  };
+      if (error) throw error;
 
-  const formatPrice = (price: number) => {
-    return `${price.toLocaleString()} RWF`;
+      setBundles(prev =>
+        prev.map(bundle =>
+          bundle.id === bundleId
+            ? { ...bundle, is_active: !isActive }
+            : bundle
+        )
+      );
+
+      toast.success(`Bundle ${!isActive ? 'activated' : 'deactivated'}`);
+    } catch (error) {
+      console.error('Error updating bundle:', error);
+      toast.error('Failed to update bundle');
+    }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-khrate-500"></div>
+      <div className="text-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-khrate-500 mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading bundles...</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Bundle Management</h2>
+        <Button
+          onClick={() => setShowAddForm(!showAddForm)}
+          className="bg-khrate-500 hover:bg-khrate-600"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Bundle
+        </Button>
       </div>
 
-      <div className="grid gap-6">
-        {bundles.map((bundle) => (
-          <Card key={bundle.id}>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-3">
-                  {bundle.title}
-                  {bundle.is_featured && (
-                    <Badge variant="secondary">Featured</Badge>
-                  )}
-                  {!bundle.is_active && (
-                    <Badge variant="destructive">Inactive</Badge>
-                  )}
-                </CardTitle>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => handleEditBundle(bundle)}
-                    variant="outline"
-                    size="sm"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    onClick={() => handleDeleteBundle(bundle.id)}
-                    variant="destructive"
-                    size="sm"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+      {showAddForm && (
+        <Card className="border-2 border-khrate-200">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>Add New Bundle</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAddForm(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="title">Title *</Label>
+                <Input
+                  id="title"
+                  value={newBundle.title}
+                  onChange={(e) => setNewBundle(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="Bundle title"
+                />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+              <div>
+                <Label htmlFor="price">Price (RWF) *</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  value={newBundle.price}
+                  onChange={(e) => setNewBundle(prev => ({ ...prev, price: Number(e.target.value) }))}
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <Label htmlFor="original_price">Original Price (RWF)</Label>
+                <Input
+                  id="original_price"
+                  type="number"
+                  value={newBundle.original_price}
+                  onChange={(e) => setNewBundle(prev => ({ ...prev, original_price: Number(e.target.value) }))}
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <Label htmlFor="image_url">Image URL</Label>
+                <Input
+                  id="image_url"
+                  value={newBundle.image_url}
+                  onChange={(e) => setNewBundle(prev => ({ ...prev, image_url: e.target.value }))}
+                  placeholder="https://..."
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Input
+                id="description"
+                value={newBundle.description}
+                onChange={(e) => setNewBundle(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Bundle description"
+              />
+            </div>
+            <div className="flex gap-4">
+              <Button onClick={handleAddBundle} className="bg-khrate-500 hover:bg-khrate-600">
+                <Save className="h-4 w-4 mr-2" />
+                Add Bundle
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {bundles.length === 0 ? (
+          <div className="col-span-full text-center py-12">
+            <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500 mb-4">No bundles found</p>
+            <Button onClick={() => setShowAddForm(true)} className="bg-khrate-500 hover:bg-khrate-600">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Your First Bundle
+            </Button>
+          </div>
+        ) : (
+          bundles.map((bundle) => (
+            <Card key={bundle.id} className={`${!bundle.is_active ? 'opacity-60' : ''}`}>
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                  <CardTitle className="text-lg">{bundle.title}</CardTitle>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleBundleActive(bundle.id, bundle.is_active)}
+                      className={bundle.is_active ? 'text-green-600' : 'text-gray-400'}
+                    >
+                      {bundle.is_active ? 'Active' : 'Inactive'}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteBundle(bundle.id)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {bundle.image_url && (
                   <img
                     src={bundle.image_url}
                     alt={bundle.title}
-                    className="w-full h-48 object-cover rounded-lg"
+                    className="w-full h-32 object-cover rounded-md"
                   />
-                </div>
-                <div className="space-y-3">
-                  <p className="text-gray-600">{bundle.description}</p>
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl font-bold text-khrate-600">
-                      {formatPrice(bundle.price)}
+                )}
+                <p className="text-sm text-gray-600">{bundle.description}</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-bold text-khrate-600">
+                    {bundle.price.toLocaleString()} RWF
+                  </span>
+                  {bundle.original_price && bundle.original_price > bundle.price && (
+                    <span className="text-sm text-gray-500 line-through">
+                      {bundle.original_price.toLocaleString()} RWF
                     </span>
-                    {bundle.original_price && bundle.original_price > bundle.price && (
-                      <span className="text-gray-500 line-through">
-                        {formatPrice(bundle.original_price)}
-                      </span>
-                    )}
-                  </div>
-                  <div>
-                    <h4 className="font-medium mb-2">Items ({bundle.items?.length || 0}):</h4>
-                    <div className="text-sm text-gray-600 space-y-1">
-                      {bundle.items?.slice(0, 3).map((item, index) => (
+                  )}
+                </div>
+                {bundleItems[bundle.id] && bundleItems[bundle.id].length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-xs font-semibold text-gray-700 mb-1">Items:</p>
+                    <div className="text-xs text-gray-600 space-y-1">
+                      {bundleItems[bundle.id].map((item, index) => (
                         <div key={index}>
-                          {item.item_name} ({item.quantity} {item.unit})
+                          {item.quantity} {item.unit} {item.item_name}
                         </div>
                       ))}
-                      {bundle.items && bundle.items.length > 3 && (
-                        <div className="text-khrate-600 font-medium">
-                          +{bundle.items.length - 3} more items
-                        </div>
-                      )}
                     </div>
                   </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                )}
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
-
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Bundle</DialogTitle>
-          </DialogHeader>
-          {editingBundle && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-3">
-                  <div>
-                    <Label htmlFor="title">Title</Label>
-                    <Input
-                      id="title"
-                      value={editingBundle.title}
-                      onChange={(e) => setEditingBundle({
-                        ...editingBundle,
-                        title: e.target.value
-                      })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={editingBundle.description || ''}
-                      onChange={(e) => setEditingBundle({
-                        ...editingBundle,
-                        description: e.target.value
-                      })}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label htmlFor="price">Price (RWF)</Label>
-                      <Input
-                        id="price"
-                        type="number"
-                        value={editingBundle.price}
-                        onChange={(e) => setEditingBundle({
-                          ...editingBundle,
-                          price: Number(e.target.value)
-                        })}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="originalPrice">Original Price (RWF)</Label>
-                      <Input
-                        id="originalPrice"
-                        type="number"
-                        value={editingBundle.original_price || ''}
-                        onChange={(e) => setEditingBundle({
-                          ...editingBundle,
-                          original_price: Number(e.target.value) || null
-                        })}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="imageUrl">Image URL</Label>
-                    <Input
-                      id="imageUrl"
-                      value={editingBundle.image_url || ''}
-                      onChange={(e) => setEditingBundle({
-                        ...editingBundle,
-                        image_url: e.target.value
-                      })}
-                    />
-                  </div>
-                  <div className="flex items-center space-x-6">
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="featured"
-                        checked={editingBundle.is_featured}
-                        onCheckedChange={(checked) => setEditingBundle({
-                          ...editingBundle,
-                          is_featured: checked
-                        })}
-                      />
-                      <Label htmlFor="featured">Featured</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="active"
-                        checked={editingBundle.is_active}
-                        onCheckedChange={(checked) => setEditingBundle({
-                          ...editingBundle,
-                          is_active: checked
-                        })}
-                      />
-                      <Label htmlFor="active">Active</Label>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <img
-                    src={editingBundle.image_url}
-                    alt={editingBundle.title}
-                    className="w-full h-48 object-cover rounded-lg"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold">Bundle Items</h3>
-                  <Button onClick={addNewItem} size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Item
-                  </Button>
-                </div>
-                <div className="space-y-3 max-h-60 overflow-y-auto">
-                  {editingItems.map((item, index) => (
-                    <div key={index} className="grid grid-cols-12 gap-2 items-end">
-                      <div className="col-span-5">
-                        <Label>Item Name</Label>
-                        <Input
-                          value={item.item_name}
-                          onChange={(e) => updateItem(index, 'item_name', e.target.value)}
-                          placeholder="Item name"
-                        />
-                      </div>
-                      <div className="col-span-3">
-                        <Label>Quantity</Label>
-                        <Input
-                          type="number"
-                          step="0.1"
-                          value={item.quantity}
-                          onChange={(e) => updateItem(index, 'quantity', Number(e.target.value))}
-                        />
-                      </div>
-                      <div className="col-span-3">
-                        <Label>Unit</Label>
-                        <Input
-                          value={item.unit}
-                          onChange={(e) => updateItem(index, 'unit', e.target.value)}
-                          placeholder="kg, pieces, etc."
-                        />
-                      </div>
-                      <div className="col-span-1">
-                        <Button
-                          onClick={() => removeItem(index)}
-                          variant="destructive"
-                          size="sm"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3">
-                <Button
-                  onClick={() => setIsEditDialogOpen(false)}
-                  variant="outline"
-                >
-                  Cancel
-                </Button>
-                <Button onClick={handleSaveBundle}>
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Changes
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
