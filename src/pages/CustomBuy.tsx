@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import ProductList from "@/components/custom-buy/ProductList";
 import CustomBuyCart from "@/components/custom-buy/CustomBuyCart";
 import CustomBuyCheckoutDialog from "@/components/custom-buy/CustomBuyCheckoutDialog";
-import { productsData } from "@/components/custom-buy/productsData";
+import products from "@/components/custom-buy/productsData";
 
 interface CartItem {
   id: number;
@@ -90,7 +90,7 @@ const CustomBuy = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            <ProductList products={productsData} onAddToCart={addToCart} />
+            <ProductList products={products} onAddToCart={addToCart} />
           </div>
           
           <div className="lg:col-span-1">
