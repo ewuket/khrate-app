@@ -21,9 +21,7 @@ export const useAdminData = () => {
 
       if (error) {
         console.error('Error loading orders:', error);
-        toast.error('Failed to load orders');
-        setOrders([]);
-        return [];
+        throw error;
       }
 
       const formattedOrders: AdminOrder[] = (data || []).map((order: any) => ({
@@ -56,9 +54,8 @@ export const useAdminData = () => {
       
     } catch (error) {
       console.error('Error loading orders:', error);
-      toast.error('Failed to load orders');
       setOrders([]);
-      return [];
+      throw error;
     }
   }, []);
 
@@ -73,9 +70,7 @@ export const useAdminData = () => {
 
       if (error) {
         console.error('Error loading group sessions:', error);
-        toast.error('Failed to load group sessions');
-        setGroupSessions([]);
-        return [];
+        throw error;
       }
       
       const formattedGroupSessions: AdminGroupSession[] = (data || []).map(session => ({
@@ -95,9 +90,8 @@ export const useAdminData = () => {
       return formattedGroupSessions;
     } catch (error) {
       console.error('Error loading group sessions:', error);
-      toast.error('Failed to load group sessions');
       setGroupSessions([]);
-      return [];
+      throw error;
     }
   }, []);
 
@@ -105,16 +99,17 @@ export const useAdminData = () => {
     try {
       console.log('Loading stats...');
       
-      // Get orders data with fallback
+      // Get orders data
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select('total_amount, status, payment_status');
 
       if (ordersError) {
         console.error('Error loading orders for stats:', ordersError);
+        throw ordersError;
       }
 
-      // Get users count with fallback
+      // Get users count
       const { count: usersCount, error: usersError } = await supabase
         .from('user_profiles')
         .select('*', { count: 'exact', head: true });
@@ -123,7 +118,7 @@ export const useAdminData = () => {
         console.error('Error loading users count:', usersError);
       }
 
-      // Get groups count with fallback
+      // Get groups count
       const { count: groupsCount, error: groupsError } = await supabase
         .from('group_sessions')
         .select('*', { count: 'exact', head: true });
@@ -165,45 +160,42 @@ export const useAdminData = () => {
     }
   }, []);
 
-  const subscribeToOrders = useCallback(() => {
-    console.log('Setting up real-time subscription...');
-    
-    const channel = supabase
-      .channel('orders-changes')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'orders' 
-        }, 
-        (payload) => {
-          console.log('Real-time update received:', payload);
-          loadOrders();
-          loadStats();
-        })
-      .subscribe();
-
-    return () => {
-      console.log('Cleaning up subscription');
-      supabase.removeChannel(channel);
-    };
-  }, [loadOrders, loadStats]);
-
   const refreshAllData = useCallback(async () => {
     console.log('Refreshing all data...');
     setLoading(true);
     try {
-      const [ordersData, groupsData, statsData] = await Promise.all([
+      const [ordersData, groupsData, statsData] = await Promise.allSettled([
         loadOrders(),
         loadGroupSessions(),
         loadStats()
       ]);
-      console.log('All data refreshed successfully');
-      return { orders: ordersData, groups: groupsData, stats: statsData };
+      
+      // Handle results
+      if (ordersData.status === 'rejected') {
+        console.error('Failed to load orders:', ordersData.reason);
+        toast.error('Failed to load orders');
+      }
+      
+      if (groupsData.status === 'rejected') {
+        console.error('Failed to load groups:', groupsData.reason);
+        toast.error('Failed to load groups');
+      }
+      
+      if (statsData.status === 'rejected') {
+        console.error('Failed to load stats:', statsData.reason);
+        toast.error('Failed to load stats');
+      }
+      
+      console.log('Data refresh completed');
+      return {
+        orders: ordersData.status === 'fulfilled' ? ordersData.value : [],
+        groups: groupsData.status === 'fulfilled' ? groupsData.value : [],
+        stats: statsData.status === 'fulfilled' ? statsData.value : null
+      };
     } catch (error) {
       console.error('Error refreshing data:', error);
-      toast.error('Failed to refresh some data');
-      console.log('Continuing with available data');
+      toast.error('Failed to refresh data');
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -217,7 +209,6 @@ export const useAdminData = () => {
     loadOrders,
     loadGroupSessions,
     loadStats,
-    subscribeToOrders,
     refreshAllData
   };
 };
