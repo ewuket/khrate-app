@@ -3,6 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface AuthButtonsProps {
   onOpenAuthModal?: () => void;
@@ -10,7 +11,7 @@ interface AuthButtonsProps {
 }
 
 const AuthButtons = ({ onOpenAuthModal, layout = "desktop" }: AuthButtonsProps) => {
-  const { isAuthenticated, signOut, openAuthModal } = useAuth();
+  const { isAuthenticated, logout, openAuthModal } = useAuth();
 
   const handleOpenAuth = () => {
     console.log('Auth button clicked, opening modal');
@@ -21,10 +22,21 @@ const AuthButtons = ({ onOpenAuthModal, layout = "desktop" }: AuthButtonsProps) 
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      console.log('Logging out user...');
+      await logout();
+      toast.success('Successfully logged out');
+    } catch (error) {
+      console.error('Error logging out:', error);
+      toast.error('Failed to log out. Please try again.');
+    }
+  };
+
   if (isAuthenticated && layout === "mobile") {
     return (
       <Button
-        onClick={signOut}
+        onClick={handleLogout}
         variant="ghost"
         className="flex justify-start text-red-500"
       >
@@ -56,7 +68,7 @@ const AuthButtons = ({ onOpenAuthModal, layout = "desktop" }: AuthButtonsProps) 
   if (isAuthenticated) {
     return (
       <Button
-        onClick={signOut}
+        onClick={handleLogout}
         variant="ghost"
         className="text-gray-700 hover:text-khrate-500"
       >

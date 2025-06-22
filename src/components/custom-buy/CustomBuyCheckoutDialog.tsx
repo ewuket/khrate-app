@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Calendar, MapPin, CreditCard, Package } from "lucide-react";
 import { toast } from "sonner";
-import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import OrderSuccessModal from "../checkout/OrderSuccessModal";
 import PaymentMethodSelector from "./PaymentMethodSelector";
@@ -36,7 +36,7 @@ const CustomBuyCheckoutDialog = ({
   getCartTotal, 
   clearCart 
 }: CustomBuyCheckoutDialogProps) => {
-  const { user } = useSupabaseAuth();
+  const { isAuthenticated, user, openAuthModal } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [orderData, setOrderData] = useState(null);
@@ -57,7 +57,10 @@ const CustomBuyCheckoutDialog = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) {
+    
+    if (!isAuthenticated || !user) {
+      console.log('User not authenticated, opening auth modal');
+      openAuthModal();
       toast.error("Please log in to place an order");
       return;
     }

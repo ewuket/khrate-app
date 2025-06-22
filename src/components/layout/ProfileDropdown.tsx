@@ -11,18 +11,21 @@ import {
 import { User, LogOut, ShoppingBag, UserCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const ProfileDropdown = () => {
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
     try {
-      await signOut();
-      // Navigate to home page after sign out
+      console.log('Signing out user...');
+      await logout();
+      toast.success('Successfully signed out');
       navigate('/');
     } catch (error) {
       console.error('Error signing out:', error);
+      toast.error('Failed to sign out. Please try again.');
     }
   };
 
@@ -35,7 +38,7 @@ const ProfileDropdown = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56 bg-white">
         <div className="px-2 py-1.5 text-sm font-medium">
-          {user?.user_metadata?.full_name || user?.email}
+          {user?.name || user?.email || 'User'}
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
