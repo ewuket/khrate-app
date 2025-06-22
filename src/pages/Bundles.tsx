@@ -3,14 +3,15 @@ import { useBundles } from "@/hooks/useBundles";
 import BundleCard from "@/components/bundles/BundleCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Bundles = () => {
-  const { data: bundles, isLoading, error, refetch } = useBundles();
+  const { data: bundles, isLoading, error, refetch, isFetching } = useBundles();
 
-  console.log('Bundles page - Loading:', isLoading, 'Error:', error, 'Data:', bundles);
+  console.log('Bundles page render - Loading:', isLoading, 'Fetching:', isFetching, 'Error:', error, 'Data:', bundles);
 
-  if (isLoading) {
+  if (isLoading || isFetching) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
@@ -55,18 +56,22 @@ const Bundles = () => {
             <p className="text-gray-600 text-lg">Choose from our carefully curated food bundles</p>
           </div>
           
-          <Alert variant="destructive" className="max-w-md mx-auto">
+          <Alert variant="destructive" className="max-w-md mx-auto mb-8">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Failed to load bundles. Please try again later.
-              <button 
-                onClick={() => refetch()} 
-                className="ml-2 underline hover:no-underline"
-              >
-                Retry
-              </button>
+              Failed to load bundles: {error.message}
             </AlertDescription>
           </Alert>
+          
+          <div className="text-center">
+            <Button 
+              onClick={() => refetch()} 
+              className="bg-khrate-500 hover:bg-khrate-600 text-white px-6 py-2 rounded-lg transition-colors"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Try Again
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -84,12 +89,13 @@ const Bundles = () => {
           <div className="text-center py-12">
             <h2 className="text-2xl font-semibold text-gray-700 mb-4">No bundles available</h2>
             <p className="text-gray-500 mb-6">We're working on adding new bundles. Please check back soon!</p>
-            <button 
+            <Button 
               onClick={() => refetch()} 
               className="bg-khrate-500 hover:bg-khrate-600 text-white px-6 py-2 rounded-lg transition-colors"
             >
+              <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -118,8 +124,8 @@ const Bundles = () => {
                 price={bundle.price}
                 originalPrice={bundle.original_price || bundle.price}
                 discount={discount}
-                items={bundle.items?.map(item => `${item.item_name} (${item.quantity} ${item.unit})`) || []}
-                image={bundle.image_url || ''}
+                items={bundle.items?.map(item => `${item.item_name} (${item.quantity} ${item.unit || 'pieces'})`) || []}
+                image={bundle.image_url || '/placeholder.svg'}
                 description={bundle.description || ''}
               />
             );
