@@ -105,9 +105,25 @@ const Bundles = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {bundles.map((bundle) => (
-            <BundleCard key={bundle.id} bundle={bundle} />
-          ))}
+          {bundles.map((bundle) => {
+            const discount = bundle.original_price 
+              ? Math.round(((bundle.original_price - bundle.price) / bundle.original_price) * 100)
+              : 0;
+            
+            return (
+              <BundleCard
+                key={bundle.id}
+                id={bundle.id}
+                title={bundle.title}
+                price={bundle.price}
+                originalPrice={bundle.original_price || bundle.price}
+                discount={discount}
+                items={bundle.items?.map(item => `${item.item_name} (${item.quantity} ${item.unit})`) || []}
+                image={bundle.image_url || ''}
+                description={bundle.description || ''}
+              />
+            );
+          })}
         </div>
       </div>
     </div>
