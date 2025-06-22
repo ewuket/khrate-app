@@ -11,7 +11,7 @@ interface AuthButtonsProps {
 }
 
 const AuthButtons = ({ onOpenAuthModal, layout = "desktop" }: AuthButtonsProps) => {
-  const { isAuthenticated, logout, openAuthModal } = useAuth();
+  const { isAuthenticated, signOut, openAuthModal } = useAuth();
 
   const handleOpenAuth = () => {
     console.log('Auth button clicked, opening modal');
@@ -25,7 +25,7 @@ const AuthButtons = ({ onOpenAuthModal, layout = "desktop" }: AuthButtonsProps) 
   const handleLogout = async () => {
     try {
       console.log('Logging out user...');
-      await logout();
+      await signOut();
       toast.success('Successfully logged out');
     } catch (error) {
       console.error('Error logging out:', error);

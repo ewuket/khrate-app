@@ -14,13 +14,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 const ProfileDropdown = () => {
-  const { user, logout } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
     try {
       console.log('Signing out user...');
-      await logout();
+      await signOut();
       toast.success('Successfully signed out');
       navigate('/');
     } catch (error) {
@@ -28,6 +28,8 @@ const ProfileDropdown = () => {
       toast.error('Failed to sign out. Please try again.');
     }
   };
+
+  const displayName = profile?.full_name || user?.email || 'User';
 
   return (
     <DropdownMenu>
@@ -38,7 +40,7 @@ const ProfileDropdown = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56 bg-white">
         <div className="px-2 py-1.5 text-sm font-medium">
-          {user?.name || user?.email || 'User'}
+          {displayName}
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
