@@ -42,10 +42,10 @@ export const useBundles = () => {
         throw new Error(`Failed to fetch bundles: ${bundlesError.message}`);
       }
 
-      console.log('Bundles fetched successfully:', bundles?.length || 0);
+      console.log('Raw bundles data:', bundles);
 
       if (!bundles || bundles.length === 0) {
-        console.log('No bundles found');
+        console.log('No bundles found - this might be the issue');
         return [];
       }
 
@@ -83,11 +83,11 @@ export const useBundles = () => {
         items: itemsByBundle[bundle.id] || []
       }));
 
-      console.log('Final bundles with items:', bundlesWithItems.length);
+      console.log('Final bundles with items:', bundlesWithItems);
       return bundlesWithItems;
     },
-    retry: 2,
-    retryDelay: 1000,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -111,7 +111,7 @@ export const useFeaturedBundles = () => {
         throw new Error(`Failed to fetch featured bundles: ${bundlesError.message}`);
       }
 
-      console.log('Featured bundles fetched successfully:', bundles?.length || 0);
+      console.log('Raw featured bundles data:', bundles);
 
       if (!bundles || bundles.length === 0) {
         console.log('No featured bundles found');
@@ -152,11 +152,11 @@ export const useFeaturedBundles = () => {
         items: itemsByBundle[bundle.id] || []
       }));
 
-      console.log('Final featured bundles with items:', bundlesWithItems.length);
+      console.log('Final featured bundles with items:', bundlesWithItems);
       return bundlesWithItems;
     },
-    retry: 2,
-    retryDelay: 1000,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

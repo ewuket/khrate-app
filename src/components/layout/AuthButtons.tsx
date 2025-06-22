@@ -41,7 +41,7 @@ const AuthButtons = ({ onOpenAuthModal, layout = "desktop" }: AuthButtonsProps) 
         className="flex justify-start text-red-500"
       >
         <LogOut className="h-5 w-5 mr-2" />
-        <span>Logout</span>
+        <span>Log Out</span>
       </Button>
     );
   }
@@ -73,7 +73,7 @@ const AuthButtons = ({ onOpenAuthModal, layout = "desktop" }: AuthButtonsProps) 
         className="text-gray-700 hover:text-khrate-500"
       >
         <LogOut className="h-4 w-4 mr-2" />
-        Logout
+        Log Out
       </Button>
     );
   }

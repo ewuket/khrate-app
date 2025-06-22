@@ -17,15 +17,15 @@ const ProfileDropdown = () => {
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
 
-  const handleSignOut = async () => {
+  const handleLogOut = async () => {
     try {
-      console.log('Signing out user...');
+      console.log('Logging out user...');
       await signOut();
-      toast.success('Successfully signed out');
-      // The signOut function in AuthContext already handles navigation
+      toast.success('Successfully logged out');
+      navigate('/');
     } catch (error) {
-      console.error('Error signing out:', error);
-      toast.error('Failed to sign out. Please try again.');
+      console.error('Error logging out:', error);
+      toast.error('Failed to log out. Please try again.');
     }
   };
 
@@ -56,9 +56,9 @@ const ProfileDropdown = () => {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-red-600 focus:text-red-600">
+        <DropdownMenuItem onClick={handleLogOut} className="cursor-pointer text-red-600 focus:text-red-600">
           <LogOut className="mr-2 h-4 w-4" />
-          Sign out
+          Log Out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
