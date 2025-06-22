@@ -10,7 +10,7 @@ import AdminNotifications from "./AdminNotifications";
 import { useAdminData } from "@/hooks/useAdminData";
 import { useAdminOperations } from "@/hooks/useAdminOperations";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Settings, Users, ShoppingBag, BarChart3, Package } from "lucide-react";
+import { RefreshCw, ShoppingBag, BarChart3, Package, Users } from "lucide-react";
 import { toast } from "sonner";
 
 const AdminDashboard = () => {
@@ -19,7 +19,6 @@ const AdminDashboard = () => {
     groupSessions, 
     stats, 
     loading, 
-    subscribeToOrders,
     refreshAllData
   } = useAdminData();
   const { updateOrderStatus, updatePaymentStatus } = useAdminOperations();
@@ -48,13 +47,6 @@ const AdminDashboard = () => {
       try {
         await refreshAllData();
         console.log('Initial data loaded successfully');
-        
-        const unsubscribe = subscribeToOrders();
-        
-        return () => {
-          console.log('Cleaning up dashboard subscriptions');
-          unsubscribe();
-        };
       } catch (error) {
         console.error('Failed to initialize dashboard:', error);
         toast.error('Failed to load dashboard data');
@@ -64,7 +56,7 @@ const AdminDashboard = () => {
     };
 
     initializeDashboard();
-  }, [refreshAllData, subscribeToOrders]);
+  }, [refreshAllData]);
 
   const handleUpdateOrderStatus = async (orderId: string, currentStatus: string) => {
     const statusOptions = ['pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'];
