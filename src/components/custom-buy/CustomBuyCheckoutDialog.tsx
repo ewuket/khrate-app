@@ -58,6 +58,8 @@ const CustomBuyCheckoutDialog = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Custom buy checkout - checking auth state:', { isAuthenticated, user: user?.id });
+    
     if (!isAuthenticated || !user) {
       console.log('User not authenticated, opening auth modal');
       openAuthModal();
@@ -80,6 +82,8 @@ const CustomBuyCheckoutDialog = ({
         total: item.price * item.quantity
       }));
 
+      console.log('Creating order with user ID:', user.id);
+
       const { data: orderResult, error } = await supabase
         .from('orders')
         .insert([{
@@ -98,7 +102,12 @@ const CustomBuyCheckoutDialog = ({
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating order:', error);
+        throw error;
+      }
+
+      console.log('Order created successfully:', orderResult);
 
       setOrderData({
         id: orderResult.id,

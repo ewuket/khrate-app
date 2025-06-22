@@ -22,7 +22,7 @@ const ProfileDropdown = () => {
       console.log('Signing out user...');
       await signOut();
       toast.success('Successfully signed out');
-      navigate('/');
+      // The signOut function in AuthContext already handles navigation
     } catch (error) {
       console.error('Error signing out:', error);
       toast.error('Failed to sign out. Please try again.');
@@ -56,7 +56,7 @@ const ProfileDropdown = () => {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+        <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-red-600 focus:text-red-600">
           <LogOut className="mr-2 h-4 w-4" />
           Sign out
         </DropdownMenuItem>
