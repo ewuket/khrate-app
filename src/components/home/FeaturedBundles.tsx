@@ -48,8 +48,8 @@ const FeaturedBundles = () => {
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">Featured Bundles</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {Array.from({ length: 3 }).map((i) => (
-              <div key={i} className="space-y-4">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="space-y-4">
                 <Skeleton className="h-48 w-full rounded-lg" />
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-4 w-1/2" />
@@ -98,7 +98,7 @@ const FeaturedBundles = () => {
             
             return (
               <BundleCard
-                key={bundle.id}
+                key={String(bundle.id)}
                 id={bundle.id}
                 title={bundle.title}
                 price={bundle.price}

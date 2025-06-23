@@ -39,18 +39,16 @@ const App = () => (
                   <Route path="/admin/dashboard" element={<AdminDashboard />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route path="/" element={<Layout />}>
-                    <Route index element={<Index />} />
-                    <Route path="bundles" element={<Bundles />} />
-                    <Route path="custom-buy" element={<CustomBuy />} />
-                    <Route path="group-buy" element={<GroupBuy />} />
-                    <Route path="orders" element={<Orders />} />
-                    <Route path="profile" element={<Profile />} />
-                    <Route path="about" element={<About />} />
-                    <Route path="contact" element={<Contact />} />
-                    <Route path="terms" element={<Terms />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Route>
+                  <Route path="/" element={<Layout><Index /></Layout>} />
+                  <Route path="/bundles" element={<Layout><Bundles /></Layout>} />
+                  <Route path="/custom-buy" element={<Layout><CustomBuy /></Layout>} />
+                  <Route path="/group-buy" element={<Layout><GroupBuy /></Layout>} />
+                  <Route path="/orders" element={<Layout><Orders /></Layout>} />
+                  <Route path="/profile" element={<Layout><Profile /></Layout>} />
+                  <Route path="/about" element={<Layout><About /></Layout>} />
+                  <Route path="/contact" element={<Layout><Contact /></Layout>} />
+                  <Route path="/terms" element={<Layout><Terms /></Layout>} />
+                  <Route path="*" element={<Layout><NotFound /></Layout>} />
                 </Routes>
               </GroupBuyingProvider>
             </CartProvider>
