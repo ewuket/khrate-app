@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_users: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          is_active: boolean | null
+          role: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          is_active?: boolean | null
+          role?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          is_active?: boolean | null
+          role?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       bundle_items: {
         Row: {
           bundle_id: number | null
@@ -23,7 +50,7 @@ export type Database = {
           created_at?: string | null
           id?: number
           item_name: string
-          quantity: number
+          quantity?: number
           unit?: string | null
         }
         Update: {

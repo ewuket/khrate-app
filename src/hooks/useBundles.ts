@@ -9,106 +9,93 @@ export interface Bundle {
   price: number;
   original_price: number | null;
   image_url: string | null;
-  is_featured: boolean | null;
-  is_active: boolean | null;
-  created_at: string | null;
-  updated_at: string | null;
-  items?: BundleItem[];
+  is_featured: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  items: BundleItem[];
 }
 
 export interface BundleItem {
   id: number;
-  bundle_id: number | null;
+  bundle_id: number;
   item_name: string;
   quantity: number;
-  unit: string | null;
-  created_at: string | null;
+  unit: string;
+  created_at: string;
 }
 
-const fetchBundlesWithItems = async (featured = false) => {
-  console.log(`Fetching ${featured ? 'featured' : 'all'} bundles...`);
+const fetchBundles = async (featuredOnly = false): Promise<Bundle[]> => {
+  console.log(`Fetching ${featuredOnly ? 'featured' : 'all'} bundles...`);
   
-  // Build the query for bundles
-  let query = supabase
+  let bundlesQuery = supabase
     .from('bundles')
     .select('*')
-    .eq('is_active', true);
+    .eq('is_active', true)
+    .order('created_at', { ascending: false });
   
-  if (featured) {
-    query = query.eq('is_featured', true);
+  if (featuredOnly) {
+    bundlesQuery = bundlesQuery.eq('is_featured', true);
   }
   
-  const { data: bundles, error: bundlesError } = await query
-    .order('created_at', { ascending: false });
-
+  const { data: bundles, error: bundlesError } = await bundlesQuery;
+  
   if (bundlesError) {
     console.error('Error fetching bundles:', bundlesError);
     throw new Error(`Failed to fetch bundles: ${bundlesError.message}`);
   }
-
-  console.log('Bundles fetched:', bundles?.length || 0);
-
+  
   if (!bundles || bundles.length === 0) {
     console.log('No bundles found');
     return [];
   }
-
-  // Fetch bundle items for all bundles
-  const bundleIds = bundles.map(bundle => bundle.id);
-  console.log('Fetching items for bundle IDs:', bundleIds);
   
-  const { data: bundleItems, error: itemsError } = await supabase
+  // Fetch all items for these bundles
+  const bundleIds = bundles.map(bundle => bundle.id);
+  const { data: items, error: itemsError } = await supabase
     .from('bundle_items')
     .select('*')
     .in('bundle_id', bundleIds)
     .order('id');
-
+  
   if (itemsError) {
     console.error('Error fetching bundle items:', itemsError);
-    // Continue without items data instead of throwing
+    // Continue without items rather than failing completely
   }
-
-  console.log('Bundle items fetched:', bundleItems?.length || 0);
-
+  
   // Group items by bundle_id
-  const itemsByBundle = (bundleItems || []).reduce((acc: Record<number, BundleItem[]>, item) => {
-    if (item.bundle_id) {
-      if (!acc[item.bundle_id]) {
-        acc[item.bundle_id] = [];
-      }
-      acc[item.bundle_id].push(item);
+  const itemsByBundle: Record<number, BundleItem[]> = {};
+  (items || []).forEach(item => {
+    if (!itemsByBundle[item.bundle_id]) {
+      itemsByBundle[item.bundle_id] = [];
     }
-    return acc;
-  }, {});
-
+    itemsByBundle[item.bundle_id].push(item);
+  });
+  
   // Combine bundles with their items
   const bundlesWithItems = bundles.map(bundle => ({
     ...bundle,
     items: itemsByBundle[bundle.id] || []
   }));
-
-  console.log('Final bundles with items:', bundlesWithItems);
+  
+  console.log(`Successfully loaded ${bundlesWithItems.length} bundles`);
   return bundlesWithItems;
 };
 
 export const useBundles = () => {
   return useQuery({
     queryKey: ['bundles'],
-    queryFn: () => fetchBundlesWithItems(false),
-    retry: 2,
-    retryDelay: 1000,
-    refetchOnWindowFocus: false,
+    queryFn: () => fetchBundles(false),
     staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
   });
 };
 
 export const useFeaturedBundles = () => {
   return useQuery({
     queryKey: ['bundles', 'featured'],
-    queryFn: () => fetchBundlesWithItems(true),
-    retry: 2,
-    retryDelay: 1000,
-    refetchOnWindowFocus: false,
+    queryFn: () => fetchBundles(true),
     staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
   });
 };

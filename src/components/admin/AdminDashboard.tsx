@@ -1,250 +1,171 @@
-import { useState, useEffect } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import AdminStatsCards from "./AdminStatsCards";
-import AdminOrdersList from "./AdminOrdersList";
-import AdminGroupsList from "./AdminGroupsList";
-import AdminBundleManagement from "./AdminBundleManagement";
-import AdminHeader from "./AdminHeader";
-import AdminNotifications from "./AdminNotifications";
+
+import { useEffect } from "react";
 import { useAdminData } from "@/hooks/useAdminData";
-import { useAdminOperations } from "@/hooks/useAdminOperations";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, ShoppingBag, BarChart3, Package, Users, AlertCircle } from "lucide-react";
-import { toast } from "sonner";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { RefreshCw, Package, ShoppingCart, Users, DollarSign } from "lucide-react";
+import { useAdmin } from "@/contexts/AdminContext";
 
 const AdminDashboard = () => {
-  const { 
-    orders, 
-    groupSessions, 
-    stats, 
-    loading, 
-    refreshAllData
-  } = useAdminData();
-  const { updateOrderStatus, updatePaymentStatus } = useAdminOperations();
-  const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState("overview");
-  const [initializing, setInitializing] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    setError(null);
-    try {
-      await refreshAllData();
-      toast.success('Data refreshed successfully');
-    } catch (error) {
-      console.error('Refresh error:', error);
-      setError('Failed to refresh data');
-      toast.error('Failed to refresh data');
-    } finally {
-      setRefreshing(false);
-    }
-  };
+  const { adminUser, logoutAdmin } = useAdmin();
+  const { orders, bundles, stats, loading, refreshAllData } = useAdminData();
 
   useEffect(() => {
-    const initializeDashboard = async () => {
-      console.log('Admin dashboard initializing...');
-      setInitializing(true);
-      setError(null);
-      
-      try {
-        await refreshAllData();
-        console.log('Initial data loaded successfully');
-      } catch (error) {
-        console.error('Failed to initialize dashboard:', error);
-        setError('Failed to load dashboard data');
-        toast.error('Failed to load dashboard data');
-      } finally {
-        setInitializing(false);
-      }
-    };
-
-    initializeDashboard();
+    refreshAllData();
   }, [refreshAllData]);
 
-  const handleUpdateOrderStatus = async (orderId: string, currentStatus: string) => {
-    const statusOptions = ['pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'];
-    const currentIndex = statusOptions.indexOf(currentStatus);
-    const nextStatus = statusOptions[(currentIndex + 1) % statusOptions.length];
-    
-    const success = await updateOrderStatus(orderId, nextStatus);
-    if (success) {
-      await refreshAllData();
-      toast.success(`Order status updated to ${nextStatus}`);
-    }
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-RW', {
+      style: 'currency',
+      currency: 'RWF',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
   };
-
-  const handleUpdatePaymentStatus = async (orderId: string, currentStatus: string) => {
-    const newStatus = currentStatus === 'pending' ? 'completed' : 'pending';
-    const success = await updatePaymentStatus(orderId, newStatus);
-    if (success) {
-      await refreshAllData();
-      toast.success(`Payment status updated to ${newStatus}`);
-    }
-  };
-
-  if (error && !initializing) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <AdminHeader />
-        <main className="container mx-auto px-4 py-8">
-          <div className="max-w-md mx-auto">
-            <Alert variant="destructive" className="mb-6">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-            <div className="text-center">
-              <Button onClick={handleRefresh} disabled={refreshing}>
-                <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-                {refreshing ? 'Retrying...' : 'Retry'}
-              </Button>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  if (initializing) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <AdminHeader />
-        <main className="container mx-auto px-4 py-8">
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-khrate-500 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading dashboard data...</p>
-          </div>
-        </main>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AdminHeader />
-      
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-              <p className="text-gray-600">Manage your Khrate platform</p>
+              <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+              <p className="text-gray-600">Welcome back, {adminUser?.email}</p>
             </div>
-            <div className="flex items-center gap-3">
-              <Button
-                onClick={handleRefresh}
-                disabled={refreshing || loading}
+            <div className="flex gap-3">
+              <Button 
+                onClick={refreshAllData}
                 variant="outline"
-                className="flex items-center gap-2"
+                disabled={loading}
               >
-                <RefreshCw className={`h-4 w-4 ${refreshing || loading ? 'animate-spin' : ''}`} />
-                {refreshing ? 'Refreshing...' : 'Refresh'}
+                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              <Button onClick={logoutAdmin} variant="destructive">
+                Logout
               </Button>
             </div>
           </div>
         </div>
+      </div>
 
-        <AdminNotifications />
+      <div className="container mx-auto px-4 py-8">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats?.total_orders || 0}</div>
+            </CardContent>
+          </Card>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-white shadow-sm">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Overview
-            </TabsTrigger>
-            <TabsTrigger value="orders" className="flex items-center gap-2">
-              <ShoppingBag className="h-4 w-4" />
-              Orders ({orders.length})
-            </TabsTrigger>
-            <TabsTrigger value="bundles" className="flex items-center gap-2">
-              <Package className="h-4 w-4" />
-              Bundles
-            </TabsTrigger>
-            <TabsTrigger value="groups" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Groups ({groupSessions.length})
-            </TabsTrigger>
-          </TabsList>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pending Orders</CardTitle>
+              <RefreshCw className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats?.pending_orders || 0}</div>
+            </CardContent>
+          </Card>
 
-          <TabsContent value="overview" className="space-y-6">
-            <AdminStatsCards stats={stats} loading={false} />
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h3 className="text-lg font-semibold mb-4">Recent Orders</h3>
-                {orders.length > 0 ? (
-                  <AdminOrdersList 
-                    orders={orders.slice(0, 5)} 
-                    onUpdateOrderStatus={handleUpdateOrderStatus}
-                    onUpdatePaymentStatus={handleUpdatePaymentStatus}
-                  />
-                ) : (
-                  <div className="text-center py-8">
-                    <ShoppingBag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">No orders yet</p>
-                  </div>
-                )}
-              </div>
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h3 className="text-lg font-semibold mb-4">Active Groups</h3>
-                {groupSessions.length > 0 ? (
-                  <AdminGroupsList groupSessions={groupSessions.slice(0, 5)} />
-                ) : (
-                  <p className="text-gray-500 text-center py-8">No active groups</p>
-                )}
-              </div>
-            </div>
-          </TabsContent>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatCurrency(stats?.total_revenue || 0)}</div>
+            </CardContent>
+          </Card>
 
-          <TabsContent value="orders">
-            <div className="bg-white rounded-lg shadow-sm">
-              <div className="p-6 border-b">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-semibold">All Orders</h2>
-                  <div className="text-sm text-gray-500">
-                    Total: {orders.length} orders
-                  </div>
-                </div>
-              </div>
-              {orders.length > 0 ? (
-                <AdminOrdersList 
-                  orders={orders}
-                  onUpdateOrderStatus={handleUpdateOrderStatus}
-                  onUpdatePaymentStatus={handleUpdatePaymentStatus}
-                />
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats?.total_users || 0}</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Recent Orders */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ShoppingCart className="h-5 w-5" />
+                Recent Orders ({orders.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {orders.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">No orders found</p>
               ) : (
-                <div className="p-8 text-center">
-                  <ShoppingBag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 mb-4">No orders yet</p>
-                  <Button onClick={handleRefresh} variant="outline">
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Check for Orders
-                  </Button>
+                <div className="space-y-4">
+                  {orders.slice(0, 5).map((order) => (
+                    <div key={order.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                      <div>
+                        <p className="font-medium">Order #{order.id.slice(0, 8)}</p>
+                        <p className="text-sm text-gray-600">{order.delivery_address}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium">{formatCurrency(order.total_amount)}</p>
+                        <Badge variant={order.status === 'completed' ? 'default' : 'secondary'}>
+                          {order.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
-            </div>
-          </TabsContent>
+            </CardContent>
+          </Card>
 
-          <TabsContent value="bundles">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <AdminBundleManagement />
-            </div>
-          </TabsContent>
-
-          <TabsContent value="groups">
-            <div className="bg-white rounded-lg shadow-sm">
-              {groupSessions.length > 0 ? (
-                <AdminGroupsList groupSessions={groupSessions} />
+          {/* Bundles Overview */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5" />
+                Bundles Overview ({bundles.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {bundles.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">No bundles found</p>
               ) : (
-                <div className="p-8 text-center">
-                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No group sessions yet</p>
+                <div className="space-y-4">
+                  {bundles.slice(0, 5).map((bundle) => (
+                    <div key={bundle.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                      <div>
+                        <p className="font-medium">{bundle.title}</p>
+                        <p className="text-sm text-gray-600">{bundle.items_count} items</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium">{formatCurrency(bundle.price)}</p>
+                        <div className="flex gap-1">
+                          {bundle.is_featured && (
+                            <Badge variant="default" className="text-xs">Featured</Badge>
+                          )}
+                          <Badge variant={bundle.is_active ? 'default' : 'secondary'} className="text-xs">
+                            {bundle.is_active ? 'Active' : 'Inactive'}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
-            </div>
-          </TabsContent>
-        </Tabs>
-      </main>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };

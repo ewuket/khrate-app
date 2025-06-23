@@ -9,48 +9,46 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 const FeaturedBundles = () => {
   const { data: bundles, isLoading, error, refetch, isFetching } = useFeaturedBundles();
   
-  console.log('FeaturedBundles render:', { 
-    bundlesCount: bundles?.length || 0, 
+  console.log('FeaturedBundles - Data:', { 
+    bundlesCount: bundles?.length, 
     isLoading, 
     isFetching, 
-    error: error?.message 
+    error 
   });
 
   if (error) {
-    console.error('FeaturedBundles error:', error);
     return (
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">Featured Bundles</h2>
-          <div className="max-w-md mx-auto">
+          <div className="max-w-md mx-auto text-center">
             <Alert variant="destructive" className="mb-6">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Failed to load featured bundles. Please try again.
+                Unable to load featured bundles. Please try again.
               </AlertDescription>
             </Alert>
-            <div className="text-center">
-              <Button 
-                onClick={() => refetch()} 
-                className="bg-khrate-500 hover:bg-khrate-600"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Retry
-              </Button>
-            </div>
+            <Button 
+              onClick={() => refetch()} 
+              className="bg-khrate-500 hover:bg-khrate-600"
+              disabled={isFetching}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
+              {isFetching ? 'Loading...' : 'Retry'}
+            </Button>
           </div>
         </div>
       </section>
     );
   }
 
-  if (isLoading || isFetching) {
+  if (isLoading) {
     return (
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">Featured Bundles</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1, 2, 3].map((i) => (
+            {Array.from({ length: 3 }).map((i) => (
               <div key={i} className="space-y-4">
                 <Skeleton className="h-48 w-full rounded-lg" />
                 <Skeleton className="h-4 w-3/4" />
@@ -64,18 +62,18 @@ const FeaturedBundles = () => {
   }
 
   if (!bundles || bundles.length === 0) {
-    console.log('No featured bundles to display');
     return (
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">Featured Bundles</h2>
           <div className="text-center py-12">
-            <p className="text-gray-600 mb-4">No featured bundles available at the moment.</p>
+            <p className="text-gray-600 mb-4">No featured bundles available right now.</p>
             <Button 
               onClick={() => refetch()} 
               variant="outline"
+              disabled={isFetching}
             >
-              <RefreshCw className="h-4 w-4 mr-2" />
+              <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
           </div>
@@ -90,9 +88,13 @@ const FeaturedBundles = () => {
         <h2 className="text-3xl font-bold text-center mb-12">Featured Bundles</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {bundles.map((bundle) => {
-            const discount = bundle.original_price 
+            const discount = bundle.original_price && bundle.original_price > bundle.price
               ? Math.round(((bundle.original_price - bundle.price) / bundle.original_price) * 100)
               : 0;
+            
+            const itemsDisplay = bundle.items.map(item => 
+              `${item.item_name} (${item.quantity} ${item.unit})`
+            );
             
             return (
               <BundleCard
@@ -102,7 +104,7 @@ const FeaturedBundles = () => {
                 price={bundle.price}
                 originalPrice={bundle.original_price || bundle.price}
                 discount={discount}
-                items={bundle.items?.map(item => `${item.item_name} (${item.quantity} ${item.unit || 'pieces'})`) || []}
+                items={itemsDisplay}
                 image={bundle.image_url || '/placeholder.svg'}
                 description={bundle.description || ''}
               />
