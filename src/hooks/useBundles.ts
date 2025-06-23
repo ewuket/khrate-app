@@ -28,58 +28,71 @@ export interface BundleItem {
 const fetchBundles = async (featuredOnly = false): Promise<Bundle[]> => {
   console.log(`Fetching ${featuredOnly ? 'featured' : 'all'} bundles...`);
   
-  let bundlesQuery = supabase
-    .from('bundles')
-    .select('*')
-    .eq('is_active', true)
-    .order('created_at', { ascending: false });
-  
-  if (featuredOnly) {
-    bundlesQuery = bundlesQuery.eq('is_featured', true);
-  }
-  
-  const { data: bundles, error: bundlesError } = await bundlesQuery;
-  
-  if (bundlesError) {
-    console.error('Error fetching bundles:', bundlesError);
-    throw new Error(`Failed to fetch bundles: ${bundlesError.message}`);
-  }
-  
-  if (!bundles || bundles.length === 0) {
-    console.log('No bundles found');
-    return [];
-  }
-  
-  // Fetch all items for these bundles
-  const bundleIds = bundles.map(bundle => bundle.id);
-  const { data: items, error: itemsError } = await supabase
-    .from('bundle_items')
-    .select('*')
-    .in('bundle_id', bundleIds)
-    .order('id');
-  
-  if (itemsError) {
-    console.error('Error fetching bundle items:', itemsError);
-    // Continue without items rather than failing completely
-  }
-  
-  // Group items by bundle_id
-  const itemsByBundle: Record<number, BundleItem[]> = {};
-  (items || []).forEach(item => {
-    if (!itemsByBundle[item.bundle_id]) {
-      itemsByBundle[item.bundle_id] = [];
+  try {
+    let bundlesQuery = supabase
+      .from('bundles')
+      .select('*')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
+    
+    if (featuredOnly) {
+      bundlesQuery = bundlesQuery.eq('is_featured', true);
     }
-    itemsByBundle[item.bundle_id].push(item);
-  });
-  
-  // Combine bundles with their items
-  const bundlesWithItems = bundles.map(bundle => ({
-    ...bundle,
-    items: itemsByBundle[bundle.id] || []
-  }));
-  
-  console.log(`Successfully loaded ${bundlesWithItems.length} bundles`);
-  return bundlesWithItems;
+    
+    const { data: bundles, error: bundlesError } = await bundlesQuery;
+    
+    if (bundlesError) {
+      console.error('Error fetching bundles:', bundlesError);
+      throw new Error(`Failed to fetch bundles: ${bundlesError.message}`);
+    }
+    
+    console.log('Bundles fetched:', bundles?.length || 0);
+    
+    if (!bundles || bundles.length === 0) {
+      console.log('No bundles found');
+      return [];
+    }
+    
+    // Fetch all items for these bundles
+    const bundleIds = bundles.map(bundle => bundle.id);
+    console.log('Fetching items for bundles:', bundleIds);
+    
+    const { data: items, error: itemsError } = await supabase
+      .from('bundle_items')
+      .select('*')
+      .in('bundle_id', bundleIds)
+      .order('id');
+    
+    if (itemsError) {
+      console.error('Error fetching bundle items:', itemsError);
+      // Continue without items rather than failing completely
+    }
+    
+    console.log('Bundle items fetched:', items?.length || 0);
+    
+    // Group items by bundle_id
+    const itemsByBundle: Record<number, BundleItem[]> = {};
+    (items || []).forEach(item => {
+      if (!itemsByBundle[item.bundle_id]) {
+        itemsByBundle[item.bundle_id] = [];
+      }
+      itemsByBundle[item.bundle_id].push(item);
+    });
+    
+    // Combine bundles with their items
+    const bundlesWithItems = bundles.map(bundle => ({
+      ...bundle,
+      items: itemsByBundle[bundle.id] || []
+    }));
+    
+    console.log(`Successfully loaded ${bundlesWithItems.length} bundles with items`);
+    console.log('Sample bundle:', bundlesWithItems[0]);
+    
+    return bundlesWithItems;
+  } catch (error) {
+    console.error('Error in fetchBundles:', error);
+    throw error;
+  }
 };
 
 export const useBundles = () => {

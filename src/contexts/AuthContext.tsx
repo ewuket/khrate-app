@@ -36,49 +36,52 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   useEffect(() => {
-    // Get initial session
-    const getInitialSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) {
-          console.error('Error getting session:', error);
-        } else {
-          setSession(session);
-          setUser(session?.user ?? null);
-          if (session?.user) {
-            await fetchUserProfile(session.user.id);
-          }
-        }
-      } catch (error) {
-        console.error('Error in getInitialSession:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getInitialSession();
-
-    // Listen for auth changes
+    console.log('Setting up auth listener...');
+    
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false);
         
         if (session?.user) {
-          await fetchUserProfile(session.user.id);
+          // Defer profile fetching to prevent deadlocks
+          setTimeout(() => {
+            fetchUserProfile(session.user.id);
+          }, 0);
         } else {
           setProfile(null);
+          setLoading(false);
         }
       }
     );
 
-    return () => subscription.unsubscribe();
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('Error getting session:', error);
+      } else {
+        console.log('Initial session check:', session?.user?.email);
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          fetchUserProfile(session.user.id);
+        } else {
+          setLoading(false);
+        }
+      }
+    });
+
+    return () => {
+      console.log('Cleaning up auth subscription');
+      subscription.unsubscribe();
+    };
   }, []);
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log('Fetching user profile for:', userId);
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
@@ -86,15 +89,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .single();
 
       if (error && error.code === 'PGRST116') {
-        // Profile doesn't exist, create it
+        console.log('Profile not found, creating new profile');
         await createUserProfile(userId);
       } else if (error) {
         console.error('Error fetching profile:', error);
       } else {
+        console.log('Profile loaded:', data);
         setProfile(data);
       }
     } catch (error) {
       console.error('Profile fetch error:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -111,6 +117,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         created_at: new Date().toISOString()
       };
 
+      console.log('Creating new profile:', newProfile);
+
       const { data, error } = await supabase
         .from('user_profiles')
         .insert([newProfile])
@@ -118,6 +126,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .single();
 
       if (error) throw error;
+      
+      console.log('Profile created:', data);
       setProfile(data);
     } catch (error) {
       console.error('Error creating profile:', error);
@@ -127,6 +137,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
+      console.log('Attempting sign in for:', email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -139,7 +151,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       console.log('Sign in successful:', data.user?.email);
-      toast.success('Signed in successfully!');
+      toast.success('Welcome back!');
       return { data };
     } catch (error: any) {
       console.error('Sign in exception:', error);
@@ -153,8 +165,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
       setLoading(true);
-      // Use the correct production domain for password reset
-      const redirectUrl = 'https://www.khrate.com/auth/callback';
+      console.log('Attempting sign up for:', email);
+      
+      const redirectUrl = `${window.location.origin}/`;
 
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -174,7 +187,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       console.log('Sign up successful:', data.user?.email);
-      toast.success('Account created successfully! Please check your email to confirm your account.');
+      
+      if (data.user && !data.session) {
+        toast.success('Account created! Please check your email to confirm your account.');
+      } else {
+        toast.success('Account created successfully!');
+      }
+      
       return { data };
     } catch (error: any) {
       console.error('Sign up exception:', error);
@@ -188,7 +207,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signOut = async () => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signOut();
+      console.log('Signing out user...');
+      
+      // Clear localStorage auth keys
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+          localStorage.removeItem(key);
+        }
+      });
+      
+      const { error } = await supabase.auth.signOut({ scope: 'global' });
       
       if (error) {
         console.error('Sign out error:', error);
@@ -201,11 +229,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setSession(null);
       setProfile(null);
       
-      // Show success message
+      console.log('Sign out successful');
       toast.success('Signed out successfully');
       
-      // Redirect to home page
-      window.location.href = '/';
+      // Force page reload for clean state
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 500);
     } catch (error: any) {
       console.error('Sign out exception:', error);
       toast.error('Failed to sign out');
@@ -216,8 +246,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const resetPassword = async (email: string) => {
     try {
-      // Use the correct production domain for password reset
-      const resetUrl = 'https://www.khrate.com/reset-password';
+      const resetUrl = `${window.location.origin}/reset-password`;
       
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: resetUrl
@@ -233,7 +262,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return { error: null };
     } catch (error: any) {
       console.error('Password reset exception:', error);
-      toast.error('Failed to send reset email');
+      toast.error('Failed to sen
+d reset email');
       return { error };
     }
   };
@@ -259,15 +289,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const openAuthModal = () => setIsAuthModalOpen(true);
-  const closeAuthModal = () => setIsAuthModalOpen(false);
+  const openAuthModal = () => {
+    console.log('Opening auth modal');
+    setIsAuthModalOpen(true);
+  };
+  
+  const closeAuthModal = () => {
+    console.log('Closing auth modal');
+    setIsAuthModalOpen(false);
+  };
 
   const value: AuthContextType = {
     user,
     session,
     profile,
     loading,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user && !!session,
     isAuthModalOpen,
     signIn,
     signUp,

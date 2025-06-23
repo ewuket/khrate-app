@@ -18,11 +18,17 @@ export interface OrderData {
   phone_number?: string;
 }
 
+export interface OrderResult {
+  success: boolean;
+  order?: any;
+  error?: string;
+}
+
 export const useOrderOperations = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   const fetchOrders = async () => {
     if (!user) return;
@@ -46,18 +52,46 @@ export const useOrderOperations = () => {
     }
   };
 
-  const submitOrder = async (orderData: OrderData) => {
+  const submitOrder = async (orderData: OrderData): Promise<OrderResult> => {
+    console.log('Starting order submission...', { isAuthenticated, userId: user?.id });
+    
+    if (!isAuthenticated || !user) {
+      console.error('User not authenticated');
+      toast.error('Please log in to place an order');
+      return { success: false, error: 'User not authenticated' };
+    }
+
     setIsSubmitting(true);
     try {
-      console.log('Submitting order:', orderData);
+      console.log('Submitting order with data:', orderData);
 
-      // Ensure items is properly serialized
+      // Ensure items is properly formatted
+      const formattedItems = orderData.items.map(item => ({
+        id: item.id || item.product_id,
+        name: item.name || item.product_name,
+        price: Number(item.price || item.product_price),
+        quantity: Number(item.quantity),
+        unit: item.unit || item.product_unit || 'item',
+        type: item.type || item.product_type || 'bundle'
+      }));
+
       const orderPayload = {
-        ...orderData,
-        items: JSON.stringify(orderData.items),
+        user_id: user.id,
+        items: formattedItems,
+        total_amount: Number(orderData.total_amount),
+        original_amount: Number(orderData.original_amount || orderData.total_amount),
+        discount_applied: Number(orderData.discount_applied || 0),
+        discount_percentage: Number(orderData.discount_percentage || 0),
+        delivery_address: orderData.delivery_address,
+        delivery_date: orderData.delivery_date,
+        delivery_time_slot: orderData.delivery_time_slot,
+        payment_method: orderData.payment_method,
+        phone_number: orderData.phone_number,
         status: 'pending',
         payment_status: 'pending'
       };
+
+      console.log('Final order payload:', orderPayload);
 
       const { data, error } = await supabase
         .from('orders')
@@ -71,22 +105,23 @@ export const useOrderOperations = () => {
       }
 
       console.log('Order submitted successfully:', data);
-      toast.success('Order placed successfully!');
+      toast.success('Order placed successfully! 🎉');
       
       // Refresh orders after successful submission
-      fetchOrders();
+      await fetchOrders();
       
       return {
         success: true,
         order: data
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting order:', error);
-      toast.error('Failed to place order. Please try again.');
+      const errorMessage = error.message || 'Failed to place order';
+      toast.error(errorMessage);
       
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: errorMessage
       };
     } finally {
       setIsSubmitting(false);
@@ -94,10 +129,10 @@ export const useOrderOperations = () => {
   };
 
   useEffect(() => {
-    if (user) {
+    if (user && isAuthenticated) {
       fetchOrders();
     }
-  }, [user]);
+  }, [user, isAuthenticated]);
 
   return {
     submitOrder,

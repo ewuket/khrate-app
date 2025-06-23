@@ -52,7 +52,10 @@ export const useAdminData = () => {
       
       const { data, error } = await supabase
         .from('orders')
-        .select('*')
+        .select(`
+          *,
+          user_profiles(full_name, email, phone)
+        `)
         .order('created_at', { ascending: false })
         .limit(50);
 
@@ -68,9 +71,9 @@ export const useAdminData = () => {
         status: order.status || 'pending',
         payment_status: order.payment_status || 'pending',
         created_at: order.created_at,
-        user_profile: {
-          full_name: '',
-          email: '',
+        user_profile: order.user_profiles || {
+          full_name: 'Guest User',
+          email: 'N/A',
         }
       }));
 
@@ -90,17 +93,28 @@ export const useAdminData = () => {
     try {
       console.log('Loading admin bundles...');
       
-      const { data, error } = await supabase
+      const { data: bundlesData, error: bundlesError } = await supabase
         .from('bundles')
-        .select(`
-          *,
-          bundle_items(count)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (bundlesError) throw bundlesError;
 
-      const formattedBundles: AdminBundle[] = (data || []).map((bundle: any) => ({
+      const { data: itemsData, error: itemsError } = await supabase
+        .from('bundle_items')
+        .select('bundle_id');
+
+      if (itemsError) {
+        console.warn('Could not load bundle items:', itemsError);
+      }
+
+      // Count items per bundle
+      const itemCounts: Record<number, number> = {};
+      (itemsData || []).forEach(item => {
+        itemCounts[item.bundle_id] = (itemCounts[item.bundle_id] || 0) + 1;
+      });
+
+      const formattedBundles: AdminBundle[] = (bundlesData || []).map((bundle: any) => ({
         id: bundle.id,
         title: bundle.title,
         description: bundle.description,
@@ -109,7 +123,7 @@ export const useAdminData = () => {
         is_featured: Boolean(bundle.is_featured),
         is_active: Boolean(bundle.is_active),
         created_at: bundle.created_at,
-        items_count: bundle.bundle_items?.[0]?.count || 0
+        items_count: itemCounts[bundle.id] || 0
       }));
 
       console.log('Admin bundles loaded:', formattedBundles.length);
@@ -128,15 +142,33 @@ export const useAdminData = () => {
     try {
       console.log('Loading admin stats...');
       
-      const [ordersResult, usersResult, bundlesResult] = await Promise.allSettled([
-        supabase.from('orders').select('total_amount, status, payment_status'),
-        supabase.from('user_profiles').select('*', { count: 'exact', head: true }),
-        supabase.from('bundles').select('*', { count: 'exact', head: true })
-      ]);
+      // Get orders data
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select('total_amount, status, payment_status');
 
-      const ordersData = ordersResult.status === 'fulfilled' ? ordersResult.value.data : [];
-      const usersCount = usersResult.status === 'fulfilled' ? usersResult.value.count : 0;
-      const bundlesCount = bundlesResult.status === 'fulfilled' ? bundlesResult.value.count : 0;
+      if (ordersError) {
+        console.warn('Error loading orders for stats:', ordersError);
+      }
+
+      // Get user profiles count (this represents registered users)
+      const { count: usersCount, error: usersError } = await supabase
+        .from('user_profiles')
+        .select('*', { count: 'exact', head: true });
+
+      if (usersError) {
+        console.warn('Error loading users count:', usersError);
+      }
+
+      // Get group sessions count
+      const { count: groupsCount, error: groupsError } = await supabase
+        .from('group_sessions')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'active');
+
+      if (groupsError) {
+        console.warn('Error loading groups count:', groupsError);
+      }
 
       const totalOrders = ordersData?.length || 0;
       const pendingOrders = ordersData?.filter(order => 
@@ -150,7 +182,7 @@ export const useAdminData = () => {
         total_orders: totalOrders,
         pending_orders: pendingOrders,
         total_revenue: totalRevenue,
-        active_groups: 0, // We'll implement this later
+        active_groups: groupsCount || 0,
         total_users: usersCount || 0
       };
 
