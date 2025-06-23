@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -262,8 +261,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return { error: null };
     } catch (error: any) {
       console.error('Password reset exception:', error);
-      toast.error('Failed to sen
-d reset email');
+      toast.error('Failed to send reset email');
       return { error };
     }
   };
