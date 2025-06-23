@@ -9,9 +9,15 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 const FeaturedBundles = () => {
   const { data: bundles, isLoading, error, refetch, isFetching } = useFeaturedBundles();
   
-  console.log('FeaturedBundles render:', { bundlesCount: bundles?.length || 0, isLoading, isFetching, error });
+  console.log('FeaturedBundles render:', { 
+    bundlesCount: bundles?.length || 0, 
+    isLoading, 
+    isFetching, 
+    error: error?.message 
+  });
 
   if (error) {
+    console.error('FeaturedBundles error:', error);
     return (
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
@@ -58,6 +64,7 @@ const FeaturedBundles = () => {
   }
 
   if (!bundles || bundles.length === 0) {
+    console.log('No featured bundles to display');
     return (
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
@@ -96,7 +103,7 @@ const FeaturedBundles = () => {
                 originalPrice={bundle.original_price || bundle.price}
                 discount={discount}
                 items={bundle.items?.map(item => `${item.item_name} (${item.quantity} ${item.unit || 'pieces'})`) || []}
-                image={bundle.image_url ||'/placeholder.svg'}
+                image={bundle.image_url || '/placeholder.svg'}
                 description={bundle.description || ''}
               />
             );

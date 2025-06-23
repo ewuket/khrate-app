@@ -9,10 +9,15 @@ import { Button } from "@/components/ui/button";
 const Bundles = () => {
   const { data: bundles, isLoading, error, refetch, isFetching } = useBundles();
 
-  console.log('Bundles page render - Loading:', isLoading, 'Fetching:', isFetching, 'Error:', error, 'Data:', bundles);
+  console.log('Bundles page render:', { 
+    bundlesCount: bundles?.length || 0, 
+    isLoading, 
+    isFetching, 
+    error: error?.message 
+  });
 
   if (error) {
-    console.error('Error loading bundles:', error);
+    console.error('Bundles page error:', error);
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
@@ -73,6 +78,7 @@ const Bundles = () => {
   }
 
   if (!bundles || bundles.length === 0) {
+    console.log('No bundles to display');
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
@@ -83,7 +89,7 @@ const Bundles = () => {
           
           <div className="text-center py-12">
             <h2 className="text-2xl font-semibold text-gray-700 mb-4">No bundles available</h2>
-            <p className="text-gray-500 mb-6">We're working on adding new bundles. Please check back soon!</p>
+            <p className="text-gray-500 mb-6">We're working on getting fresh bundles ready for you!</p>
             <Button 
               onClick={() => refetch()} 
               className="bg-khrate-500 hover:bg-khrate-600 text-white px-6 py-2 rounded-lg transition-colors"
@@ -96,6 +102,8 @@ const Bundles = () => {
       </div>
     );
   }
+
+  console.log('Rendering bundles:', bundles.length);
 
   return (
     <div className="min-h-screen bg-gray-50">

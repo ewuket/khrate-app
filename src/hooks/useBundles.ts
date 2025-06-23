@@ -25,69 +25,78 @@ export interface BundleItem {
   created_at: string | null;
 }
 
+const fetchBundlesWithItems = async (featured = false) => {
+  console.log(`Fetching ${featured ? 'featured' : 'all'} bundles...`);
+  
+  // Build the query for bundles
+  let query = supabase
+    .from('bundles')
+    .select('*')
+    .eq('is_active', true);
+  
+  if (featured) {
+    query = query.eq('is_featured', true);
+  }
+  
+  const { data: bundles, error: bundlesError } = await query
+    .order('created_at', { ascending: false });
+
+  if (bundlesError) {
+    console.error('Error fetching bundles:', bundlesError);
+    throw new Error(`Failed to fetch bundles: ${bundlesError.message}`);
+  }
+
+  console.log('Bundles fetched:', bundles?.length || 0);
+
+  if (!bundles || bundles.length === 0) {
+    console.log('No bundles found');
+    return [];
+  }
+
+  // Fetch bundle items for all bundles
+  const bundleIds = bundles.map(bundle => bundle.id);
+  console.log('Fetching items for bundle IDs:', bundleIds);
+  
+  const { data: bundleItems, error: itemsError } = await supabase
+    .from('bundle_items')
+    .select('*')
+    .in('bundle_id', bundleIds)
+    .order('id');
+
+  if (itemsError) {
+    console.error('Error fetching bundle items:', itemsError);
+    // Continue without items data instead of throwing
+  }
+
+  console.log('Bundle items fetched:', bundleItems?.length || 0);
+
+  // Group items by bundle_id
+  const itemsByBundle = (bundleItems || []).reduce((acc: Record<number, BundleItem[]>, item) => {
+    if (item.bundle_id) {
+      if (!acc[item.bundle_id]) {
+        acc[item.bundle_id] = [];
+      }
+      acc[item.bundle_id].push(item);
+    }
+    return acc;
+  }, {});
+
+  // Combine bundles with their items
+  const bundlesWithItems = bundles.map(bundle => ({
+    ...bundle,
+    items: itemsByBundle[bundle.id] || []
+  }));
+
+  console.log('Final bundles with items:', bundlesWithItems);
+  return bundlesWithItems;
+};
+
 export const useBundles = () => {
   return useQuery({
     queryKey: ['bundles'],
-    queryFn: async () => {
-      console.log('Fetching all bundles...');
-      
-      const { data: bundles, error: bundlesError } = await supabase
-        .from('bundles')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
-
-      if (bundlesError) {
-        console.error('Error fetching bundles:', bundlesError);
-        throw new Error(`Failed to fetch bundles: ${bundlesError.message}`);
-      }
-
-      console.log('Raw bundles data:', bundles);
-
-      if (!bundles || bundles.length === 0) {
-        console.log('No bundles found - this might be the issue');
-        return [];
-      }
-
-      // Fetch bundle items for all bundles
-      const bundleIds = bundles.map(bundle => bundle.id);
-      console.log('Fetching items for bundle IDs:', bundleIds);
-      
-      const { data: bundleItems, error: itemsError } = await supabase
-        .from('bundle_items')
-        .select('*')
-        .in('bundle_id', bundleIds)
-        .order('id');
-
-      if (itemsError) {
-        console.error('Error fetching bundle items:', itemsError);
-        // Continue without items data instead of throwing
-      }
-
-      console.log('Bundle items fetched:', bundleItems?.length || 0);
-
-      // Group items by bundle_id
-      const itemsByBundle = (bundleItems || []).reduce((acc: Record<number, BundleItem[]>, item) => {
-        if (item.bundle_id) {
-          if (!acc[item.bundle_id]) {
-            acc[item.bundle_id] = [];
-          }
-          acc[item.bundle_id].push(item);
-        }
-        return acc;
-      }, {});
-
-      // Combine bundles with their items
-      const bundlesWithItems = bundles.map(bundle => ({
-        ...bundle,
-        items: itemsByBundle[bundle.id] || []
-      }));
-
-      console.log('Final bundles with items:', bundlesWithItems);
-      return bundlesWithItems;
-    },
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    queryFn: () => fetchBundlesWithItems(false),
+    retry: 2,
+    retryDelay: 1000,
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -96,67 +105,9 @@ export const useBundles = () => {
 export const useFeaturedBundles = () => {
   return useQuery({
     queryKey: ['bundles', 'featured'],
-    queryFn: async () => {
-      console.log('Fetching featured bundles...');
-      
-      const { data: bundles, error: bundlesError } = await supabase
-        .from('bundles')
-        .select('*')
-        .eq('is_active', true)
-        .eq('is_featured', true)
-        .order('created_at', { ascending: false });
-
-      if (bundlesError) {
-        console.error('Error fetching featured bundles:', bundlesError);
-        throw new Error(`Failed to fetch featured bundles: ${bundlesError.message}`);
-      }
-
-      console.log('Raw featured bundles data:', bundles);
-
-      if (!bundles || bundles.length === 0) {
-        console.log('No featured bundles found');
-        return [];
-      }
-
-      // Fetch bundle items for featured bundles
-      const bundleIds = bundles.map(bundle => bundle.id);
-      console.log('Fetching items for featured bundle IDs:', bundleIds);
-      
-      const { data: bundleItems, error: itemsError } = await supabase
-        .from('bundle_items')
-        .select('*')
-        .in('bundle_id', bundleIds)
-        .order('id');
-
-      if (itemsError) {
-        console.error('Error fetching featured bundle items:', itemsError);
-        // Continue without items data instead of throwing
-      }
-
-      console.log('Featured bundle items fetched:', bundleItems?.length || 0);
-
-      // Group items by bundle_id
-      const itemsByBundle = (bundleItems || []).reduce((acc: Record<number, BundleItem[]>, item) => {
-        if (item.bundle_id) {
-          if (!acc[item.bundle_id]) {
-            acc[item.bundle_id] = [];
-          }
-          acc[item.bundle_id].push(item);
-        }
-        return acc;
-      }, {});
-
-      // Combine bundles with their items
-      const bundlesWithItems = bundles.map(bundle => ({
-        ...bundle,
-        items: itemsByBundle[bundle.id] || []
-      }));
-
-      console.log('Final featured bundles with items:', bundlesWithItems);
-      return bundlesWithItems;
-    },
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    queryFn: () => fetchBundlesWithItems(true),
+    retry: 2,
+    retryDelay: 1000,
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
