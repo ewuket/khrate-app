@@ -4,7 +4,6 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye, ShoppingCart } from "lucide-react";
-import BundleAddToCartButton from './BundleAddToCartButton';
 import BundlePreviewModal from './BundlePreviewModal';
 import { useCartContext } from '@/contexts/CartContext';
 
@@ -33,8 +32,9 @@ const BundleCard: React.FC<BundleCardProps> = ({
   features = [],
   onClick
 }) => {
-  const { addToCart, isAddingToCart } = useCartContext();
+  const { addToCart } = useCartContext();
   const [showPreview, setShowPreview] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
 
   const formatPrice = (price: number) => {
     return `${price.toLocaleString()} RWF`;
@@ -43,6 +43,8 @@ const BundleCard: React.FC<BundleCardProps> = ({
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    setIsAdding(true);
     
     const bundleItem = {
       id,
@@ -54,7 +56,17 @@ const BundleCard: React.FC<BundleCardProps> = ({
     };
 
     console.log('Adding bundle to cart:', bundleItem);
-    await addToCart(bundleItem);
+    
+    try {
+      await addToCart(bundleItem);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+    } finally {
+      // Reset adding state after a short delay
+      setTimeout(() => {
+        setIsAdding(false);
+      }, 1000);
+    }
   };
 
   const handlePreview = (e: React.MouseEvent) => {
@@ -62,8 +74,6 @@ const BundleCard: React.FC<BundleCardProps> = ({
     e.stopPropagation();
     setShowPreview(true);
   };
-
-  const isAdding = isAddingToCart(id, 'bundle');
 
   const bundleForPreview = {
     id,
@@ -143,7 +153,6 @@ const BundleCard: React.FC<BundleCardProps> = ({
             </div>
           )}
 
-          {/* Items count display */}
           <div className="text-xs text-gray-500 mb-2">
             {items.length} items included
           </div>

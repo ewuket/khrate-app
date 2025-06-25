@@ -37,7 +37,7 @@ export const useAdminStats = () => {
           .select('*', { count: 'exact', head: true })
           .eq('status', 'active');
 
-        // Get total users
+        // Get total users from user_profiles
         const { count: totalUsers } = await supabase
           .from('user_profiles')
           .select('*', { count: 'exact', head: true });
