@@ -1,11 +1,13 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAdminData } from "@/hooks/useAdminData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RefreshCw, Package, ShoppingCart, Users, DollarSign } from "lucide-react";
 import { useAdmin } from "@/contexts/AdminContext";
+import AdminBundlesList from "./AdminBundlesList";
 
 const AdminDashboard = () => {
   const { adminUser, logoutAdmin } = useAdmin();
@@ -95,76 +97,136 @@ const AdminDashboard = () => {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Recent Orders */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ShoppingCart className="h-5 w-5" />
-                Recent Orders ({orders.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {orders.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No orders found</p>
-              ) : (
-                <div className="space-y-4">
-                  {orders.slice(0, 5).map((order) => (
-                    <div key={order.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                      <div>
-                        <p className="font-medium">Order #{order.id.slice(0, 8)}</p>
-                        <p className="text-sm text-gray-600">{order.delivery_address}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">{formatCurrency(order.total_amount)}</p>
-                        <Badge variant={order.status === 'completed' ? 'default' : 'secondary'}>
-                          {order.status}
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        {/* Main Content Tabs */}
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="bundles">Bundle Management</TabsTrigger>
+            <TabsTrigger value="orders">Order Management</TabsTrigger>
+          </TabsList>
 
-          {/* Bundles Overview */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5" />
-                Bundles Overview ({bundles.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {bundles.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No bundles found</p>
-              ) : (
-                <div className="space-y-4">
-                  {bundles.slice(0, 5).map((bundle) => (
-                    <div key={bundle.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                      <div>
-                        <p className="font-medium">{bundle.title}</p>
-                        <p className="text-sm text-gray-600">{bundle.items_count} items</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">{formatCurrency(bundle.price)}</p>
-                        <div className="flex gap-1">
-                          {bundle.is_featured && (
-                            <Badge variant="default" className="text-xs">Featured</Badge>
-                          )}
-                          <Badge variant={bundle.is_active ? 'default' : 'secondary'} className="text-xs">
-                            {bundle.is_active ? 'Active' : 'Inactive'}
-                          </Badge>
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Recent Orders */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ShoppingCart className="h-5 w-5" />
+                    Recent Orders ({orders.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {orders.length === 0 ? (
+                    <p className="text-gray-500 text-center py-4">No orders found</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {orders.slice(0, 5).map((order) => (
+                        <div key={order.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                          <div>
+                            <p className="font-medium">Order #{order.id.slice(0, 8)}</p>
+                            <p className="text-sm text-gray-600">{order.delivery_address}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-medium">{formatCurrency(order.total_amount)}</p>
+                            <Badge variant={order.status === 'completed' ? 'default' : 'secondary'}>
+                              {order.status}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Bundles Overview */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Package className="h-5 w-5" />
+                    Bundles Overview ({bundles.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {bundles.length === 0 ? (
+                    <p className="text-gray-500 text-center py-4">No bundles found</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {bundles.slice(0, 5).map((bundle) => (
+                        <div key={bundle.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                          <div>
+                            <p className="font-medium">{bundle.title}</p>
+                            <p className="text-sm text-gray-600">{bundle.items_count} items</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-medium">{formatCurrency(bundle.price)}</p>
+                            <div className="flex gap-1">
+                              {bundle.is_featured && (
+                                <Badge variant="default" className="text-xs">Featured</Badge>
+                              )}
+                              <Badge variant={bundle.is_active ? 'default' : 'secondary'} className="text-xs">
+                                {bundle.is_active ? 'Active' : 'Inactive'}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="bundles">
+            <AdminBundlesList />
+          </TabsContent>
+
+          <TabsContent value="orders">
+            <Card>
+              <CardHeader>
+                <CardTitle>Order Management</CardTitle>
+                <p className="text-gray-600">View and manage customer orders</p>
+              </CardHeader>
+              <CardContent>
+                {orders.length === 0 ? (
+                  <p className="text-gray-500 text-center py-8">No orders found</p>
+                ) : (
+                  <div className="space-y-4">
+                    {orders.map((order) => (
+                      <div key={order.id} className="border rounded-lg p-4 space-y-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-semibold">Order #{order.id.slice(0, 8)}</h3>
+                            <p className="text-sm text-gray-600">
+                              {order.user_profile?.full_name} - {order.user_profile?.email}
+                            </p>
+                            <p className="text-sm text-gray-600">{order.delivery_address}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-lg">{formatCurrency(order.total_amount)}</p>
+                            <div className="flex gap-2 mt-1">
+                              <Badge variant={order.status === 'completed' ? 'default' : 'secondary'}>
+                                {order.status}
+                              </Badge>
+                              <Badge variant={order.payment_status === 'completed' ? 'default' : 'destructive'}>
+                                {order.payment_status}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          <p>Items: {Array.isArray(order.items) ? order.items.length : 0} items</p>
+                          <p>Created: {new Date(order.created_at).toLocaleDateString()}</p>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

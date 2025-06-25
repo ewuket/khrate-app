@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminStats, AdminOrder } from "@/types/admin";
-import { useBundles } from "./useBundles";
+import { useAdminBundles } from "./useAdminBundles";
 import { useCallback } from "react";
 
 export const useAdminStats = () => {
@@ -117,7 +117,7 @@ export const useAdminOrders = () => {
 export const useAdminData = () => {
   const statsQuery = useAdminStats();
   const ordersQuery = useAdminOrders();
-  const bundlesQuery = useBundles();
+  const bundlesQuery = useAdminBundles();
 
   const refreshAllData = useCallback(() => {
     statsQuery.refetch();

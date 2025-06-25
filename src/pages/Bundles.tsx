@@ -13,10 +13,12 @@ const Bundles = () => {
     bundlesCount: bundles?.length, 
     isLoading, 
     isFetching, 
-    error 
+    error,
+    bundles: bundles?.slice(0, 2) // Log first 2 bundles for debugging
   });
 
   if (error) {
+    console.error('Bundles page error:', error);
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
@@ -29,7 +31,7 @@ const Bundles = () => {
             <Alert variant="destructive" className="mb-6">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Unable to load bundles. Please try again.
+                Unable to load bundles: {error.message || 'Unknown error'}
               </AlertDescription>
             </Alert>
             
@@ -48,6 +50,7 @@ const Bundles = () => {
   }
 
   if (isLoading) {
+    console.log('Bundles page - Loading state');
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
@@ -78,6 +81,7 @@ const Bundles = () => {
   }
 
   if (!bundles || bundles.length === 0) {
+    console.log('Bundles page - No bundles found');
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
@@ -103,6 +107,8 @@ const Bundles = () => {
     );
   }
 
+  console.log('Bundles page - Rendering bundles:', bundles.length);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
@@ -120,6 +126,13 @@ const Bundles = () => {
             const itemsDisplay = bundle.items.map(item => 
               `${item.item_name} (${item.quantity} ${item.unit})`
             );
+            
+            console.log('Rendering bundle:', {
+              id: bundle.id,
+              title: bundle.title,
+              itemsCount: bundle.items.length,
+              imageUrl: bundle.image_url
+            });
             
             return (
               <BundleCard

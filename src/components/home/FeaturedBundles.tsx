@@ -13,10 +13,12 @@ const FeaturedBundles = () => {
     bundlesCount: bundles?.length, 
     isLoading, 
     isFetching, 
-    error 
+    error,
+    bundles: bundles?.slice(0, 2) // Log first 2 featured bundles for debugging
   });
 
   if (error) {
+    console.error('Featured bundles error:', error);
     return (
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
@@ -25,7 +27,7 @@ const FeaturedBundles = () => {
             <Alert variant="destructive" className="mb-6">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Unable to load featured bundles. Please try again.
+                Unable to load featured bundles: {error.message || 'Unknown error'}
               </AlertDescription>
             </Alert>
             <Button 
@@ -43,6 +45,7 @@ const FeaturedBundles = () => {
   }
 
   if (isLoading) {
+    console.log('Featured bundles - Loading state');
     return (
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
@@ -62,6 +65,7 @@ const FeaturedBundles = () => {
   }
 
   if (!bundles || bundles.length === 0) {
+    console.log('Featured bundles - No bundles found');
     return (
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
@@ -82,6 +86,8 @@ const FeaturedBundles = () => {
     );
   }
 
+  console.log('Featured bundles - Rendering bundles:', bundles.length);
+
   return (
     <section className="py-16 bg-white">
       <div className="container mx-auto px-4">
@@ -95,6 +101,13 @@ const FeaturedBundles = () => {
             const itemsDisplay = bundle.items.map(item => 
               `${item.item_name} (${item.quantity} ${item.unit})`
             );
+            
+            console.log('Rendering featured bundle:', {
+              id: bundle.id,
+              title: bundle.title,
+              isFeatured: bundle.is_featured,
+              itemsCount: bundle.items.length
+            });
             
             return (
               <BundleCard
