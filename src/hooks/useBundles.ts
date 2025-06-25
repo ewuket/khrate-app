@@ -29,7 +29,7 @@ const fetchBundles = async (featuredOnly = false): Promise<Bundle[]> => {
   console.log(`Fetching ${featuredOnly ? 'featured' : 'all'} bundles...`);
   
   try {
-    // First try to fetch bundles without RLS restrictions
+    // Build the query for bundles
     let bundlesQuery = supabase
       .from('bundles')
       .select('*')
@@ -45,7 +45,7 @@ const fetchBundles = async (featuredOnly = false): Promise<Bundle[]> => {
     if (bundlesError) {
       console.error('Error fetching bundles:', bundlesError);
       
-      // If RLS is blocking, try with admin access or public access
+      // If there's an RLS issue, try to handle it gracefully
       if (bundlesError.code === 'PGRST301' || bundlesError.message?.includes('policy')) {
         console.log('RLS blocking bundles, trying alternative approach...');
         

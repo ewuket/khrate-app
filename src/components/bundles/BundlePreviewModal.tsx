@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -58,10 +59,10 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-4xl max-h-[95vh] overflow-y-auto p-0 bg-white">
-          <DialogHeader className="flex flex-row items-center justify-between p-6 border-b bg-gradient-to-r from-khrate-500 to-khrate-600 text-white">
-            <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-              <Package className="h-6 w-6" />
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto p-0 bg-white">
+          <DialogHeader className="flex flex-row items-center justify-between p-4 border-b bg-gradient-to-r from-khrate-500 to-khrate-600 text-white">
+            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+              <Package className="h-5 w-5" />
               {bundle.title}
             </DialogTitle>
             <Button 
@@ -74,19 +75,19 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
             </Button>
           </DialogHeader>
           
-          <div className="p-6">
-            {/* Hero Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <div className="p-4">
+            {/* Compact Hero Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               {/* Bundle Image */}
               <div className="relative">
-                <div className="relative overflow-hidden rounded-xl shadow-lg h-80">
+                <div className="relative overflow-hidden rounded-lg shadow-md h-48">
                   <img 
                     src={bundle.image} 
                     alt={bundle.title}
                     className="w-full h-full object-cover"
                   />
                   {savings && (
-                    <div className="absolute top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">
+                    <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-md">
                       -{savings.percentage}% OFF
                     </div>
                   )}
@@ -94,88 +95,86 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
               </div>
               
               {/* Bundle Info */}
-              <div className="flex flex-col justify-center space-y-6">
+              <div className="flex flex-col justify-center space-y-3">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">{bundle.title}</h1>
-                  <p className="text-gray-600 text-lg mb-4">
+                  <h1 className="text-xl font-bold text-gray-900 mb-1">{bundle.title}</h1>
+                  <p className="text-gray-600 text-sm mb-3">
                     {bundle.description || "Fresh, quality ingredients delivered to your door"}
                   </p>
                   
                   {/* Price Section */}
-                  <div className="mb-6">
-                    <div className="text-4xl font-bold text-khrate-600 mb-2">
+                  <div className="mb-3">
+                    <div className="text-2xl font-bold text-khrate-600 mb-1">
                       {formatPrice(bundle.price)}
                     </div>
                     {bundle.originalPrice && (
-                      <div className="flex items-center gap-3">
-                        <span className="text-xl text-gray-500 line-through">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-500 line-through">
                           {formatPrice(bundle.originalPrice)}
                         </span>
-                        <span className="text-lg text-green-600 font-semibold bg-green-50 px-3 py-1 rounded-full">
+                        <span className="text-sm text-green-600 font-semibold bg-green-50 px-2 py-0.5 rounded">
                           Save {formatPrice(savings?.amount || 0)}
                         </span>
                       </div>
                     )}
                   </div>
 
-                  {/* Features */}
-                  <div className="flex flex-wrap gap-4 mb-6">
-                    <div className="flex items-center gap-2 text-sm bg-green-50 px-3 py-2 rounded-full">
-                      <Star className="h-4 w-4 text-green-600" />
-                      <span className="text-green-700">Premium Quality</span>
+                  {/* Compact Features */}
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    <div className="flex items-center gap-1 text-xs bg-green-50 px-2 py-1 rounded">
+                      <Star className="h-3 w-3 text-green-600" />
+                      <span className="text-green-700">Premium</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm bg-blue-50 px-3 py-2 rounded-full">
-                      <Truck className="h-4 w-4 text-blue-600" />
+                    <div className="flex items-center gap-1 text-xs bg-blue-50 px-2 py-1 rounded">
+                      <Truck className="h-3 w-3 text-blue-600" />
                       <span className="text-blue-700">Fast Delivery</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm bg-orange-50 px-3 py-2 rounded-full">
-                      <Clock className="h-4 w-4 text-orange-600" />
+                    <div className="flex items-center gap-1 text-xs bg-orange-50 px-2 py-1 rounded">
+                      <Clock className="h-3 w-3 text-orange-600" />
                       <span className="text-orange-700">Same Day</span>
                     </div>
                   </div>
                 </div>
                 
-                {/* Action Buttons */}
-                <div className="flex flex-col gap-3">
+                {/* Compact Action Buttons */}
+                <div className="flex flex-col gap-2">
                   <Button
                     onClick={handleAddToCart}
                     disabled={isAdding}
-                    className="w-full bg-khrate-500 hover:bg-khrate-600 text-white py-4 text-lg font-semibold"
-                    size="lg"
+                    className="w-full bg-khrate-500 hover:bg-khrate-600 text-white py-2 text-sm font-semibold"
                   >
-                    <ShoppingCart className="h-5 w-5 mr-2" />
-                    {isAdding ? 'Adding to Cart...' : 'Add to Cart'}
+                    <ShoppingCart className="h-4 w-4 mr-2" />
+                    {isAdding ? 'Adding...' : 'Add to Cart'}
                   </Button>
                   
                   <Button
                     onClick={handleProceedToCheckout}
                     variant="outline"
-                    className="w-full border-2 border-khrate-500 text-khrate-600 hover:bg-khrate-50 py-4 text-lg font-semibold"
-                    size="lg"
+                    className="w-full border-khrate-500 text-khrate-600 hover:bg-khrate-50 py-2 text-sm font-semibold"
                   >
-                    <CreditCard className="h-5 w-5 mr-2" />
+                    <CreditCard className="h-4 w-4 mr-2" />
                     Buy Now
                   </Button>
                 </div>
               </div>
             </div>
             
-            {/* Items Section */}
-            <div className="bg-gray-50 rounded-xl p-6">
-              <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-                What's included in this bundle
+            {/* Compact Items Section */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="text-lg font-bold text-gray-900 mb-3 text-center">
+                What's included ({bundle.items.length} items)
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {bundle.items.map((item, index) => (
-                  <div key={index} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                  <div key={index} className="bg-white p-2 rounded border border-gray-200 hover:shadow-sm transition-shadow">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 bg-khrate-500 rounded-full flex-shrink-0"></div>
-                        <span className="font-medium text-gray-800">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-khrate-500 rounded-full flex-shrink-0"></div>
+                        <span className="font-medium text-gray-800 text-sm">
                           {item.name}
                         </span>
                       </div>
-                      <span className="text-khrate-600 font-bold">
+                      <span className="text-khrate-600 font-bold text-sm">
                         {typeof item.quantity === 'number' && item.quantity < 1 
                           ? `${item.quantity}kg` 
                           : item.quantity
@@ -187,28 +186,28 @@ const BundlePreviewModal: React.FC<BundlePreviewModalProps> = ({
               </div>
             </div>
 
-            {/* Why Choose Section */}
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center p-4">
-                <div className="w-16 h-16 bg-khrate-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Truck className="h-8 w-8 text-khrate-600" />
+            {/* Compact Why Choose Section */}
+            <div className="mt-4 grid grid-cols-3 gap-3">
+              <div className="text-center p-2">
+                <div className="w-10 h-10 bg-khrate-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <Truck className="h-5 w-5 text-khrate-600" />
                 </div>
-                <h4 className="font-semibold text-gray-800 mb-2">Fast Delivery</h4>
-                <p className="text-sm text-gray-600">Same day delivery available to your doorstep</p>
+                <h4 className="font-semibold text-gray-800 mb-1 text-sm">Fast Delivery</h4>
+                <p className="text-xs text-gray-600">Same day delivery</p>
               </div>
-              <div className="text-center p-4">
-                <div className="w-16 h-16 bg-khrate-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Star className="h-8 w-8 text-khrate-600" />
+              <div className="text-center p-2">
+                <div className="w-10 h-10 bg-khrate-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <Star className="h-5 w-5 text-khrate-600" />
                 </div>
-                <h4 className="font-semibold text-gray-800 mb-2">Premium Quality</h4>
-                <p className="text-sm text-gray-600">Handpicked fresh ingredients for your family</p>
+                <h4 className="font-semibold text-gray-800 mb-1 text-sm">Premium Quality</h4>
+                <p className="text-xs text-gray-600">Fresh ingredients</p>
               </div>
-              <div className="text-center p-4">
-                <div className="w-16 h-16 bg-khrate-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Package className="h-8 w-8 text-khrate-600" />
+              <div className="text-center p-2">
+                <div className="w-10 h-10 bg-khrate-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <Package className="h-5 w-5 text-khrate-600" />
                 </div>
-                <h4 className="font-semibold text-gray-800 mb-2">Great Value</h4>
-                <p className="text-sm text-gray-600">Save money with our bundled packages</p>
+                <h4 className="font-semibold text-gray-800 mb-1 text-sm">Great Value</h4>
+                <p className="text-xs text-gray-600">Save money</p>
               </div>
             </div>
           </div>
