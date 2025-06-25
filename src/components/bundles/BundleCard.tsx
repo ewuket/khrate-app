@@ -44,6 +44,8 @@ const BundleCard: React.FC<BundleCardProps> = ({
     e.preventDefault();
     e.stopPropagation();
     
+    if (isAdding) return; // Prevent double clicks
+    
     setIsAdding(true);
     
     const bundleItem = {
@@ -62,10 +64,10 @@ const BundleCard: React.FC<BundleCardProps> = ({
     } catch (error) {
       console.error('Error adding to cart:', error);
     } finally {
-      // Reset adding state after a short delay
+      // Reset adding state quickly to allow multiple additions
       setTimeout(() => {
         setIsAdding(false);
-      }, 1000);
+      }, 500);
     }
   };
 

@@ -44,80 +44,84 @@ const fetchBundles = async (featuredOnly = false): Promise<Bundle[]> => {
     
     if (bundlesError) {
       console.error('Error fetching bundles:', bundlesError);
+      throw new Error(`Failed to fetch bundles: ${bundlesError.message}`);
+    }
+
+    console.log('Bundles fetched successfully:', bundles?.length || 0);
+    
+    if (!bundles || bundles.length === 0) {
+      console.log('No bundles found, returning empty array');
+      return [];
+    }
+    
+    // Fetch all items for these bundles
+    const bundleIds = bundles.map(bundle => bundle.id);
+    console.log('Fetching items for bundles:', bundleIds);
+    
+    const { data: items, error: itemsError } = await supabase
+      .from('bundle_items')
+      .select('*')
+      .in('bundle_id', bundleIds)
+      .order('id');
+    
+    if (itemsError) {
+      console.error('Error fetching bundle items:', itemsError);
+      // Continue without items rather than failing completely
+    }
+    
+    console.log('Bundle items fetched:', items?.length || 0);
+    
+    // Group items by bundle_id
+    const itemsByBundle: Record<number, BundleItem[]> = {};
+    (items || []).forEach(item => {
+      if (!itemsByBundle[item.bundle_id]) {
+        itemsByBundle[item.bundle_id] = [];
+      }
+      itemsByBundle[item.bundle_id].push(item);
+    });
+    
+    // Combine bundles with their items and add proper images
+    const bundlesWithItems = bundles.map(bundle => {
+      let imageUrl = bundle.image_url;
       
-      // If there's an RLS issue, try to handle it gracefully
-      if (bundlesError.code === 'PGRST301' || bundlesError.message?.includes('policy')) {
-        console.log('RLS blocking bundles, trying alternative approach...');
-        
-        // Try to get current user and check if admin
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          console.log('User authenticated, retrying bundle fetch...');
-          const { data: retryBundles, error: retryError } = await bundlesQuery;
-          if (retryError) {
-            console.error('Retry failed:', retryError);
-            return [];
-          }
-          return processBundles(retryBundles || []);
+      // Add appropriate images for each bundle based on title
+      if (!imageUrl || imageUrl === '/placeholder.svg') {
+        const title = bundle.title.toLowerCase();
+        if (title.includes('essential breakfast')) {
+          imageUrl = '/lovable-uploads/280f9459-3e15-4683-85fb-0295c65c6045.png';
+        } else if (title.includes('family essential')) {
+          imageUrl = '/lovable-uploads/4730e151-0c90-4bde-a3cf-7eb370e2cac1.png';
+        } else if (title.includes('premium household')) {
+          imageUrl = '/lovable-uploads/616885e4-604b-4999-8a22-90a738d3c1e0.png';
+        } else if (title.includes('fresh vegetable')) {
+          imageUrl = '/lovable-uploads/ea7e14fb-6084-4c08-94cf-b35bb353cd1c.png';
+        } else if (title.includes('tropical fruit')) {
+          imageUrl = '/lovable-uploads/99149a9c-234b-46ab-bd67-67d22129abb2.png';
+        } else if (title.includes('protein power')) {
+          imageUrl = '/lovable-uploads/87618cc5-dec8-4826-9426-51ad24b6362a.png';
+        } else if (title.includes('healthy snack')) {
+          imageUrl = '/lovable-uploads/7bd74977-70dd-4c12-8ccd-42b15a0320c1.png';
+        } else if (title.includes('dairy delight')) {
+          imageUrl = '/lovable-uploads/b2a772dc-4abb-463a-88e9-370f4fdd2684.png';
         } else {
-          console.log('No authenticated user, returning empty array');
-          return [];
+          imageUrl = '/lovable-uploads/44536f37-66fe-4604-a318-5afc62c7fcdf.png';
         }
       }
       
-      throw new Error(`Failed to fetch bundles: ${bundlesError.message}`);
-    }
+      return {
+        ...bundle,
+        image_url: imageUrl,
+        items: itemsByBundle[bundle.id] || []
+      };
+    });
     
-    return processBundles(bundles || []);
+    console.log(`Successfully processed ${bundlesWithItems.length} bundles with items`);
+    
+    return bundlesWithItems;
   } catch (error) {
     console.error('Error in fetchBundles:', error);
     throw error;
   }
-};
-
-const processBundles = async (bundles: any[]): Promise<Bundle[]> => {
-  console.log('Processing bundles:', bundles.length);
-  
-  if (bundles.length === 0) {
-    console.log('No bundles found');
-    return [];
-  }
-  
-  // Fetch all items for these bundles
-  const bundleIds = bundles.map(bundle => bundle.id);
-  console.log('Fetching items for bundles:', bundleIds);
-  
-  const { data: items, error: itemsError } = await supabase
-    .from('bundle_items')
-    .select('*')
-    .in('bundle_id', bundleIds)
-    .order('id');
-  
-  if (itemsError) {
-    console.error('Error fetching bundle items:', itemsError);
-    // Continue without items rather than failing completely
-  }
-  
-  console.log('Bundle items fetched:', items?.length || 0);
-  
-  // Group items by bundle_id
-  const itemsByBundle: Record<number, BundleItem[]> = {};
-  (items || []).forEach(item => {
-    if (!itemsByBundle[item.bundle_id]) {
-      itemsByBundle[item.bundle_id] = [];
-    }
-    itemsByBundle[item.bundle_id].push(item);
-  });
-  
-  // Combine bundles with their items
-  const bundlesWithItems = bundles.map(bundle => ({
-    ...bundle,
-    items: itemsByBundle[bundle.id] || []
-  }));
-  
-  console.log(`Successfully processed ${bundlesWithItems.length} bundles with items`);
-  
-  return bundlesWithItems;
 };
 
 export const useBundles = () => {
@@ -125,7 +129,8 @@ export const useBundles = () => {
     queryKey: ['bundles'],
     queryFn: () => fetchBundles(false),
     staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 2,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 };
 
@@ -134,6 +139,7 @@ export const useFeaturedBundles = () => {
     queryKey: ['bundles', 'featured'],
     queryFn: () => fetchBundles(true),
     staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 2,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 };
