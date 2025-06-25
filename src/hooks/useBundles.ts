@@ -128,9 +128,9 @@ export const useBundles = () => {
   return useQuery({
     queryKey: ['bundles'],
     queryFn: () => fetchBundles(false),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 30 * 1000, // 30 seconds instead of 5 minutes for better debugging
+    retry: 2, // Reduced retry attempts
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
   });
 };
 
@@ -138,8 +138,8 @@ export const useFeaturedBundles = () => {
   return useQuery({
     queryKey: ['bundles', 'featured'],
     queryFn: () => fetchBundles(true),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 30 * 1000, // 30 seconds instead of 5 minutes for better debugging
+    retry: 2, // Reduced retry attempts
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
   });
 };
