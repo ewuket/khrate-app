@@ -2,7 +2,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AdminProvider } from "@/contexts/AdminContext";
 import { CartProvider } from "@/contexts/CartContext";
@@ -41,16 +41,16 @@ function App() {
                     <Route path="/admin/dashboard" element={<AdminDashboard />} />
                     <Route path="/auth/callback" element={<AuthCallback />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
-                    <Route element={<Layout />}>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/about" element={<About />} />
-                      <Route path="/contact" element={<Contact />} />
-                      <Route path="/bundles" element={<Bundles />} />
-                      <Route path="/custom-buy" element={<CustomBuy />} />
-                      <Route path="/group-buy" element={<GroupBuy />} />
-                      <Route path="/orders" element={<Orders />} />
-                      <Route path="/profile" element={<Profile />} />
-                      <Route path="/terms" element={<Terms />} />
+                    <Route path="/*" element={<Layout><Outlet /></Layout>}>
+                      <Route index element={<Index />} />
+                      <Route path="about" element={<About />} />
+                      <Route path="contact" element={<Contact />} />
+                      <Route path="bundles" element={<Bundles />} />
+                      <Route path="custom-buy" element={<CustomBuy />} />
+                      <Route path="group-buy" element={<GroupBuy />} />
+                      <Route path="orders" element={<Orders />} />
+                      <Route path="profile" element={<Profile />} />
+                      <Route path="terms" element={<Terms />} />
                       <Route path="*" element={<NotFound />} />
                     </Route>
                   </Routes>

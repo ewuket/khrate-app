@@ -2,6 +2,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminStats, AdminOrder } from "@/types/admin";
+import { useBundles } from "./useBundles";
+import { useCallback } from "react";
 
 export const useAdminStats = () => {
   return useQuery({
@@ -89,7 +91,7 @@ export const useAdminOrders = () => {
         return orders?.map(order => ({
           id: order.id,
           user_id: order.user_id,
-          items: order.items,
+          items: Array.isArray(order.items) ? order.items : [],
           total_amount: order.total_amount,
           status: order.status,
           payment_status: order.payment_status,
@@ -110,4 +112,27 @@ export const useAdminOrders = () => {
     staleTime: 30 * 1000, // 30 seconds
     retry: 2,
   });
+};
+
+export const useAdminData = () => {
+  const statsQuery = useAdminStats();
+  const ordersQuery = useAdminOrders();
+  const bundlesQuery = useBundles();
+
+  const refreshAllData = useCallback(() => {
+    statsQuery.refetch();
+    ordersQuery.refetch();
+    bundlesQuery.refetch();
+  }, [statsQuery, ordersQuery, bundlesQuery]);
+
+  return {
+    stats: statsQuery.data,
+    orders: ordersQuery.data || [],
+    bundles: bundlesQuery.data?.map(bundle => ({
+      ...bundle,
+      items_count: bundle.items?.length || 0
+    })) || [],
+    loading: statsQuery.isLoading || ordersQuery.isLoading || bundlesQuery.isLoading,
+    refreshAllData
+  };
 };

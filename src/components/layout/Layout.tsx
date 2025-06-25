@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import ChatAssistant from '@/components/chat/ChatAssistant';
@@ -22,7 +22,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <main className="flex-1">
-        {children}
+        {children || <Outlet />}
       </main>
       {shouldShowFooter && <Footer />}
       <ChatAssistant />
