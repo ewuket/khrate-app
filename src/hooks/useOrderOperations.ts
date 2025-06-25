@@ -31,42 +31,22 @@ export const useOrderOperations = () => {
   const { user, isAuthenticated } = useAuth();
 
   const fetchOrders = async () => {
-    if (!user) {
-      console.log('No user authenticated, checking localStorage for guest orders');
-      const guestOrders = JSON.parse(localStorage.getItem(`khrate_orders_guest`) || '[]');
-      setOrders(guestOrders);
-      setLoading(false);
-      return;
-    }
+    if (!user) return;
     
     setLoading(true);
     try {
-      console.log('Fetching orders for user:', user.id);
-      
       const { data, error } = await supabase
         .from('orders')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching orders:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('Fetched orders from Supabase:', data);
       setOrders(data || []);
     } catch (error) {
       console.error('Error fetching orders:', error);
-      
-      // Fallback to localStorage
-      const localOrders = JSON.parse(localStorage.getItem(`khrate_orders_${user.id}`) || '[]');
-      console.log('Fallback to localStorage orders:', localOrders);
-      setOrders(localOrders);
-      
-      if (localOrders.length === 0) {
-        toast.error('Failed to load orders');
-      }
+      toast.error('Failed to fetch orders');
     } finally {
       setLoading(false);
     }
