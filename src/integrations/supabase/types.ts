@@ -152,6 +152,48 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_buy_items: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          id: number
+          image_url: string | null
+          is_active: boolean | null
+          name: string
+          price: number
+          stock_quantity: number | null
+          unit: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          image_url?: string | null
+          is_active?: boolean | null
+          name: string
+          price: number
+          stock_quantity?: number | null
+          unit?: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          image_url?: string | null
+          is_active?: boolean | null
+          name?: string
+          price?: number
+          stock_quantity?: number | null
+          unit?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       group_cart_items: {
         Row: {
           created_at: string

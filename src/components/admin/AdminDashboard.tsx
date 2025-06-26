@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useAdminData } from "@/hooks/useAdminData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RefreshCw, Package, ShoppingCart, Users, DollarSign } from "lucide-react";
 import { useAdmin } from "@/contexts/AdminContext";
 import AdminBundlesList from "./AdminBundlesList";
+import AdminCustomItemsManagement from "./custom-items/AdminCustomItemsManagement";
 
 const AdminDashboard = () => {
   const { adminUser, logoutAdmin } = useAdmin();
@@ -99,9 +99,10 @@ const AdminDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="bundles">Bundle Management</TabsTrigger>
+            <TabsTrigger value="custom-items">Custom Buy Items</TabsTrigger>
             <TabsTrigger value="orders">Order Management</TabsTrigger>
           </TabsList>
 
@@ -180,6 +181,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="bundles">
             <AdminBundlesList />
+          </TabsContent>
+
+          <TabsContent value="custom-items">
+            <AdminCustomItemsManagement />
           </TabsContent>
 
           <TabsContent value="orders">
