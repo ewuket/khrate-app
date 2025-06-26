@@ -1,3 +1,4 @@
+import { Json } from "@/integrations/supabase/types";
 
 export interface AdminStats {
   total_orders: number;
@@ -9,47 +10,79 @@ export interface AdminStats {
 
 export interface AdminOrder {
   id: string;
-  user_id: string;
+  user_id: string | null;
   items: any[];
   total_amount: number;
   status: string;
   payment_status: string;
   delivery_address: string;
   delivery_date: string | null;
-  created_at: string;
-  user_profile?: {
+  created_at: string | null;
+  user_profile: {
     full_name: string;
     email: string;
-    phone?: string;
+    phone: string | null;
   };
+}
+
+export interface AdminBundle {
+  id: number;
+  title: string;
+  description: string | null;
+  price: number;
+  original_price: number | null;
+  image_url: string | null;
+  is_active: boolean | null;
+  is_featured: boolean | null;
+  created_at: string | null;
+  updated_at: string | null;
+  items?: any[];
+  items_count?: number;
+}
+
+export interface AdminCustomItem {
+  id: number;
+  name: string;
+  description: string | null;
+  price: number;
+  unit: string;
+  category: string;
+  stock_quantity: number | null;
+  image_url: string | null;
+  is_active: boolean | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 export interface AdminGroupSession {
   id: string;
-  name: string;
+  name: string | null;
   join_code: string;
   leader_id: string;
-  member_count: number;
-  total_amount: number;
-  status: string;
-  order_status: string;
+  min_participants: number;
+  max_participants: number;
+  discount_percentage: number;
+  status: 'active' | 'inactive' | 'completed';
+  order_status: string | null;
   created_at: string;
+  updated_at: string;
+  group_type: string;
+  is_public: boolean;
+  is_featured: boolean;
+  location: string | null;
+  region: string | null;
+  featured_at: string | null;
+  admin_notes: string | null;
+  items?: any;
+  member_count?: number;
+  total_amount?: number;
 }
 
-export interface AdminNotification {
-  id: string;
-  type: 'order' | 'group' | 'system';
-  title: string;
-  message: string;
-  data: any;
-  read: boolean;
-  created_at: string;
-}
-
-export interface AdminUser {
-  id: string;
-  email: string;
-  role: string;
-  created_at: string;
-  last_login: string;
+export interface GroupStats {
+  total_groups: number;
+  active_groups: number;
+  featured_groups: number;
+  completed_groups: number;
+  total_members: number;
+  avg_group_size: number;
 }

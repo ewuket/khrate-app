@@ -333,50 +333,65 @@ export type Database = {
       }
       group_sessions: {
         Row: {
+          admin_notes: string | null
           created_at: string
           discount_percentage: number
+          featured_at: string | null
           group_type: string
           id: string
+          is_featured: boolean | null
           is_public: boolean
           items: Json | null
           join_code: string
           leader_id: string
+          location: string | null
           max_participants: number
           min_participants: number
           name: string | null
           order_status: string | null
+          region: string | null
           status: string
           updated_at: string
         }
         Insert: {
+          admin_notes?: string | null
           created_at?: string
           discount_percentage?: number
+          featured_at?: string | null
           group_type?: string
           id?: string
+          is_featured?: boolean | null
           is_public?: boolean
           items?: Json | null
           join_code: string
           leader_id: string
+          location?: string | null
           max_participants?: number
           min_participants?: number
           name?: string | null
           order_status?: string | null
+          region?: string | null
           status?: string
           updated_at?: string
         }
         Update: {
+          admin_notes?: string | null
           created_at?: string
           discount_percentage?: number
+          featured_at?: string | null
           group_type?: string
           id?: string
+          is_featured?: boolean | null
           is_public?: boolean
           items?: Json | null
           join_code?: string
           leader_id?: string
+          location?: string | null
           max_participants?: number
           min_participants?: number
           name?: string | null
           order_status?: string | null
+          region?: string | null
           status?: string
           updated_at?: string
         }
@@ -549,6 +564,33 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_admin_group_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          total_groups: number
+          active_groups: number
+          featured_groups: number
+          completed_groups: number
+          total_members: number
+          avg_group_size: number
+        }[]
+      }
+      get_featured_groups: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          name: string
+          location: string
+          region: string
+          member_count: number
+          max_participants: number
+          discount_percentage: number
+          status: string
+          join_code: string
+          created_at: string
+          items: Json
+        }[]
+      }
       get_group_payment_summary: {
         Args: { group_id: string }
         Returns: {
@@ -567,6 +609,21 @@ export type Database = {
           discount_amount: number
           final_amount: number
           qualifies_for_discount: boolean
+        }[]
+      }
+      get_groups_by_location: {
+        Args: { p_location?: string; p_region?: string }
+        Returns: {
+          id: string
+          name: string
+          location: string
+          region: string
+          member_count: number
+          max_participants: number
+          discount_percentage: number
+          status: string
+          join_code: string
+          created_at: string
         }[]
       }
       sanitize_text_input: {

@@ -18,14 +18,16 @@ export interface AdminCustomItem {
 }
 
 export const useAdminCustomItems = () => {
-  const [items, setItems] = useState<AdminCustomItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchItems = async () => {
-    try {
-      setLoading(true);
-      console.log('Fetching custom buy items...');
+  const {
+    data: customItems = [],
+    isLoading,
+    refetch
+  } = useQuery({
+    queryKey: ['admin-custom-items'],
+    queryFn: async () => {
+      console.log('Fetching admin custom items...');
       
       const { data, error } = await supabase
         .from('custom_buy_items')
@@ -37,26 +39,29 @@ export const useAdminCustomItems = () => {
         throw error;
       }
 
-      console.log('Custom items fetched:', data?.length || 0);
-      setItems(data || []);
-      setError(null);
-    } catch (err) {
-      console.error('Error in fetchItems:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch custom items';
-      setError(errorMessage);
-      toast.error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
+      console.log('Admin custom items fetched:', data?.length || 0);
+      return data || [];
+    },
+    staleTime: 30 * 1000,
+    retry: 2,
+  });
 
-  const createItem = async (itemData: Omit<AdminCustomItem, 'id' | 'created_at' | 'updated_at'>) => {
-    try {
-      console.log('Creating custom item:', itemData);
+  const createCustomItemMutation = useMutation({
+    mutationFn: async (itemData: any) => {
+      console.log('Creating custom item with data:', itemData);
       
       const { data, error } = await supabase
         .from('custom_buy_items')
-        .insert([itemData])
+        .insert({
+          name: itemData.name,
+          description: itemData.description,
+          price: parseFloat(itemData.price),
+          unit: itemData.unit,
+          category: itemData.category,
+          stock_quantity: parseInt(itemData.stock_quantity) || 0,
+          image_url: itemData.image_url || '/placeholder.svg',
+          is_active: itemData.is_active !== false
+        })
         .select()
         .single();
 
@@ -65,25 +70,37 @@ export const useAdminCustomItems = () => {
         throw error;
       }
 
-      console.log('Custom item created:', data);
-      toast.success('Item created successfully');
-      await fetchItems();
       return data;
-    } catch (err) {
-      console.error('Error in createItem:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to create item';
-      toast.error(errorMessage);
-      throw err;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-custom-items'] });
+      toast.success('Custom item created successfully!');
+    },
+    onError: (error) => {
+      console.error('Error creating custom item:', error);
+      toast.error('Failed to create custom item');
     }
-  };
+  });
 
-  const updateItem = async (id: number, updates: Partial<AdminCustomItem>) => {
-    try {
-      console.log('Updating custom item:', id, updates);
+  const updateCustomItemMutation = useMutation({
+    mutationFn: async (itemData: any) => {
+      console.log('Updating custom item with data:', itemData);
+      
+      const { id, ...updateData } = itemData;
       
       const { data, error } = await supabase
         .from('custom_buy_items')
-        .update(updates)
+        .update({
+          name: updateData.name,
+          description: updateData.description,
+          price: parseFloat(updateData.price),
+          unit: updateData.unit,
+          category: updateData.category,
+          stock_quantity: parseInt(updateData.stock_quantity) || 0,
+          image_url: updateData.image_url || '/placeholder.svg',
+          is_active: updateData.is_active !== false,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', id)
         .select()
         .single();
@@ -93,59 +110,49 @@ export const useAdminCustomItems = () => {
         throw error;
       }
 
-      console.log('Custom item updated:', data);
-      toast.success('Item updated successfully');
-      await fetchItems();
       return data;
-    } catch (err) {
-      console.error('Error in updateItem:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update item';
-      toast.error(errorMessage);
-      throw err;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-custom-items'] });
+      toast.success('Custom item updated successfully!');
+    },
+    onError: (error) => {
+      console.error('Error updating custom item:', error);
+      toast.error('Failed to update custom item. Please check your data and try again.');
     }
-  };
+  });
 
-  const deleteItem = async (id: number) => {
-    try {
-      console.log('Deleting custom item:', id);
-      
+  const deleteCustomItemMutation = useMutation({
+    mutationFn: async (itemId: number) => {
       const { error } = await supabase
         .from('custom_buy_items')
         .delete()
-        .eq('id', id);
+        .eq('id', itemId);
 
       if (error) {
         console.error('Error deleting custom item:', error);
         throw error;
       }
-
-      console.log('Custom item deleted:', id);
-      toast.success('Item deleted successfully');
-      await fetchItems();
-    } catch (err) {
-      console.error('Error in deleteItem:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to delete item';
-      toast.error(errorMessage);
-      throw err;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-custom-items'] });
+      toast.success('Custom item deleted successfully!');
+    },
+    onError: (error) => {
+      console.error('Error deleting custom item:', error);
+      toast.error('Failed to delete custom item');
     }
-  };
-
-  const toggleActive = async (id: number, isActive: boolean) => {
-    await updateItem(id, { is_active: isActive });
-  };
-
-  useEffect(() => {
-    fetchItems();
-  }, []);
+  });
 
   return {
-    items,
-    loading,
-    error,
-    fetchItems,
-    createItem,
-    updateItem,
-    deleteItem,
-    toggleActive
+    customItems,
+    isLoading,
+    refetch,
+    createCustomItem: createCustomItemMutation.mutate,
+    updateCustomItem: updateCustomItemMutation.mutate,
+    deleteCustomItem: deleteCustomItemMutation.mutate,
+    isCreating: createCustomItemMutation.isPending,
+    isUpdating: updateCustomItemMutation.isPending,
+    isDeleting: deleteCustomItemMutation.isPending,
   };
 };
