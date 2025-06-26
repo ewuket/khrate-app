@@ -26,69 +26,8 @@ export interface AdminBundleItem {
   created_at: string;
 }
 
-const fetchAdminBundles = async (): Promise<AdminBundle[]> => {
-  console.log('Fetching admin bundles...');
-  
-  try {
-    // Fetch all bundles (including inactive ones for admin)
-    const { data: bundles, error: bundlesError } = await supabase
-      .from('bundles')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (bundlesError) {
-      console.error('Error fetching admin bundles:', bundlesError);
-      throw new Error(`Failed to fetch bundles: ${bundlesError.message}`);
-    }
-
-    console.log('Admin bundles fetched:', bundles?.length || 0);
-    
-    if (!bundles || bundles.length === 0) {
-      return [];
-    }
-    
-    // Fetch all items for these bundles
-    const bundleIds = bundles.map(bundle => bundle.id);
-    const { data: items, error: itemsError } = await supabase
-      .from('bundle_items')
-      .select('*')
-      .in('bundle_id', bundleIds)
-      .order('id');
-    
-    if (itemsError) {
-      console.error('Error fetching bundle items:', itemsError);
-    }
-    
-    // Group items by bundle_id
-    const itemsByBundle: Record<number, AdminBundleItem[]> = {};
-    (items || []).forEach(item => {
-      if (!itemsByBundle[item.bundle_id]) {
-        itemsByBundle[item.bundle_id] = [];
-      }
-      itemsByBundle[item.bundle_id].push(item);
-    });
-    
-    // Combine bundles with their items
-    const bundlesWithItems = bundles.map(bundle => ({
-      ...bundle,
-      items: itemsByBundle[bundle.id] || []
-    }));
-    
-    return bundlesWithItems;
-  } catch (error) {
-    console.error('Error in fetchAdminBundles:', error);
-    throw error;
-  }
-};
-
 export const useAdminBundles = () => {
-  const queryClient = useQueryClient();
-
-  const {
-    data: bundles = [],
-    isLoading,
-    refetch
-  } = useQuery({
+  return useQuery({
     queryKey: ['admin-bundles'],
     queryFn: async () => {
       console.log('Fetching admin bundles...');
@@ -125,8 +64,12 @@ export const useAdminBundles = () => {
     staleTime: 30 * 1000,
     retry: 2,
   });
+};
 
-  const createBundleMutation = useMutation({
+export const useCreateBundle = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
     mutationFn: async (bundleData: any) => {
       console.log('Creating bundle with data:', bundleData);
       
@@ -172,8 +115,12 @@ export const useAdminBundles = () => {
       toast.error('Failed to create bundle');
     }
   });
+};
 
-  const updateBundleMutation = useMutation({
+export const useUpdateBundle = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
     mutationFn: async (bundleData: any) => {
       console.log('Updating bundle with data:', bundleData);
       
@@ -236,8 +183,12 @@ export const useAdminBundles = () => {
       toast.error('Failed to update bundle. Please check your data and try again.');
     }
   });
+};
 
-  const deleteBundleMutation = useMutation({
+export const useDeleteBundle = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
     mutationFn: async (bundleId: number) => {
       // Delete bundle items first
       const { error: itemsError } = await supabase
@@ -270,16 +221,4 @@ export const useAdminBundles = () => {
       toast.error('Failed to delete bundle');
     }
   });
-
-  return {
-    bundles,
-    isLoading,
-    refetch,
-    createBundle: createBundleMutation.mutate,
-    updateBundle: updateBundleMutation.mutate,
-    deleteBundle: deleteBundleMutation.mutate,
-    isCreating: createBundleMutation.isPending,
-    isUpdating: updateBundleMutation.isPending,
-    isDeleting: deleteBundleMutation.isPending,
-  };
 };

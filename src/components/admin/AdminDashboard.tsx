@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import AdminHeader from "./AdminHeader";
@@ -14,6 +15,17 @@ import AdminGroupBuyingManagement from "./AdminGroupBuyingManagement";
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const { stats, orders, bundles, loading, refreshAllData } = useAdminData();
+
+  // Placeholder functions for order management
+  const handleUpdateOrderStatus = async (orderId: string, status: string) => {
+    console.log('Update order status:', orderId, status);
+    // TODO: Implement order status update
+  };
+
+  const handleUpdatePaymentStatus = async (orderId: string, paymentStatus: string) => {
+    console.log('Update payment status:', orderId, paymentStatus);
+    // TODO: Implement payment status update
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -33,14 +45,22 @@ const AdminDashboard = () => {
           <TabsContent value="overview" className="space-y-6">
             <AdminStatsCards stats={stats} loading={loading} />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <AdminOrdersList orders={orders} />
-              <AdminBundlesList bundles={bundles} />
+              <AdminOrdersList 
+                orders={orders} 
+                onUpdateOrderStatus={handleUpdateOrderStatus}
+                onUpdatePaymentStatus={handleUpdatePaymentStatus}
+              />
+              <AdminBundlesList />
             </div>
             <AdminGroupsList groupSessions={[]} />
           </TabsContent>
 
           <TabsContent value="orders">
-            <AdminOrdersList orders={orders} />
+            <AdminOrdersList 
+              orders={orders}
+              onUpdateOrderStatus={handleUpdateOrderStatus}
+              onUpdatePaymentStatus={handleUpdatePaymentStatus}
+            />
           </TabsContent>
 
           <TabsContent value="bundles">

@@ -32,6 +32,7 @@ export const useAdminGroups = () => {
 
       return data?.map(group => ({
         ...group,
+        status: group.status as 'active' | 'inactive' | 'completed', // Type assertion
         member_count: group.group_members?.[0]?.count || 0
       })) || [];
     },

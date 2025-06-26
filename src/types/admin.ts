@@ -1,4 +1,14 @@
+
 import { Json } from "@/integrations/supabase/types";
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  role: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface AdminStats {
   total_orders: number;

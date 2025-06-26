@@ -8,7 +8,7 @@ import AdminCustomItemsEmptyState from "./AdminCustomItemsEmptyState";
 import AdminCustomItemForm from "./AdminCustomItemForm";
 
 const AdminCustomItemsManagement = () => {
-  const { items, loading, fetchItems, createItem, updateItem, deleteItem, toggleActive } = useAdminCustomItems();
+  const { customItems, isLoading, refetch, createCustomItem, updateCustomItem, deleteCustomItem } = useAdminCustomItems();
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
 
@@ -24,12 +24,12 @@ const AdminCustomItemsManagement = () => {
 
   const handleDeleteItem = async (itemId) => {
     if (window.confirm('Are you sure you want to delete this item?')) {
-      await deleteItem(itemId);
+      await deleteCustomItem(itemId);
     }
   };
 
   const handleToggleActive = async (itemId, isActive) => {
-    await toggleActive(itemId, isActive);
+    await updateCustomItem({ id: itemId, is_active: !isActive });
   };
 
   const handleFormClose = () => {
@@ -40,9 +40,9 @@ const AdminCustomItemsManagement = () => {
   const handleFormSubmit = async (itemData) => {
     try {
       if (editingItem) {
-        await updateItem(editingItem.id, itemData);
+        await updateCustomItem({ id: editingItem.id, ...itemData });
       } else {
-        await createItem(itemData);
+        await createCustomItem(itemData);
       }
       handleFormClose();
     } catch (error) {
@@ -50,7 +50,7 @@ const AdminCustomItemsManagement = () => {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return <AdminCustomItemsLoadingState />;
   }
 
@@ -58,15 +58,15 @@ const AdminCustomItemsManagement = () => {
     <div className="space-y-6">
       <AdminCustomItemsHeader
         onCreateItem={handleCreateItem}
-        onRefresh={fetchItems}
-        isRefreshing={loading}
+        onRefresh={refetch}
+        isRefreshing={isLoading}
       />
 
-      {items.length === 0 ? (
+      {customItems.length === 0 ? (
         <AdminCustomItemsEmptyState onCreateItem={handleCreateItem} />
       ) : (
         <AdminCustomItemsGrid
-          items={items}
+          items={customItems}
           onEdit={handleEditItem}
           onDelete={handleDeleteItem}
           onToggleActive={handleToggleActive}
