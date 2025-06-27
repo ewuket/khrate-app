@@ -26,6 +26,19 @@ export const useCustomBuyItems = () => {
       setError(null);
       console.log('🔄 Fetching active custom buy items for user side...');
       
+      // Test database connection first
+      const { data: testConnection, error: connectionError } = await supabase
+        .from('custom_buy_items')
+        .select('count(*)')
+        .limit(1);
+      
+      if (connectionError) {
+        console.error('❌ Database connection error:', connectionError);
+        throw new Error(`Database connection failed: ${connectionError.message}`);
+      }
+      
+      console.log('✅ Database connection successful for custom items');
+      
       const { data, error } = await supabase
         .from('custom_buy_items')
         .select('*')
@@ -35,23 +48,32 @@ export const useCustomBuyItems = () => {
 
       if (error) {
         console.error('❌ Error fetching custom items:', error);
-        throw error;
+        throw new Error(`Failed to fetch custom items: ${error.message}`);
       }
 
       console.log('✅ Raw custom items data from Supabase:', data);
       console.log('📊 Number of active custom items fetched:', data?.length || 0);
       
+      if (!data || data.length === 0) {
+        console.warn('⚠️ No custom items found in database');
+        setItems([]);
+        setError(null);
+        return;
+      }
+      
       if (data && data.length > 0) {
         console.log('🔍 Sample custom item:', data[0]);
+        console.log('🏷️ Categories found:', [...new Set(data.map(item => item.category))]);
       }
 
-      setItems(data || []);
+      setItems(data);
       setError(null);
     } catch (err) {
-      console.error('❌ Error in fetchItems:', err);
+      console.error('❌ Critical error in fetchItems:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch items';
       setError(errorMessage);
       toast.error(`Error loading custom items: ${errorMessage}`);
+      setItems([]);
     } finally {
       setLoading(false);
     }
@@ -67,7 +89,7 @@ export const useCustomBuyItems = () => {
   }, {} as Record<string, CustomBuyItem[]>);
 
   useEffect(() => {
-    console.log('🚀 Starting initial custom items fetch...');
+    console.log('🚀 useCustomBuyItems hook initialized - Starting initial custom items fetch...');
     fetchItems();
   }, []);
 

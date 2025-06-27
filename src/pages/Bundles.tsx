@@ -35,7 +35,10 @@ const Bundles = () => {
             </Alert>
             
             <Button 
-              onClick={() => refetch()} 
+              onClick={() => {
+                console.log('🔄 Manual refresh triggered for bundles');
+                refetch();
+              }} 
               className="bg-khrate-500 hover:bg-khrate-600"
               disabled={loading}
             >
@@ -93,7 +96,10 @@ const Bundles = () => {
             <h2 className="text-2xl font-semibold text-gray-700 mb-4">No bundles available</h2>
             <p className="text-gray-500 mb-6">Check back soon for new bundles!</p>
             <Button 
-              onClick={() => refetch()} 
+              onClick={() => {
+                console.log('🔄 Manual refresh triggered for empty bundles');
+                refetch();
+              }} 
               variant="outline"
               disabled={loading}
             >

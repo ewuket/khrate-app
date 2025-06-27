@@ -5,18 +5,44 @@ import BundleCard from '@/components/bundles/BundleCard';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const FeaturedBundles = () => {
-  const { featuredBundles, loading, fetchFeaturedBundles } = useBundles();
+  const { featuredBundles, loading, error, fetchFeaturedBundles } = useBundles();
 
   useEffect(() => {
     console.log('🏠 FeaturedBundles component mounted, fetching featured bundles...');
     fetchFeaturedBundles();
   }, []);
 
-  console.log('🏠 FeaturedBundles component state:', {
+  console.log('🏠 FeaturedBundles component render state:', {
     featuredBundlesCount: featuredBundles?.length,
     loading,
+    error,
     featuredBundles: featuredBundles?.slice(0, 2) // Log first 2 for debugging
   });
+
+  if (error) {
+    console.error('❌ FeaturedBundles - Error state:', error);
+    return (
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Featured Bundles</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Discover our handpicked collection of premium bundles designed to give you the best value
+            </p>
+          </div>
+          <div className="text-center py-12">
+            <p className="text-red-500 mb-4">Error loading featured bundles: {error}</p>
+            <button 
+              onClick={fetchFeaturedBundles}
+              className="bg-khrate-500 hover:bg-khrate-600 text-white px-4 py-2 rounded"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   if (loading) {
     console.log('⏳ FeaturedBundles - Loading state');
@@ -55,7 +81,14 @@ const FeaturedBundles = () => {
             </p>
           </div>
           <div className="text-center py-12">
-            <p className="text-gray-500">No featured bundles available at the moment.</p>
+            <p className="text-gray-500 mb-4">No featured bundles available at the moment.</p>
+            <p className="text-sm text-gray-400">Check back soon for new featured bundles!</p>
+            <button 
+              onClick={fetchFeaturedBundles}
+              className="mt-4 bg-khrate-500 hover:bg-khrate-600 text-white px-4 py-2 rounded"
+            >
+              Refresh
+            </button>
           </div>
         </div>
       </section>

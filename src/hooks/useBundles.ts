@@ -34,7 +34,20 @@ export const useBundles = () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('🔄 Fetching all bundles...');
+      console.log('🔄 Fetching all bundles from database...');
+      
+      // First, let's check if we can connect to Supabase
+      const { data: testConnection, error: connectionError } = await supabase
+        .from('bundles')
+        .select('count(*)')
+        .limit(1);
+      
+      if (connectionError) {
+        console.error('❌ Database connection error:', connectionError);
+        throw new Error(`Database connection failed: ${connectionError.message}`);
+      }
+      
+      console.log('✅ Database connection successful');
       
       // Fetch bundles with their items
       const { data: bundlesData, error: bundlesError } = await supabase
@@ -53,35 +66,45 @@ export const useBundles = () => {
 
       if (bundlesError) {
         console.error('❌ Error fetching bundles:', bundlesError);
-        throw bundlesError;
+        throw new Error(`Failed to fetch bundles: ${bundlesError.message}`);
       }
 
       console.log('✅ Raw bundles data from Supabase:', bundlesData);
       console.log('📊 Number of bundles fetched:', bundlesData?.length || 0);
       
+      if (!bundlesData || bundlesData.length === 0) {
+        console.warn('⚠️ No bundles found in database');
+        setBundles([]);
+        setFeaturedBundles([]);
+        setError(null);
+        return;
+      }
+      
       // Transform the data to match our interface
-      const transformedBundles = bundlesData?.map(bundle => {
+      const transformedBundles = bundlesData.map(bundle => {
         console.log('🔧 Transforming bundle:', bundle.id, bundle.title);
         return {
           ...bundle,
           items: bundle.bundle_items || []
         };
-      }) || [];
+      });
 
       console.log('✅ Transformed bundles:', transformedBundles);
       setBundles(transformedBundles);
       
       // Set featured bundles
       const featured = transformedBundles.filter(bundle => bundle.is_featured);
-      console.log('⭐ Featured bundles found:', featured.length);
+      console.log('⭐ Featured bundles found:', featured.length, featured);
       setFeaturedBundles(featured);
       
       setError(null);
     } catch (err) {
-      console.error('❌ Error in fetchBundles:', err);
+      console.error('❌ Critical error in fetchBundles:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch bundles';
       setError(errorMessage);
       toast.error(`Error loading bundles: ${errorMessage}`);
+      setBundles([]);
+      setFeaturedBundles([]);
     } finally {
       setLoading(false);
     }
@@ -109,16 +132,22 @@ export const useBundles = () => {
 
       if (featuredError) {
         console.error('❌ Error fetching featured bundles:', featuredError);
-        throw featuredError;
+        throw new Error(`Failed to fetch featured bundles: ${featuredError.message}`);
       }
 
       console.log('✅ Featured bundles data from Supabase:', featuredData);
       console.log('📊 Number of featured bundles fetched:', featuredData?.length || 0);
       
-      const transformedFeatured = featuredData?.map(bundle => ({
+      if (!featuredData || featuredData.length === 0) {
+        console.warn('⚠️ No featured bundles found');
+        setFeaturedBundles([]);
+        return;
+      }
+      
+      const transformedFeatured = featuredData.map(bundle => ({
         ...bundle,
         items: bundle.bundle_items || []
-      })) || [];
+      }));
 
       console.log('✅ Transformed featured bundles:', transformedFeatured);
       setFeaturedBundles(transformedFeatured);
@@ -130,7 +159,7 @@ export const useBundles = () => {
   };
 
   useEffect(() => {
-    console.log('🚀 Starting initial bundle fetch...');
+    console.log('🚀 useBundles hook initialized - Starting initial bundle fetch...');
     fetchBundles();
   }, []);
 

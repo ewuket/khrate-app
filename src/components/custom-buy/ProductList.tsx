@@ -35,7 +35,10 @@ const ProductList: React.FC<ProductListProps> = ({ onAddToCart }) => {
         
         <div className="text-center">
           <Button 
-            onClick={() => refetch()} 
+            onClick={() => {
+              console.log('🔄 Manual refresh triggered for custom items');
+              refetch();
+            }} 
             variant="outline"
             disabled={loading}
           >
@@ -75,7 +78,10 @@ const ProductList: React.FC<ProductListProps> = ({ onAddToCart }) => {
         <h3 className="text-xl font-semibold text-gray-700 mb-4">No products available</h3>
         <p className="text-gray-500 mb-6">Check back soon for new products!</p>
         <Button 
-          onClick={() => refetch()} 
+          onClick={() => {
+            console.log('🔄 Manual refresh triggered for empty custom items');
+            refetch();
+          }} 
           variant="outline"
         >
           <RefreshCw className="h-4 w-4 mr-2" />
