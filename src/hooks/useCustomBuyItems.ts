@@ -23,7 +23,8 @@ export const useCustomBuyItems = () => {
   const fetchItems = async () => {
     try {
       setLoading(true);
-      console.log('Fetching active custom buy items for user side...');
+      setError(null);
+      console.log('🔄 Fetching active custom buy items for user side...');
       
       const { data, error } = await supabase
         .from('custom_buy_items')
@@ -33,18 +34,24 @@ export const useCustomBuyItems = () => {
         .order('name', { ascending: true });
 
       if (error) {
-        console.error('Error fetching custom items:', error);
+        console.error('❌ Error fetching custom items:', error);
         throw error;
       }
 
-      console.log('Active custom items fetched:', data?.length || 0);
+      console.log('✅ Raw custom items data from Supabase:', data);
+      console.log('📊 Number of active custom items fetched:', data?.length || 0);
+      
+      if (data && data.length > 0) {
+        console.log('🔍 Sample custom item:', data[0]);
+      }
+
       setItems(data || []);
       setError(null);
     } catch (err) {
-      console.error('Error in fetchItems:', err);
+      console.error('❌ Error in fetchItems:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch items';
       setError(errorMessage);
-      toast.error(errorMessage);
+      toast.error(`Error loading custom items: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -60,6 +67,7 @@ export const useCustomBuyItems = () => {
   }, {} as Record<string, CustomBuyItem[]>);
 
   useEffect(() => {
+    console.log('🚀 Starting initial custom items fetch...');
     fetchItems();
   }, []);
 

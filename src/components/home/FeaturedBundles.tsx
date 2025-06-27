@@ -8,10 +8,18 @@ const FeaturedBundles = () => {
   const { featuredBundles, loading, fetchFeaturedBundles } = useBundles();
 
   useEffect(() => {
+    console.log('🏠 FeaturedBundles component mounted, fetching featured bundles...');
     fetchFeaturedBundles();
   }, []);
 
+  console.log('🏠 FeaturedBundles component state:', {
+    featuredBundlesCount: featuredBundles?.length,
+    loading,
+    featuredBundles: featuredBundles?.slice(0, 2) // Log first 2 for debugging
+  });
+
   if (loading) {
+    console.log('⏳ FeaturedBundles - Loading state');
     return (
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
@@ -36,6 +44,7 @@ const FeaturedBundles = () => {
   }
 
   if (!featuredBundles || featuredBundles.length === 0) {
+    console.log('📭 FeaturedBundles - No featured bundles found');
     return (
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
@@ -52,6 +61,8 @@ const FeaturedBundles = () => {
       </section>
     );
   }
+
+  console.log('✅ FeaturedBundles - Rendering featured bundles:', featuredBundles.length);
 
   return (
     <section className="py-16 bg-gray-50">
@@ -71,6 +82,12 @@ const FeaturedBundles = () => {
             const itemsDisplay = bundle.items?.map(item => 
               `${item.item_name} (${item.quantity} ${item.unit})`
             ) || [];
+            
+            console.log('🎨 Rendering featured bundle:', {
+              id: bundle.id,
+              title: bundle.title,
+              itemsCount: bundle.items?.length || 0
+            });
             
             return (
               <BundleCard

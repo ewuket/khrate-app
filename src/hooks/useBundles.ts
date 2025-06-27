@@ -33,7 +33,8 @@ export const useBundles = () => {
   const fetchBundles = async () => {
     try {
       setLoading(true);
-      console.log('Fetching bundles...');
+      setError(null);
+      console.log('🔄 Fetching all bundles...');
       
       // Fetch bundles with their items
       const { data: bundlesData, error: bundlesError } = await supabase
@@ -51,30 +52,36 @@ export const useBundles = () => {
         .order('created_at', { ascending: false });
 
       if (bundlesError) {
-        console.error('Error fetching bundles:', bundlesError);
+        console.error('❌ Error fetching bundles:', bundlesError);
         throw bundlesError;
       }
 
-      console.log('Bundles fetched:', bundlesData?.length || 0);
+      console.log('✅ Raw bundles data from Supabase:', bundlesData);
+      console.log('📊 Number of bundles fetched:', bundlesData?.length || 0);
       
       // Transform the data to match our interface
-      const transformedBundles = bundlesData?.map(bundle => ({
-        ...bundle,
-        items: bundle.bundle_items || []
-      })) || [];
+      const transformedBundles = bundlesData?.map(bundle => {
+        console.log('🔧 Transforming bundle:', bundle.id, bundle.title);
+        return {
+          ...bundle,
+          items: bundle.bundle_items || []
+        };
+      }) || [];
 
+      console.log('✅ Transformed bundles:', transformedBundles);
       setBundles(transformedBundles);
       
       // Set featured bundles
       const featured = transformedBundles.filter(bundle => bundle.is_featured);
+      console.log('⭐ Featured bundles found:', featured.length);
       setFeaturedBundles(featured);
       
       setError(null);
     } catch (err) {
-      console.error('Error in fetchBundles:', err);
+      console.error('❌ Error in fetchBundles:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch bundles';
       setError(errorMessage);
-      toast.error(errorMessage);
+      toast.error(`Error loading bundles: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -82,7 +89,7 @@ export const useBundles = () => {
 
   const fetchFeaturedBundles = async () => {
     try {
-      console.log('Fetching featured bundles...');
+      console.log('🔄 Fetching featured bundles only...');
       
       const { data: featuredData, error: featuredError } = await supabase
         .from('bundles')
@@ -101,24 +108,29 @@ export const useBundles = () => {
         .limit(6);
 
       if (featuredError) {
-        console.error('Error fetching featured bundles:', featuredError);
+        console.error('❌ Error fetching featured bundles:', featuredError);
         throw featuredError;
       }
 
-      console.log('Featured bundles fetched:', featuredData?.length || 0);
+      console.log('✅ Featured bundles data from Supabase:', featuredData);
+      console.log('📊 Number of featured bundles fetched:', featuredData?.length || 0);
       
       const transformedFeatured = featuredData?.map(bundle => ({
         ...bundle,
         items: bundle.bundle_items || []
       })) || [];
 
+      console.log('✅ Transformed featured bundles:', transformedFeatured);
       setFeaturedBundles(transformedFeatured);
     } catch (err) {
-      console.error('Error fetching featured bundles:', err);
+      console.error('❌ Error fetching featured bundles:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch featured bundles';
+      toast.error(`Error loading featured bundles: ${errorMessage}`);
     }
   };
 
   useEffect(() => {
+    console.log('🚀 Starting initial bundle fetch...');
     fetchBundles();
   }, []);
 

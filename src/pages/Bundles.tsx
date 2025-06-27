@@ -9,7 +9,7 @@ import { AlertCircle, RefreshCw } from "lucide-react";
 const Bundles = () => {
   const { bundles, loading, error, refetch } = useBundles();
 
-  console.log('Bundles page - Data:', { 
+  console.log('📄 Bundles page - Current state:', { 
     bundlesCount: bundles?.length, 
     loading, 
     error,
@@ -17,7 +17,7 @@ const Bundles = () => {
   });
 
   if (error) {
-    console.error('Bundles page error:', error);
+    console.error('❌ Bundles page error:', error);
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
@@ -49,7 +49,7 @@ const Bundles = () => {
   }
 
   if (loading) {
-    console.log('Bundles page - Loading state');
+    console.log('⏳ Bundles page - Loading state');
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
@@ -80,7 +80,7 @@ const Bundles = () => {
   }
 
   if (!bundles || bundles.length === 0) {
-    console.log('Bundles page - No bundles found');
+    console.log('📭 Bundles page - No bundles found');
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
@@ -106,7 +106,7 @@ const Bundles = () => {
     );
   }
 
-  console.log('Bundles page - Rendering bundles:', bundles.length);
+  console.log('✅ Bundles page - Rendering bundles:', bundles.length);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -126,7 +126,7 @@ const Bundles = () => {
               `${item.item_name} (${item.quantity} ${item.unit})`
             ) || [];
             
-            console.log('Rendering bundle:', {
+            console.log('🎨 Rendering bundle:', {
               id: bundle.id,
               title: bundle.title,
               itemsCount: bundle.items?.length || 0,
