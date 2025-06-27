@@ -7,12 +7,11 @@ import { Button } from "@/components/ui/button";
 import { AlertCircle, RefreshCw } from "lucide-react";
 
 const Bundles = () => {
-  const { data: bundles, isLoading, error, refetch, isFetching } = useBundles();
+  const { bundles, loading, error, refetch } = useBundles();
 
   console.log('Bundles page - Data:', { 
     bundlesCount: bundles?.length, 
-    isLoading, 
-    isFetching, 
+    loading, 
     error,
     bundles: bundles?.slice(0, 2) // Log first 2 bundles for debugging
   });
@@ -31,17 +30,17 @@ const Bundles = () => {
             <Alert variant="destructive" className="mb-6">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Unable to load bundles: {error.message || 'Unknown error'}
+                Unable to load bundles: {error}
               </AlertDescription>
             </Alert>
             
             <Button 
               onClick={() => refetch()} 
               className="bg-khrate-500 hover:bg-khrate-600"
-              disabled={isFetching}
+              disabled={loading}
             >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
-              {isFetching ? 'Loading...' : 'Try Again'}
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              {loading ? 'Loading...' : 'Try Again'}
             </Button>
           </div>
         </div>
@@ -49,7 +48,7 @@ const Bundles = () => {
     );
   }
 
-  if (isLoading) {
+  if (loading) {
     console.log('Bundles page - Loading state');
     return (
       <div className="min-h-screen bg-gray-50">
@@ -96,9 +95,9 @@ const Bundles = () => {
             <Button 
               onClick={() => refetch()} 
               variant="outline"
-              disabled={isFetching}
+              disabled={loading}
             >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
           </div>
@@ -123,14 +122,14 @@ const Bundles = () => {
               ? Math.round(((bundle.original_price - bundle.price) / bundle.original_price) * 100)
               : 0;
             
-            const itemsDisplay = bundle.items.map(item => 
+            const itemsDisplay = bundle.items?.map(item => 
               `${item.item_name} (${item.quantity} ${item.unit})`
-            );
+            ) || [];
             
             console.log('Rendering bundle:', {
               id: bundle.id,
               title: bundle.title,
-              itemsCount: bundle.items.length,
+              itemsCount: bundle.items?.length || 0,
               imageUrl: bundle.image_url
             });
             

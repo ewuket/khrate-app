@@ -12,13 +12,15 @@ interface AdminCustomItemCardProps {
   onEdit: (item: AdminCustomItem) => void;
   onDelete: (itemId: number) => void;
   onToggleActive: (itemId: number, isActive: boolean) => void;
+  isToggling?: boolean;
 }
 
 const AdminCustomItemCard: React.FC<AdminCustomItemCardProps> = ({
   item,
   onEdit,
   onDelete,
-  onToggleActive
+  onToggleActive,
+  isToggling = false
 }) => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-RW', {
@@ -68,6 +70,7 @@ const AdminCustomItemCard: React.FC<AdminCustomItemCardProps> = ({
           <Switch
             checked={item.is_active}
             onCheckedChange={(checked) => onToggleActive(item.id, checked)}
+            disabled={isToggling}
           />
         </div>
       </CardContent>
@@ -78,6 +81,7 @@ const AdminCustomItemCard: React.FC<AdminCustomItemCardProps> = ({
           size="sm"
           onClick={() => onEdit(item)}
           className="flex-1"
+          disabled={isToggling}
         >
           <Edit className="h-4 w-4 mr-1" />
           Edit
@@ -87,6 +91,7 @@ const AdminCustomItemCard: React.FC<AdminCustomItemCardProps> = ({
           size="sm"
           onClick={() => onDelete(item.id)}
           className="flex-1"
+          disabled={isToggling}
         >
           <Trash2 className="h-4 w-4 mr-1" />
           Delete
