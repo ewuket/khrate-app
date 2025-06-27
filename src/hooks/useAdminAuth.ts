@@ -26,7 +26,9 @@ export const useAdminAuth = () => {
             id: user.id,
             email: user.email,
             role: 'admin',
+            is_active: true,
             created_at: user.created_at || new Date().toISOString(),
+            updated_at: new Date().toISOString(),
             last_login: new Date().toISOString()
           };
           
@@ -46,7 +48,9 @@ export const useAdminAuth = () => {
               id: adminData.id,
               email: adminData.email,
               role: adminData.role || 'admin',
+              is_active: adminData.is_active || true,
               created_at: adminData.created_at || new Date().toISOString(),
+              updated_at: adminData.updated_at || new Date().toISOString(),
               last_login: new Date().toISOString()
             };
             
@@ -93,7 +97,9 @@ export const useAdminAuth = () => {
               id: signUpData.user.id,
               email: signUpData.user.email!,
               role: 'admin',
+              is_active: true,
               created_at: signUpData.user.created_at || new Date().toISOString(),
+              updated_at: new Date().toISOString(),
               last_login: new Date().toISOString()
             };
             
@@ -107,7 +113,9 @@ export const useAdminAuth = () => {
             id: authData.user.id,
             email: authData.user.email!,
             role: 'admin',
+            is_active: true,
             created_at: authData.user.created_at || new Date().toISOString(),
+            updated_at: new Date().toISOString(),
             last_login: new Date().toISOString()
           };
           
@@ -150,7 +158,9 @@ export const useAdminAuth = () => {
           id: adminData?.id || authData.user!.id,
           email: email,
           role: adminData?.role || 'admin',
+          is_active: adminData?.is_active || true,
           created_at: adminData?.created_at || authData.user!.created_at || new Date().toISOString(),
+          updated_at: adminData?.updated_at || new Date().toISOString(),
           last_login: new Date().toISOString()
         };
         
