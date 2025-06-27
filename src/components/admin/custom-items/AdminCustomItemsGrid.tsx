@@ -1,21 +1,22 @@
 
 import React from 'react';
-import { AdminCustomItem } from "@/hooks/useAdminCustomItems";
-import AdminCustomItemCard from "./AdminCustomItemCard";
+import AdminCustomItemCard from './AdminCustomItemCard';
 
 interface AdminCustomItemsGridProps {
-  items: AdminCustomItem[];
-  onEdit: (item: AdminCustomItem) => void;
+  items: any[];
+  onEdit: (item: any) => void;
   onDelete: (itemId: number) => void;
   onToggleActive: (itemId: number, isActive: boolean) => void;
+  isToggling?: boolean;
 }
 
-const AdminCustomItemsGrid: React.FC<AdminCustomItemsGridProps> = ({
-  items,
-  onEdit,
-  onDelete,
-  onToggleActive
-}) => {
+const AdminCustomItemsGrid = ({ 
+  items, 
+  onEdit, 
+  onDelete, 
+  onToggleActive,
+  isToggling = false
+}: AdminCustomItemsGridProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {items.map((item) => (
@@ -25,6 +26,7 @@ const AdminCustomItemsGrid: React.FC<AdminCustomItemsGridProps> = ({
           onEdit={onEdit}
           onDelete={onDelete}
           onToggleActive={onToggleActive}
+          isToggling={isToggling}
         />
       ))}
     </div>

@@ -55,7 +55,7 @@ export const useAdminCustomItems = () => {
         .from('custom_buy_items')
         .insert({
           name: itemData.name,
-          description: itemData.description,
+          description: itemData.description || null,
           price: parseFloat(itemData.price),
           unit: itemData.unit,
           category: itemData.category,
@@ -89,19 +89,31 @@ export const useAdminCustomItems = () => {
       
       const { id, ...updateData } = itemData;
       
+      // Clean and validate the data before update
+      const cleanUpdateData = {
+        name: updateData.name?.trim(),
+        description: updateData.description?.trim() || null,
+        price: parseFloat(updateData.price),
+        unit: updateData.unit?.trim(),
+        category: updateData.category?.trim(),
+        stock_quantity: parseInt(updateData.stock_quantity) || 0,
+        image_url: updateData.image_url?.trim() || '/placeholder.svg',
+        is_active: Boolean(updateData.is_active),
+        updated_at: new Date().toISOString()
+      };
+
+      // Validate required fields
+      if (!cleanUpdateData.name || !cleanUpdateData.unit || !cleanUpdateData.category) {
+        throw new Error('Name, unit, and category are required fields');
+      }
+
+      if (isNaN(cleanUpdateData.price) || cleanUpdateData.price < 0) {
+        throw new Error('Price must be a valid positive number');
+      }
+
       const { data, error } = await supabase
         .from('custom_buy_items')
-        .update({
-          name: updateData.name,
-          description: updateData.description,
-          price: parseFloat(updateData.price),
-          unit: updateData.unit,
-          category: updateData.category,
-          stock_quantity: parseInt(updateData.stock_quantity) || 0,
-          image_url: updateData.image_url || '/placeholder.svg',
-          is_active: updateData.is_active !== false,
-          updated_at: new Date().toISOString()
-        })
+        .update(cleanUpdateData)
         .eq('id', id)
         .select()
         .single();
@@ -119,7 +131,7 @@ export const useAdminCustomItems = () => {
     },
     onError: (error) => {
       console.error('Error updating custom item:', error);
-      toast.error('Failed to update custom item. Please check your data and try again.');
+      toast.error(error.message || 'Failed to update custom item. Please check your data and try again.');
     }
   });
 
@@ -145,6 +157,37 @@ export const useAdminCustomItems = () => {
     }
   });
 
+  const toggleActiveCustomItemMutation = useMutation({
+    mutationFn: async ({ id, is_active }: { id: number; is_active: boolean }) => {
+      console.log('Toggling custom item active status:', id, is_active);
+      
+      const { data, error } = await supabase
+        .from('custom_buy_items')
+        .update({ 
+          is_active: is_active,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error toggling custom item status:', error);
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-custom-items'] });
+      toast.success(`Custom item ${data.is_active ? 'activated' : 'deactivated'} successfully!`);
+    },
+    onError: (error) => {
+      console.error('Error toggling custom item status:', error);
+      toast.error('Failed to update item status');
+    }
+  });
+
   return {
     customItems,
     isLoading,
@@ -152,8 +195,10 @@ export const useAdminCustomItems = () => {
     createCustomItem: createCustomItemMutation.mutate,
     updateCustomItem: updateCustomItemMutation.mutate,
     deleteCustomItem: deleteCustomItemMutation.mutate,
+    toggleActiveCustomItem: toggleActiveCustomItemMutation.mutate,
     isCreating: createCustomItemMutation.isPending,
     isUpdating: updateCustomItemMutation.isPending,
     isDeleting: deleteCustomItemMutation.isPending,
+    isToggling: toggleActiveCustomItemMutation.isPending,
   };
 };

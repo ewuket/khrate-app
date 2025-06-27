@@ -23,7 +23,7 @@ export const useCustomBuyItems = () => {
   const fetchItems = async () => {
     try {
       setLoading(true);
-      console.log('Fetching active custom buy items...');
+      console.log('Fetching active custom buy items for user side...');
       
       const { data, error } = await supabase
         .from('custom_buy_items')
@@ -50,14 +50,25 @@ export const useCustomBuyItems = () => {
     }
   };
 
+  // Group items by category for better organization
+  const groupedItems = items.reduce((acc, item) => {
+    if (!acc[item.category]) {
+      acc[item.category] = [];
+    }
+    acc[item.category].push(item);
+    return acc;
+  }, {} as Record<string, CustomBuyItem[]>);
+
   useEffect(() => {
     fetchItems();
   }, []);
 
   return {
     items,
+    groupedItems,
     loading,
     error,
-    fetchItems
+    fetchItems,
+    refetch: fetchItems
   };
 };

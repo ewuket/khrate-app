@@ -8,7 +8,17 @@ import AdminCustomItemsEmptyState from "./AdminCustomItemsEmptyState";
 import AdminCustomItemForm from "./AdminCustomItemForm";
 
 const AdminCustomItemsManagement = () => {
-  const { customItems, isLoading, refetch, createCustomItem, updateCustomItem, deleteCustomItem } = useAdminCustomItems();
+  const { 
+    customItems, 
+    isLoading, 
+    refetch, 
+    createCustomItem, 
+    updateCustomItem, 
+    deleteCustomItem,
+    toggleActiveCustomItem,
+    isToggling 
+  } = useAdminCustomItems();
+  
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
 
@@ -29,7 +39,8 @@ const AdminCustomItemsManagement = () => {
   };
 
   const handleToggleActive = async (itemId, isActive) => {
-    await updateCustomItem({ id: itemId, is_active: !isActive });
+    console.log('Toggling item status:', itemId, 'from', isActive, 'to', !isActive);
+    await toggleActiveCustomItem({ id: itemId, is_active: !isActive });
   };
 
   const handleFormClose = () => {
@@ -70,6 +81,7 @@ const AdminCustomItemsManagement = () => {
           onEdit={handleEditItem}
           onDelete={handleDeleteItem}
           onToggleActive={handleToggleActive}
+          isToggling={isToggling}
         />
       )}
 
