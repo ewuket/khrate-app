@@ -33,11 +33,13 @@ const JoinGroupModal: React.FC<JoinGroupModalProps> = ({ isOpen, onClose }) => {
       if (group) {
         setJoinCode('');
         onClose();
-        toast.success(`Successfully joined "${group.name}"!`);
+        toast.success(`Successfully joined "${group.name}"!`, {
+          description: `You can now add items to the group cart and benefit from ${group.discount_percentage}% discount when the minimum members are reached.`
+        });
       }
     } catch (error) {
       console.error('Error joining group:', error);
-      toast.error('Failed to join group. Please check the code.');
+      // Error is already handled in the joinGroup function
     } finally {
       setIsJoining(false);
     }
@@ -64,15 +66,25 @@ const JoinGroupModal: React.FC<JoinGroupModalProps> = ({ isOpen, onClose }) => {
               id="joinCode"
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-              placeholder="Enter 6-character code"
+              placeholder="Enter 6-character code (e.g., ABC123)"
               maxLength={6}
               disabled={isJoining}
+              className="uppercase tracking-wider text-center font-mono"
               required
-              className="font-mono text-center text-lg tracking-wider"
             />
             <p className="text-sm text-gray-500">
-              Ask the group creator for the 6-character join code
+              Ask the group leader for the 6-character join code
             </p>
+          </div>
+
+          <div className="text-sm text-gray-600 bg-gray-50 p-4 rounded-lg">
+            <p><strong>How it works:</strong></p>
+            <ul className="list-disc list-inside mt-2 space-y-1">
+              <li>Enter the group's join code</li>
+              <li>Add items to your group cart</li>
+              <li>Get discounts when minimum members join</li>
+              <li>Complete payment when the group is ready</li>
+            </ul>
           </div>
 
           <div className="flex gap-3">

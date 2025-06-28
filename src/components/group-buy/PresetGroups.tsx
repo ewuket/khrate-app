@@ -1,150 +1,193 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, MapPin, Clock, Zap } from "lucide-react";
-import GroupPreviewModal from "./GroupPreviewModal";
+import { Users, MapPin, Percent, Calendar } from "lucide-react";
+import { useFeaturedGroups } from "@/hooks/useFeaturedGroups";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, RefreshCw } from "lucide-react";
 
 interface PresetGroupsProps {
   onJoinGroup: (groupId: string) => void;
 }
 
 const PresetGroups: React.FC<PresetGroupsProps> = ({ onJoinGroup }) => {
-  const [selectedGroup, setSelectedGroup] = useState<any>(null);
-  const [showPreview, setShowPreview] = useState(false);
+  const { featuredGroups, loading, error, refetch } = useFeaturedGroups();
 
-  const presetGroups = [
-    {
-      id: 'family-essentials',
-      name: 'Family Essentials',
-      description: 'Perfect for families looking to stock up on daily necessities',
-      memberCount: 8,
-      maxMembers: 12,
-      discount: '15% off',
-      location: 'Kigali City',
-      estimatedDelivery: 'Tomorrow by 2 PM',
-      sampleItems: ['Rice 25kg', 'Cooking Oil 5L', 'Sugar 2kg', 'Beans 5kg'],
-      totalValue: 45000,
-      tag: 'Popular'
-    },
-    {
-      id: 'office-snacks',
-      name: 'Office Snacks',
-      description: 'Keep your workplace energized with bulk office snacks',
-      memberCount: 5,
-      maxMembers: 10,
-      discount: '12% off',
-      location: 'Kigali CBD',
-      estimatedDelivery: 'Today by 6 PM',
-      sampleItems: ['Coffee packets', 'Biscuits', 'Juice boxes', 'Nuts mix'],
-      totalValue: 28000,
-      tag: 'Fast'
-    },
-    {
-      id: 'fresh-produce',
-      name: 'Fresh Produce',
-      description: 'Fresh fruits and vegetables delivered daily',
-      memberCount: 12,
-      maxMembers: 15,
-      discount: '20% off',
-      location: 'Nyarutarama',
-      estimatedDelivery: 'Daily delivery available',
-      sampleItems: ['Tomatoes 5kg', 'Onions 3kg', 'Bananas bunch', 'Avocados 2kg'],
-      totalValue: 35000,
-      tag: 'Best Deal'
-    }
-  ];
+  console.log('🏠 PresetGroups component render state:', {
+    featuredGroupsCount: featuredGroups?.length,
+    loading,
+    error,
+    featuredGroups: featuredGroups?.slice(0, 2) // Log first 2 for debugging
+  });
 
-  const handlePreviewGroup = (group: any) => {
-    setSelectedGroup(group);
-    setShowPreview(true);
-  };
+  if (error) {
+    console.error('❌ PresetGroups - Error state:', error);
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Join Active Groups</h2>
+          <p className="text-gray-600">Connect with others in your area for group buying discounts</p>
+        </div>
+        
+        <div className="max-w-md mx-auto text-center">
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Unable to load groups: {error}
+            </AlertDescription>
+          </Alert>
+          
+          <Button 
+            onClick={refetch} 
+            variant="outline"
+            disabled={loading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            {loading ? 'Loading...' : 'Try Again'}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
-  const handleJoinGroup = (groupId: string) => {
-    setShowPreview(false);
-    onJoinGroup(groupId);
-  };
-
-  return (
-    <>
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-2">Join Active Groups</h2>
-        <p className="text-muted-foreground mb-6">
-          Jump into these popular group buying sessions happening right now
-        </p>
+  if (loading) {
+    console.log('⏳ PresetGroups - Loading state');
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Join Active Groups</h2>
+          <p className="text-gray-600">Connect with others in your area for group buying discounts</p>
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {presetGroups.map((group) => (
-            <Card key={group.id} className="hover:shadow-lg transition-shadow">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <Card key={index} className="h-full">
               <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-lg">{group.name}</CardTitle>
-                    <CardDescription className="mt-1">{group.description}</CardDescription>
-                  </div>
-                  <Badge variant="secondary" className="text-xs">
-                    {group.tag}
-                  </Badge>
-                </div>
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-full" />
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3 mb-4">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Users className="h-4 w-4 text-khrate-500" />
-                    <span>{group.memberCount}/{group.maxMembers} members</span>
-                    <Badge variant="outline" className="ml-auto text-green-600 border-green-200">
-                      {group.discount}
-                    </Badge>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <MapPin className="h-4 w-4" />
-                    <span>{group.location}</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="h-4 w-4" />
-                    <span>{group.estimatedDelivery}</span>
-                  </div>
-                </div>
-
-                <div className="mb-4">
-                  <p className="text-sm font-medium mb-2">Sample items:</p>
-                  <p className="text-sm text-muted-foreground">
-                    {group.sampleItems.slice(0, 2).join(', ')}
-                    {group.sampleItems.length > 2 && ` +${group.sampleItems.length - 2} more`}
-                  </p>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => handlePreviewGroup(group)}
-                    className="flex-1"
-                  >
-                    Preview
-                  </Button>
-                  <Button 
-                    onClick={() => handleJoinGroup(group.id)}
-                    className="flex-1 bg-khrate-500 hover:bg-khrate-600"
-                  >
-                    <Zap className="mr-1 h-3 w-3" />
-                    Join Now
-                  </Button>
-                </div>
+              <CardContent className="space-y-4">
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-4 w-2/3" />
+                <Skeleton className="h-10 w-full" />
               </CardContent>
             </Card>
           ))}
         </div>
       </div>
+    );
+  }
 
-      <GroupPreviewModal
-        isOpen={showPreview}
-        onClose={() => setShowPreview(false)}
-        group={selectedGroup}
-      />
-    </>
+  if (!featuredGroups || featuredGroups.length === 0) {
+    console.log('📭 PresetGroups - No featured groups found');
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Join Active Groups</h2>
+          <p className="text-gray-600">Connect with others in your area for group buying discounts</p>
+        </div>
+        
+        <div className="text-center py-12">
+          <Users className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+          <h3 className="text-xl font-semibold text-gray-700 mb-2">No active groups available</h3>
+          <p className="text-gray-500 mb-4">Check back soon for new group buying opportunities!</p>
+          <Button 
+            onClick={refetch} 
+            variant="outline"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  console.log('✅ PresetGroups - Rendering featured groups:', featuredGroups.length);
+
+  return (
+    <div className="space-y-6">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Join Active Groups</h2>
+        <p className="text-gray-600">Connect with others in your area for group buying discounts</p>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {featuredGroups.map((group) => {
+          console.log('🎨 Rendering featured group:', {
+            id: group.id,
+            name: group.name,
+            location: group.location,
+            memberCount: group.member_count
+          });
+          
+          return (
+            <Card key={group.id} className="h-full hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <CardTitle className="text-lg">{group.name}</CardTitle>
+                  <Badge variant="outline" className="bg-khrate-50 text-khrate-700">
+                    {group.discount_percentage}% OFF
+                  </Badge>
+                </div>
+                <CardDescription className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  {group.location && group.region 
+                    ? `${group.location}, ${group.region}`
+                    : group.location || group.region || 'Location not specified'
+                  }
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between text-sm">
+                  <div className="flex items-center gap-1">
+                    <Users className="h-4 w-4 text-gray-500" />
+                    <span>{group.member_count}/{group.max_participants} members</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Percent className="h-4 w-4 text-green-600" />
+                    <span className="text-green-600 font-medium">{group.discount_percentage}% discount</span>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between text-sm text-gray-500">
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-4 w-4" />
+                    <span>Created {new Date(group.created_at).toLocaleDateString()}</span>
+                  </div>
+                  <Badge variant="secondary" className="text-xs">
+                    {group.status}
+                  </Badge>
+                </div>
+                
+                <Button 
+                  className="w-full bg-khrate-500 hover:bg-khrate-600" 
+                  onClick={() => onJoinGroup(group.join_code)}
+                >
+                  Join Group
+                </Button>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+      
+      {featuredGroups.length > 0 && (
+        <div className="text-center">
+          <Button 
+            onClick={refetch} 
+            variant="outline"
+            size="sm"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh Groups
+          </Button>
+        </div>
+      )}
+    </div>
   );
 };
 

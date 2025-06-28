@@ -1,35 +1,33 @@
 
-import GroupActions from "./GroupActions";
-import PresetGroups from "./PresetGroups";
-import PopularGroupBuys from "@/components/home/PopularGroupBuys";
+import React from 'react';
+import GroupActions from './GroupActions';
+import PresetGroups from './PresetGroups';
 
 interface NoGroupViewProps {
   onCreateGroup: () => void;
   onJoinGroup: () => void;
-  onJoinPresetGroup: (groupId: string) => void;
+  onJoinPresetGroup: (joinCode: string) => void;
 }
 
-const NoGroupView = ({ onCreateGroup, onJoinGroup, onJoinPresetGroup }: NoGroupViewProps) => {
+const NoGroupView: React.FC<NoGroupViewProps> = ({
+  onCreateGroup,
+  onJoinGroup,
+  onJoinPresetGroup
+}) => {
+  console.log('🔍 NoGroupView rendering with props:', {
+    onCreateGroup: typeof onCreateGroup,
+    onJoinGroup: typeof onJoinGroup,
+    onJoinPresetGroup: typeof onJoinPresetGroup
+  });
+
   return (
     <div className="space-y-12">
-      <div className="text-center">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">Join or Create a Group</h2>
-        <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-          Team up with others to unlock group discounts and save money on your grocery shopping.
-        </p>
-      </div>
-
-      <GroupActions 
+      <GroupActions
         onCreateGroup={onCreateGroup}
         onJoinGroup={onJoinGroup}
       />
-
+      
       <PresetGroups onJoinGroup={onJoinPresetGroup} />
-
-      {/* Popular Group Buys section */}
-      <div className="mt-16">
-        <PopularGroupBuys />
-      </div>
     </div>
   );
 };

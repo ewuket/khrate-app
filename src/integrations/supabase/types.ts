@@ -552,6 +552,10 @@ export type Database = {
           final_total: number
         }[]
       }
+      can_access_group: {
+        Args: { group_id: string; user_id: string }
+        Returns: boolean
+      }
       check_first_time_discount: {
         Args: { p_user_id: string }
         Returns: {
@@ -625,6 +629,10 @@ export type Database = {
           join_code: string
           created_at: string
         }[]
+      }
+      is_group_member: {
+        Args: { group_id: string; user_id: string }
+        Returns: boolean
       }
       sanitize_text_input: {
         Args: { input_text: string; max_length?: number }

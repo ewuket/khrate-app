@@ -1,25 +1,22 @@
 
 {
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/images/*.{png,jpg,gif}", "/css/*"]
+  },
+  "mimeTypes": {
+    ".json": "application/json"
+  },
   "routes": [
     {
       "route": "/*",
-      "allowedRoles": ["anonymous", "authenticated"],
-      "serve": "/index.html"
+      "headers": {
+        "cache-control": "must-revalidate, max-age=6000"
+      }
     }
   ],
-  "navigationFallback": {
-    "rewrite": "/index.html"
-  },
-  "responseOverrides": {
-    "404": {
-      "rewrite": "/index.html"
-    }
-  },
   "globalHeaders": {
-    "X-Frame-Options": "DENY"
+    "content-security-policy": "default-src https: 'unsafe-eval' 'unsafe-inline'; object-src 'none'"
   },
-  "forwardingGateway": {
-    "khrate.com": "https://www.khrate.com",
-    "www.khrate.com": "https://www.khrate.com"
-  }
+  "trailingSlash": "auto"
 }

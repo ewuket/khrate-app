@@ -27,6 +27,10 @@ interface AdminGroupSession {
   is_public: boolean;
   items: any;
   updated_at: string;
+  location?: string;
+  region?: string;
+  admin_notes?: string;
+  is_featured: boolean;
 }
 
 const AdminGroupManagement = () => {
@@ -38,9 +42,14 @@ const AdminGroupManagement = () => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
+    location: '',
+    region: '',
     discount_percentage: 10,
     min_participants: 3,
-    max_participants: 10
+    max_participants: 10,
+    admin_notes: '',
+    is_public: false,
+    is_featured: false
   });
 
   const loadGroups = async () => {
@@ -53,7 +62,6 @@ const AdminGroupManagement = () => {
 
       if (error) throw error;
       
-      // Type cast the data to match our interface
       const typedGroups = (data || []).map(group => ({
         ...group,
         status: group.status as 'active' | 'inactive'
@@ -97,13 +105,23 @@ const AdminGroupManagement = () => {
       
       const newGroup = {
         name: formData.name,
+        location: formData.location || null,
+        region: formData.region || null,
         discount_percentage: formData.discount_percentage,
         min_participants: formData.min_participants,
         max_participants: formData.max_participants,
         status: 'active' as const,
         join_code: generateJoinCode(),
-        leader_id: user.id
+        leader_id: user.id,
+        group_type: formData.is_public ? 'public' : 'private',
+        is_public: formData.is_public,
+        is_featured: formData.is_featured,
+        admin_notes: formData.admin_notes || null,
+        order_status: 'collecting',
+        items: []
       };
+
+      console.log('Creating group with data:', newGroup);
 
       const { data, error } = await supabase
         .from('group_sessions')
@@ -111,9 +129,11 @@ const AdminGroupManagement = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Group creation error:', error);
+        throw error;
+      }
 
-      // Type cast the returned data
       const typedGroup = {
         ...data,
         status: data.status as 'active' | 'inactive'
@@ -123,21 +143,30 @@ const AdminGroupManagement = () => {
       setFormData({
         name: '',
         description: '',
+        location: '',
+        region: '',
         discount_percentage: 10,
         min_participants: 3,
-        max_participants: 10
+        max_participants: 10,
+        admin_notes: '',
+        is_public: false,
+        is_featured: false
       });
       setShowCreateForm(false);
       toast.success('Group created successfully!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating group:', error);
-      toast.error('Failed to create group');
+      toast.error(`Failed to create group: ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteGroup = async (groupId: string) => {
+    if (!confirm('Are you sure you want to delete this group? This action cannot be undone.')) {
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('group_sessions')
@@ -180,6 +209,32 @@ const AdminGroupManagement = () => {
     }
   };
 
+  const toggleFeaturedStatus = async (groupId: string) => {
+    try {
+      const group = groups.find(g => g.id === groupId);
+      if (!group) return;
+
+      const newFeatured = !group.is_featured;
+      
+      const { error } = await supabase
+        .from('group_sessions')
+        .update({ is_featured: newFeatured })
+        .eq('id', groupId);
+
+      if (error) throw error;
+
+      setGroups(prev => prev.map(group => 
+        group.id === groupId 
+          ? { ...group, is_featured: newFeatured }
+          : group
+      ));
+      toast.success(newFeatured ? 'Group featured!' : 'Group unfeatured!');
+    } catch (error) {
+      console.error('Error updating featured status:', error);
+      toast.error('Failed to update featured status');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -206,7 +261,7 @@ const AdminGroupManagement = () => {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Group Name</Label>
+                <Label htmlFor="name">Group Name *</Label>
                 <Input
                   id="name"
                   value={formData.name}
@@ -216,12 +271,32 @@ const AdminGroupManagement = () => {
               </div>
               
               <div className="space-y-2">
+                <Label htmlFor="location">Location</Label>
+                <Input
+                  id="location"
+                  value={formData.location}
+                  onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                  placeholder="e.g., Kigali City"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="region">Region</Label>
+                <Input
+                  id="region"
+                  value={formData.region}
+                  onChange={(e) => setFormData(prev => ({ ...prev, region: e.target.value }))}
+                  placeholder="e.g., Nyarugenge"
+                />
+              </div>
+              
+              <div className="space-y-2">
                 <Label htmlFor="discount">Discount Percentage</Label>
                 <Input
                   id="discount"
                   type="number"
                   min="0"
-                  max="100"
+                  max="50"
                   value={formData.discount_percentage}
                   onChange={(e) => setFormData(prev => ({ ...prev, discount_percentage: parseInt(e.target.value) || 0 }))}
                   placeholder="10"
@@ -254,13 +329,33 @@ const AdminGroupManagement = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="description">Description (Optional)</Label>
+              <Label htmlFor="admin_notes">Admin Notes</Label>
               <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Describe the group buying session..."
+                id="admin_notes"
+                value={formData.admin_notes}
+                onChange={(e) => setFormData(prev => ({ ...prev, admin_notes: e.target.value }))}
+                placeholder="Internal notes about this group..."
               />
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={formData.is_public}
+                  onChange={(e) => setFormData(prev => ({ ...prev, is_public: e.target.checked }))}
+                />
+                <span>Make Public</span>
+              </label>
+              
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={formData.is_featured}
+                  onChange={(e) => setFormData(prev => ({ ...prev, is_featured: e.target.checked }))}
+                />
+                <span>Featured Group</span>
+              </label>
             </div>
             
             <div className="flex gap-2">
@@ -294,12 +389,30 @@ const AdminGroupManagement = () => {
                     <Badge variant={group.status === 'active' ? 'default' : 'secondary'}>
                       {group.status}
                     </Badge>
+                    {group.is_featured && (
+                      <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
+                        Featured
+                      </Badge>
+                    )}
+                    {group.is_public && (
+                      <Badge variant="outline" className="bg-green-50 text-green-700">
+                        Public
+                      </Badge>
+                    )}
                   </div>
                   
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
                       <span className="font-medium">Join Code:</span>
                       <p className="font-mono bg-gray-100 px-2 py-1 rounded text-xs">{group.join_code}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Location:</span>
+                      <p>{group.location || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Region:</span>
+                      <p>{group.region || 'Not specified'}</p>
                     </div>
                     <div>
                       <span className="font-medium">Discount:</span>
@@ -314,9 +427,24 @@ const AdminGroupManagement = () => {
                       <p>{new Date(group.created_at).toLocaleDateString()}</p>
                     </div>
                   </div>
+                  
+                  {group.admin_notes && (
+                    <div className="mt-2 text-sm">
+                      <span className="font-medium">Admin Notes:</span>
+                      <p className="text-gray-600">{group.admin_notes}</p>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex gap-2 ml-4">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => toggleFeaturedStatus(group.id)}
+                    disabled={loading}
+                  >
+                    {group.is_featured ? 'Unfeature' : 'Feature'}
+                  </Button>
                   <Button
                     size="sm"
                     variant="outline"
