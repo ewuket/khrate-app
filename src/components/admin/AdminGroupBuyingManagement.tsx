@@ -39,7 +39,8 @@ const AdminGroupBuyingManagement = () => {
     toggleFeatured,
     isCreating,
     isUpdating,
-    isDeleting
+    isDeleting,
+    refetch
   } = useAdminGroups();
   
   const { data: groupStats, isLoading: statsLoading } = useAdminGroupStats();
@@ -141,11 +142,36 @@ const AdminGroupBuyingManagement = () => {
   };
 
   const filteredGroups = {
-    all: groups,
-    active: groups.filter(g => g.status === 'active'),
-    inactive: groups.filter(g => g.status === 'inactive'),
-    featured: groups.filter(g => g.is_featured)
+    all: groups || [],
+    active: (groups || []).filter(g => g.status === 'active'),
+    inactive: (groups || []).filter(g => g.status === 'inactive'),
+    featured: (groups || []).filter(g => g.is_featured)
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold">Group Buying Management</h2>
+            <p className="text-muted-foreground">Loading group buying sessions...</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+                  <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -154,14 +180,23 @@ const AdminGroupBuyingManagement = () => {
           <h2 className="text-2xl font-bold">Group Buying Management</h2>
           <p className="text-muted-foreground">Manage group buying sessions and monitor performance</p>
         </div>
-        <Button 
-          onClick={() => setShowCreateForm(true)}
-          className="bg-khrate-500 hover:bg-khrate-600"
-          disabled={isLoading}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Create Group
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={refetch}
+            variant="outline"
+            disabled={isLoading}
+          >
+            Refresh
+          </Button>
+          <Button 
+            onClick={() => setShowCreateForm(true)}
+            className="bg-khrate-500 hover:bg-khrate-600"
+            disabled={isLoading}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Create Group
+          </Button>
+        </div>
       </div>
 
       {/* Statistics Cards */}
@@ -426,7 +461,7 @@ const AdminGroupBuyingManagement = () => {
               </Card>
             ))}
             
-            {filteredGroups[tab === 'overview' ? 'all' : tab].length === 0 && !isLoading && (
+            {filteredGroups[tab === 'overview' ? 'all' : tab].length === 0 && (
               <Card>
                 <CardContent className="p-12 text-center">
                   <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />

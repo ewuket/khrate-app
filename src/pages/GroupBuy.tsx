@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { useGroupBuying } from "@/contexts/GroupBuyingContext";
 import { useAuth } from "@/contexts/AuthContext";
-import CreateGroupModal from "@/components/group-buy/CreateGroupModal";
 import JoinGroupModal from "@/components/group-buy/JoinGroupModal";
 import GroupCartSidebar from "@/components/group-buy/GroupCartSidebar";
 import GroupBuyHero from "@/components/group-buy/GroupBuyHero";
@@ -22,17 +21,8 @@ const GroupBuy = () => {
     joinGroup
   } = useGroupBuying();
   
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showGroupCart, setShowGroupCart] = useState(false);
-
-  const handleCreateGroup = () => {
-    if (!isAuthenticated) {
-      openAuthModal();
-      return;
-    }
-    setShowCreateModal(true);
-  };
 
   const handleJoinGroup = () => {
     if (!isAuthenticated) {
@@ -42,17 +32,15 @@ const GroupBuy = () => {
     setShowJoinModal(true);
   };
 
-  const handleJoinPresetGroup = async (groupId: string) => {
+  const handleJoinPresetGroup = async (joinCode: string) => {
     if (!isAuthenticated) {
       openAuthModal();
       return;
     }
     
     try {
-      // Simulate joining a preset group with enhanced feedback
-      const mockJoinCode = `PRESET${groupId.slice(-3)}`;
-      await joinGroup(mockJoinCode);
-      toast.success(`Successfully joined ${groupId.replace('-', ' ')} group! Start adding items to your group cart.`);
+      await joinGroup(joinCode);
+      toast.success(`Successfully joined group! Start adding items to your group cart.`);
     } catch (error) {
       console.error('Error joining preset group:', error);
       toast.error('Failed to join group. Please try again.');
@@ -74,7 +62,6 @@ const GroupBuy = () => {
       {/* Header with orange background and white text */}
       <div className="bg-khrate-500 text-white">
         <GroupBuyHero 
-          onCreateGroup={handleCreateGroup}
           onJoinGroup={handleJoinGroup}
         />
       </div>
@@ -83,7 +70,6 @@ const GroupBuy = () => {
         <div className="container mx-auto">
           {!currentGroup ? (
             <NoGroupView
-              onCreateGroup={handleCreateGroup}
               onJoinGroup={handleJoinGroup}
               onJoinPresetGroup={handleJoinPresetGroup}
             />
@@ -99,11 +85,6 @@ const GroupBuy = () => {
           )}
         </div>
       </section>
-
-      <CreateGroupModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-      />
 
       <JoinGroupModal
         isOpen={showJoinModal}

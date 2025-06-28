@@ -4,18 +4,15 @@ import GroupActions from './GroupActions';
 import PresetGroups from './PresetGroups';
 
 interface NoGroupViewProps {
-  onCreateGroup: () => void;
   onJoinGroup: () => void;
   onJoinPresetGroup: (joinCode: string) => void;
 }
 
 const NoGroupView: React.FC<NoGroupViewProps> = ({
-  onCreateGroup,
   onJoinGroup,
   onJoinPresetGroup
 }) => {
   console.log('🔍 NoGroupView rendering with props:', {
-    onCreateGroup: typeof onCreateGroup,
     onJoinGroup: typeof onJoinGroup,
     onJoinPresetGroup: typeof onJoinPresetGroup
   });
@@ -23,7 +20,6 @@ const NoGroupView: React.FC<NoGroupViewProps> = ({
   return (
     <div className="space-y-12">
       <GroupActions
-        onCreateGroup={onCreateGroup}
         onJoinGroup={onJoinGroup}
       />
       

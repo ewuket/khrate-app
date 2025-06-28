@@ -15,7 +15,7 @@ export const useAdminGroups = () => {
   } = useQuery({
     queryKey: ['admin-groups'],
     queryFn: async (): Promise<AdminGroupSession[]> => {
-      console.log('Fetching admin groups...');
+      console.log('🔄 Fetching admin groups...');
       
       const { data, error } = await supabase
         .from('group_sessions')
@@ -26,13 +26,15 @@ export const useAdminGroups = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching admin groups:', error);
+        console.error('❌ Error fetching admin groups:', error);
         throw error;
       }
 
+      console.log('✅ Admin groups fetched:', data?.length || 0);
+
       return data?.map(group => ({
         ...group,
-        status: group.status as 'active' | 'inactive' | 'completed', // Type assertion
+        status: group.status as 'active' | 'inactive' | 'completed',
         member_count: group.group_members?.[0]?.count || 0
       })) || [];
     },
@@ -42,6 +44,8 @@ export const useAdminGroups = () => {
 
   const createGroupMutation = useMutation({
     mutationFn: async (groupData: Partial<AdminGroupSession>) => {
+      console.log('🔄 Creating group with data:', groupData);
+      
       const { data, error } = await supabase
         .from('group_sessions')
         .insert({
@@ -55,26 +59,35 @@ export const useAdminGroups = () => {
           location: groupData.location,
           region: groupData.region,
           is_featured: groupData.is_featured || false,
+          is_public: true, // Make groups public so users can see them
           admin_notes: groupData.admin_notes
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error creating group:', error);
+        throw error;
+      }
+      
+      console.log('✅ Group created successfully:', data);
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-groups'] });
+      queryClient.invalidateQueries({ queryKey: ['featured-groups'] }); // Refresh featured groups
       toast.success('Group created successfully!');
     },
     onError: (error) => {
-      console.error('Error creating group:', error);
+      console.error('❌ Error creating group:', error);
       toast.error('Failed to create group');
     }
   });
 
   const updateGroupMutation = useMutation({
     mutationFn: async ({ id, ...updates }: Partial<AdminGroupSession> & { id: string }) => {
+      console.log('🔄 Updating group:', id, updates);
+      
       const { data, error } = await supabase
         .from('group_sessions')
         .update(updates)
@@ -82,40 +95,56 @@ export const useAdminGroups = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error updating group:', error);
+        throw error;
+      }
+      
+      console.log('✅ Group updated successfully:', data);
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-groups'] });
+      queryClient.invalidateQueries({ queryKey: ['featured-groups'] }); // Refresh featured groups
       toast.success('Group updated successfully!');
     },
     onError: (error) => {
-      console.error('Error updating group:', error);
+      console.error('❌ Error updating group:', error);
       toast.error('Failed to update group');
     }
   });
 
   const deleteGroupMutation = useMutation({
     mutationFn: async (groupId: string) => {
+      console.log('🔄 Deleting group:', groupId);
+      
       const { error } = await supabase
         .from('group_sessions')
         .delete()
         .eq('id', groupId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error deleting group:', error);
+        throw error;
+      }
+      
+      console.log('✅ Group deleted successfully');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-groups'] });
+      queryClient.invalidateQueries({ queryKey: ['featured-groups'] }); // Refresh featured groups
       toast.success('Group deleted successfully!');
     },
     onError: (error) => {
-      console.error('Error deleting group:', error);
+      console.error('❌ Error deleting group:', error);
       toast.error('Failed to delete group');
     }
   });
 
   const toggleFeaturedMutation = useMutation({
     mutationFn: async ({ id, is_featured }: { id: string; is_featured: boolean }) => {
+      console.log('🔄 Toggling featured status:', id, is_featured);
+      
       const { data, error } = await supabase
         .from('group_sessions')
         .update({ is_featured })
@@ -123,15 +152,21 @@ export const useAdminGroups = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error toggling featured status:', error);
+        throw error;
+      }
+      
+      console.log('✅ Featured status toggled successfully:', data);
       return data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-groups'] });
+      queryClient.invalidateQueries({ queryKey: ['featured-groups'] }); // Refresh featured groups
       toast.success(data.is_featured ? 'Group featured successfully!' : 'Group unfeatured successfully!');
     },
     onError: (error) => {
-      console.error('Error toggling featured status:', error);
+      console.error('❌ Error toggling featured status:', error);
       toast.error('Failed to update featured status');
     }
   });
@@ -155,13 +190,17 @@ export const useAdminGroupStats = () => {
   return useQuery({
     queryKey: ['admin-group-stats'],
     queryFn: async (): Promise<GroupStats> => {
+      console.log('🔄 Fetching admin group stats...');
+      
       const { data, error } = await supabase
         .rpc('get_admin_group_stats');
 
       if (error) {
-        console.error('Error fetching group stats:', error);
+        console.error('❌ Error fetching group stats:', error);
         throw error;
       }
+
+      console.log('✅ Admin group stats fetched:', data?.[0]);
 
       return data?.[0] || {
         total_groups: 0,
