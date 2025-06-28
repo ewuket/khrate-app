@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -72,6 +71,10 @@ const AdminGroupBuyingManagement = () => {
       admin_notes: ''
     });
     setEditingGroup(null);
+  };
+
+  const handleRefresh = () => {
+    refetch();
   };
 
   const handleCreateGroup = async () => {
@@ -182,7 +185,7 @@ const AdminGroupBuyingManagement = () => {
         </div>
         <div className="flex gap-2">
           <Button 
-            onClick={refetch}
+            onClick={handleRefresh}
             variant="outline"
             disabled={isLoading}
           >
