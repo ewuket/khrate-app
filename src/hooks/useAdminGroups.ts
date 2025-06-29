@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -18,17 +17,7 @@ export const useAdminGroups = () => {
       console.log('Fetching admin groups...');
       
       try {
-        // Check if user is authenticated first
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        
-        if (userError || !user) {
-          console.error('User authentication error:', userError);
-          throw new Error('Authentication required');
-        }
-
-        console.log('Current user authenticated:', user.email);
-
-        // Fetch groups - now works with optimized RLS policies
+        // Fetch groups with optimized query
         const { data: groupsData, error: groupsError } = await supabase
           .from('group_sessions')
           .select('*')
@@ -56,7 +45,6 @@ export const useAdminGroups = () => {
             .in('group_session_id', groupIds);
 
           if (!membersError && membersData) {
-            // Count members per group
             memberCounts = membersData.reduce((acc, member) => {
               acc[member.group_session_id] = (acc[member.group_session_id] || 0) + 1;
               return acc;
@@ -64,11 +52,12 @@ export const useAdminGroups = () => {
           }
         }
 
-        // Combine groups with member counts
+        // Combine groups with member counts and ensure items is always an array
         const groupsWithMemberCount = groupsData.map(group => ({
           ...group,
           member_count: memberCounts[group.id] || 0,
-          status: group.status as 'active' | 'completed' | 'inactive'
+          status: group.status as 'active' | 'completed' | 'inactive',
+          items: Array.isArray(group.items) ? group.items : []
         }));
 
         console.log('Processed groups with member count:', groupsWithMemberCount.length);
@@ -87,13 +76,10 @@ export const useAdminGroups = () => {
     mutationFn: async (groupData: Partial<AdminGroupSession>) => {
       console.log('Creating group with data:', groupData);
 
-      // Generate unique join code
-      const { data: joinCodeData, error: joinCodeError } = await supabase
-        .rpc('generate_join_code');
-
-      if (joinCodeError) {
-        console.error('Error generating join code:', joinCodeError);
-        throw new Error('Failed to generate join code');
+      // Check authentication first
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Authentication required');
       }
 
       const insertData = {
@@ -101,11 +87,15 @@ export const useAdminGroups = () => {
         location: groupData.location,
         region: groupData.region,
         max_participants: groupData.max_participants,
+        min_participants: groupData.min_participants,
         discount_percentage: groupData.discount_percentage,
-        leader_id: groupData.leader_id || '',
-        join_code: joinCodeData,
-        is_public: true,
+        leader_id: user.id,
+        join_code: Math.random().toString(36).substr(2, 6).toUpperCase(),
+        is_public: groupData.is_public || true,
+        is_featured: groupData.is_featured || false,
         group_type: 'public',
+        status: 'active',
+        admin_notes: groupData.admin_notes,
         items: groupData.items || []
       };
 
@@ -142,6 +132,11 @@ export const useAdminGroups = () => {
       console.log('Updating group:', groupData);
       
       const { id, ...updateData } = groupData;
+      
+      // Ensure items is properly formatted
+      if (updateData.items) {
+        updateData.items = Array.isArray(updateData.items) ? updateData.items : [];
+      }
       
       const { data, error } = await supabase
         .from('group_sessions')

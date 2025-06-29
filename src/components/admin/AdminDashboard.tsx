@@ -16,7 +16,6 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const { stats, orders, bundles, loading, refreshAllData } = useAdminData();
 
-  // Placeholder functions for order management
   const handleUpdateOrderStatus = async (orderId: string, status: string) => {
     console.log('Update order status:', orderId, status);
     // TODO: Implement order status update
@@ -52,7 +51,6 @@ const AdminDashboard = () => {
               />
               <AdminBundlesList />
             </div>
-            <AdminGroupsList groupSessions={[]} />
           </TabsContent>
 
           <TabsContent value="orders">

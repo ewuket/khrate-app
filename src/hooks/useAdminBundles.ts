@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,7 +15,7 @@ export interface AdminBundle {
   created_at: string;
   updated_at: string;
   bundle_items?: AdminBundleItem[];
-  items?: AdminBundleItem[]; // Add this for backward compatibility
+  items?: AdminBundleItem[];
 }
 
 export interface AdminBundleItem {
@@ -50,42 +49,44 @@ export const useAdminBundles = () => {
   } = useQuery({
     queryKey: ['admin-bundles'],
     queryFn: async (): Promise<AdminBundle[]> => {
-      console.log('Fetching bundles...');
+      console.log('Fetching bundles for admin...');
 
-      // First, check if user is authenticated
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      if (userError || !user) {
-        console.error('User authentication error:', userError);
-        throw new Error('Authentication required');
+      try {
+        // First try to get all bundles - fallback approach for admin visibility
+        const { data: bundlesData, error: bundlesError } = await supabase
+          .from('bundles')
+          .select(`
+            *,
+            bundle_items (*)
+          `)
+          .order('created_at', { ascending: false });
+
+        if (bundlesError) {
+          console.error('Error fetching bundles:', bundlesError);
+          // If the admin query fails, throw error to show user what's wrong
+          throw new Error(`Database error: ${bundlesError.message}`);
+        }
+
+        console.log('Successfully fetched bundles:', bundlesData?.length || 0);
+        
+        if (!bundlesData || bundlesData.length === 0) {
+          console.warn('No bundles found in database');
+          return [];
+        }
+
+        // Transform data to include both bundle_items and items for backward compatibility
+        const transformedBundles = bundlesData.map(bundle => ({
+          ...bundle,
+          items: bundle.bundle_items || []
+        }));
+
+        return transformedBundles;
+      } catch (error) {
+        console.error('Failed to fetch bundles:', error);
+        throw error;
       }
-
-      console.log('User authenticated, fetching bundles...');
-
-      const { data: bundlesData, error: bundlesError } = await supabase
-        .from('bundles')
-        .select(`
-          *,
-          bundle_items (*)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (bundlesError) {
-        console.error('Error fetching bundles:', bundlesError);
-        throw bundlesError;
-      }
-
-      console.log('Successfully fetched bundles:', bundlesData?.length || 0);
-      
-      // Transform data to include both bundle_items and items for backward compatibility
-      const transformedBundles = (bundlesData || []).map(bundle => ({
-        ...bundle,
-        items: bundle.bundle_items || []
-      }));
-
-      return transformedBundles;
     },
-    retry: 2,
+    retry: 1,
     retryDelay: 1000
   });
 
@@ -95,7 +96,6 @@ export const useAdminBundles = () => {
 
       const { bundle_items, ...bundleInfo } = bundleData;
 
-      // Insert bundle first
       const { data: newBundle, error: bundleError } = await supabase
         .from('bundles')
         .insert([bundleInfo])
@@ -107,7 +107,6 @@ export const useAdminBundles = () => {
         throw bundleError;
       }
 
-      // Insert bundle items if provided
       if (bundle_items && bundle_items.length > 0) {
         const itemsToInsert = bundle_items.map(item => ({
           ...item,
@@ -143,7 +142,6 @@ export const useAdminBundles = () => {
 
       const { bundle_items, ...bundleInfo } = bundleData;
 
-      // Update bundle
       const { data: updatedBundle, error: bundleError } = await supabase
         .from('bundles')
         .update(bundleInfo)
@@ -156,15 +154,12 @@ export const useAdminBundles = () => {
         throw bundleError;
       }
 
-      // If bundle_items provided, update them
       if (bundle_items !== undefined) {
-        // Delete existing items
         await supabase
           .from('bundle_items')
           .delete()
           .eq('bundle_id', id);
 
-        // Insert new items
         if (bundle_items.length > 0) {
           const itemsToInsert = bundle_items.map(item => ({
             ...item,

@@ -6,10 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Users } from "lucide-react";
+import { Plus, Edit, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAdminGroups } from '@/hooks/useAdminGroups';
+
+interface GroupItem {
+  name: string;
+  quantity: number;
+  unit: string;
+}
 
 interface AdminGroupSession {
   id: string;
@@ -25,19 +30,19 @@ interface AdminGroupSession {
   group_type: string;
   order_status: string | null;
   is_public: boolean;
-  items: any;
+  items: GroupItem[];
   updated_at: string;
   location?: string;
   region?: string;
   admin_notes?: string;
   is_featured: boolean;
+  member_count?: number;
 }
 
 const AdminGroupManagement = () => {
-  const [groups, setGroups] = useState<AdminGroupSession[]>([]);
+  const { groups, isLoading, createGroup, updateGroup, deleteGroup } = useAdminGroups();
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const { user } = useAuth();
+  const [editingGroup, setEditingGroup] = useState<AdminGroupSession | null>(null);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -49,44 +54,77 @@ const AdminGroupManagement = () => {
     max_participants: 10,
     admin_notes: '',
     is_public: false,
-    is_featured: false
+    is_featured: false,
+    items: [] as GroupItem[]
   });
 
-  const loadGroups = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('group_sessions')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      
-      const typedGroups = (data || []).map(group => ({
-        ...group,
-        status: group.status as 'active' | 'inactive'
-      }));
-      
-      setGroups(typedGroups);
-    } catch (error) {
-      console.error('Error loading groups:', error);
-      toast.error('Failed to load groups');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [currentItem, setCurrentItem] = useState({
+    name: '',
+    quantity: 1,
+    unit: 'kg'
+  });
 
   useEffect(() => {
-    loadGroups();
-  }, []);
-
-  const generateJoinCode = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < 6; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    if (editingGroup) {
+      setFormData({
+        name: editingGroup.name || '',
+        description: editingGroup.description || '',
+        location: editingGroup.location || '',
+        region: editingGroup.region || '',
+        discount_percentage: editingGroup.discount_percentage,
+        min_participants: editingGroup.min_participants,
+        max_participants: editingGroup.max_participants,
+        admin_notes: editingGroup.admin_notes || '',
+        is_public: editingGroup.is_public,
+        is_featured: editingGroup.is_featured,
+        items: Array.isArray(editingGroup.items) ? editingGroup.items : []
+      });
     }
-    return result;
+  }, [editingGroup]);
+
+  const handleAddItem = () => {
+    if (!currentItem.name.trim()) {
+      toast.error('Item name is required');
+      return;
+    }
+
+    const newItem = {
+      name: currentItem.name.trim(),
+      quantity: currentItem.quantity,
+      unit: currentItem.unit
+    };
+
+    setFormData(prev => ({
+      ...prev,
+      items: [...prev.items, newItem]
+    }));
+
+    setCurrentItem({ name: '', quantity: 1, unit: 'kg' });
+  };
+
+  const handleRemoveItem = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      items: prev.items.filter((_, i) => i !== index)
+    }));
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      description: '',
+      location: '',
+      region: '',
+      discount_percentage: 10,
+      min_participants: 3,
+      max_participants: 10,
+      admin_notes: '',
+      is_public: false,
+      is_featured: false,
+      items: []
+    });
+    setCurrentItem({ name: '', quantity: 1, unit: 'kg' });
+    setEditingGroup(null);
   };
 
   const handleCreateGroup = async () => {
@@ -95,145 +133,110 @@ const AdminGroupManagement = () => {
       return;
     }
 
-    if (!user) {
-      toast.error('You must be logged in to create groups');
+    try {
+      const groupData = {
+        name: formData.name,
+        location: formData.location,
+        region: formData.region,
+        discount_percentage: formData.discount_percentage,
+        min_participants: formData.min_participants,
+        max_participants: formData.max_participants,
+        is_public: formData.is_public,
+        is_featured: formData.is_featured,
+        admin_notes: formData.admin_notes,
+        items: formData.items
+      };
+
+      await createGroup(groupData);
+      resetForm();
+      setShowCreateForm(false);
+    } catch (error: any) {
+      console.error('Error creating group:', error);
+      toast.error(`Failed to create group: ${error.message}`);
+    }
+  };
+
+  const handleUpdateGroup = async () => {
+    if (!editingGroup || !formData.name.trim()) {
+      toast.error('Group name is required');
       return;
     }
 
     try {
-      setLoading(true);
-      
-      const newGroup = {
+      const groupData = {
+        id: editingGroup.id,
         name: formData.name,
-        location: formData.location || null,
-        region: formData.region || null,
+        location: formData.location,
+        region: formData.region,
         discount_percentage: formData.discount_percentage,
         min_participants: formData.min_participants,
         max_participants: formData.max_participants,
-        status: 'active' as const,
-        join_code: generateJoinCode(),
-        leader_id: user.id,
-        group_type: formData.is_public ? 'public' : 'private',
         is_public: formData.is_public,
         is_featured: formData.is_featured,
-        admin_notes: formData.admin_notes || null,
-        order_status: 'collecting',
-        items: []
+        admin_notes: formData.admin_notes,
+        items: formData.items
       };
 
-      console.log('Creating group with data:', newGroup);
-
-      const { data, error } = await supabase
-        .from('group_sessions')
-        .insert(newGroup)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Group creation error:', error);
-        throw error;
-      }
-
-      const typedGroup = {
-        ...data,
-        status: data.status as 'active' | 'inactive'
-      };
-
-      setGroups(prev => [typedGroup, ...prev]);
-      setFormData({
-        name: '',
-        description: '',
-        location: '',
-        region: '',
-        discount_percentage: 10,
-        min_participants: 3,
-        max_participants: 10,
-        admin_notes: '',
-        is_public: false,
-        is_featured: false
-      });
+      await updateGroup(groupData);
+      resetForm();
       setShowCreateForm(false);
-      toast.success('Group created successfully!');
     } catch (error: any) {
-      console.error('Error creating group:', error);
-      toast.error(`Failed to create group: ${error.message}`);
-    } finally {
-      setLoading(false);
+      console.error('Error updating group:', error);
+      toast.error(`Failed to update group: ${error.message}`);
     }
   };
 
-  const handleDeleteGroup = async (groupId: string) => {
+  const handleEdit = (group: AdminGroupSession) => {
+    setEditingGroup(group);
+    setShowCreateForm(true);
+  };
+
+  const handleDelete = async (groupId: string) => {
     if (!confirm('Are you sure you want to delete this group? This action cannot be undone.')) {
       return;
     }
 
     try {
-      const { error } = await supabase
-        .from('group_sessions')
-        .delete()
-        .eq('id', groupId);
-
-      if (error) throw error;
-
-      setGroups(prev => prev.filter(group => group.id !== groupId));
-      toast.success('Group deleted successfully!');
+      await deleteGroup(groupId);
     } catch (error) {
       console.error('Error deleting group:', error);
       toast.error('Failed to delete group');
     }
   };
 
-  const toggleGroupStatus = async (groupId: string) => {
+  const handleToggleStatus = async (group: AdminGroupSession) => {
     try {
-      const group = groups.find(g => g.id === groupId);
-      if (!group) return;
-
       const newStatus = group.status === 'active' ? 'inactive' : 'active';
-      
-      const { error } = await supabase
-        .from('group_sessions')
-        .update({ status: newStatus })
-        .eq('id', groupId);
-
-      if (error) throw error;
-
-      setGroups(prev => prev.map(group => 
-        group.id === groupId 
-          ? { ...group, status: newStatus }
-          : group
-      ));
-      toast.success('Group status updated!');
+      await updateGroup({
+        id: group.id,
+        status: newStatus
+      });
     } catch (error) {
-      console.error('Error updating group status:', error);
+      console.error('Error toggling group status:', error);
       toast.error('Failed to update group status');
     }
   };
 
-  const toggleFeaturedStatus = async (groupId: string) => {
+  const handleToggleFeatured = async (group: AdminGroupSession) => {
     try {
-      const group = groups.find(g => g.id === groupId);
-      if (!group) return;
-
-      const newFeatured = !group.is_featured;
-      
-      const { error } = await supabase
-        .from('group_sessions')
-        .update({ is_featured: newFeatured })
-        .eq('id', groupId);
-
-      if (error) throw error;
-
-      setGroups(prev => prev.map(group => 
-        group.id === groupId 
-          ? { ...group, is_featured: newFeatured }
-          : group
-      ));
-      toast.success(newFeatured ? 'Group featured!' : 'Group unfeatured!');
+      await updateGroup({
+        id: group.id,
+        is_featured: !group.is_featured
+      });
     } catch (error) {
-      console.error('Error updating featured status:', error);
+      console.error('Error toggling featured status:', error);
       toast.error('Failed to update featured status');
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-khrate-500 mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading groups...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -245,7 +248,7 @@ const AdminGroupManagement = () => {
         <Button 
           onClick={() => setShowCreateForm(true)}
           className="bg-khrate-500 hover:bg-khrate-600"
-          disabled={loading}
+          disabled={isLoading}
         >
           <Plus className="h-4 w-4 mr-2" />
           Create Group
@@ -255,8 +258,10 @@ const AdminGroupManagement = () => {
       {showCreateForm && (
         <Card>
           <CardHeader>
-            <CardTitle>Create New Group</CardTitle>
-            <CardDescription>Set up a new group buying session</CardDescription>
+            <CardTitle>{editingGroup ? 'Edit Group' : 'Create New Group'}</CardTitle>
+            <CardDescription>
+              {editingGroup ? 'Update group buying session details' : 'Set up a new group buying session'}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -299,7 +304,6 @@ const AdminGroupManagement = () => {
                   max="50"
                   value={formData.discount_percentage}
                   onChange={(e) => setFormData(prev => ({ ...prev, discount_percentage: parseInt(e.target.value) || 0 }))}
-                  placeholder="10"
                 />
               </div>
               
@@ -311,7 +315,6 @@ const AdminGroupManagement = () => {
                   min="2"
                   value={formData.min_participants}
                   onChange={(e) => setFormData(prev => ({ ...prev, min_participants: parseInt(e.target.value) || 2 }))}
-                  placeholder="3"
                 />
               </div>
               
@@ -323,9 +326,57 @@ const AdminGroupManagement = () => {
                   min="2"
                   value={formData.max_participants}
                   onChange={(e) => setFormData(prev => ({ ...prev, max_participants: parseInt(e.target.value) || 2 }))}
-                  placeholder="10"
                 />
               </div>
+            </div>
+
+            {/* Items Management Section */}
+            <div className="space-y-4">
+              <Label>Group Items</Label>
+              
+              {/* Add Item Form */}
+              <div className="flex gap-2 p-4 border rounded-lg bg-gray-50">
+                <Input
+                  placeholder="Item name (e.g., Tomatoes)"
+                  value={currentItem.name}
+                  onChange={(e) => setCurrentItem(prev => ({ ...prev, name: e.target.value }))}
+                  className="flex-1"
+                />
+                <Input
+                  type="number"
+                  placeholder="Quantity"
+                  value={currentItem.quantity}
+                  onChange={(e) => setCurrentItem(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
+                  className="w-24"
+                />
+                <Input
+                  placeholder="Unit"
+                  value={currentItem.unit}
+                  onChange={(e) => setCurrentItem(prev => ({ ...prev, unit: e.target.value }))}
+                  className="w-20"
+                />
+                <Button onClick={handleAddItem} size="sm">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Items List */}
+              {formData.items.length > 0 && (
+                <div className="space-y-2">
+                  {formData.items.map((item, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 border rounded">
+                      <span>{item.quantity} {item.unit} of {item.name}</span>
+                      <Button
+                        onClick={() => handleRemoveItem(index)}
+                        size="sm"
+                        variant="destructive"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -360,16 +411,19 @@ const AdminGroupManagement = () => {
             
             <div className="flex gap-2">
               <Button 
-                onClick={handleCreateGroup}
+                onClick={editingGroup ? handleUpdateGroup : handleCreateGroup}
                 className="bg-khrate-500 hover:bg-khrate-600"
-                disabled={!formData.name.trim() || loading}
+                disabled={!formData.name.trim() || isLoading}
               >
-                {loading ? 'Creating...' : 'Create Group'}
+                {editingGroup ? 'Update Group' : 'Create Group'}
               </Button>
               <Button 
                 variant="outline" 
-                onClick={() => setShowCreateForm(false)}
-                disabled={loading}
+                onClick={() => {
+                  resetForm();
+                  setShowCreateForm(false);
+                }}
+                disabled={isLoading}
               >
                 Cancel
               </Button>
@@ -401,7 +455,7 @@ const AdminGroupManagement = () => {
                     )}
                   </div>
                   
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
                     <div>
                       <span className="font-medium">Join Code:</span>
                       <p className="font-mono bg-gray-100 px-2 py-1 rounded text-xs">{group.join_code}</p>
@@ -411,25 +465,31 @@ const AdminGroupManagement = () => {
                       <p>{group.location || 'Not specified'}</p>
                     </div>
                     <div>
-                      <span className="font-medium">Region:</span>
-                      <p>{group.region || 'Not specified'}</p>
+                      <span className="font-medium">Members:</span>
+                      <p>{group.member_count || 0} / {group.max_participants}</p>
                     </div>
                     <div>
                       <span className="font-medium">Discount:</span>
                       <p>{group.discount_percentage}%</p>
                     </div>
-                    <div>
-                      <span className="font-medium">Participants:</span>
-                      <p>{group.min_participants} - {group.max_participants}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium">Created:</span>
-                      <p>{new Date(group.created_at).toLocaleDateString()}</p>
-                    </div>
                   </div>
+
+                  {/* Display Items */}
+                  {group.items && Array.isArray(group.items) && group.items.length > 0 && (
+                    <div className="mb-4">
+                      <span className="font-medium text-sm">Items:</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {group.items.map((item, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {item.quantity} {item.unit} {item.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   
                   {group.admin_notes && (
-                    <div className="mt-2 text-sm">
+                    <div className="text-sm">
                       <span className="font-medium">Admin Notes:</span>
                       <p className="text-gray-600">{group.admin_notes}</p>
                     </div>
@@ -440,24 +500,33 @@ const AdminGroupManagement = () => {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => toggleFeaturedStatus(group.id)}
-                    disabled={loading}
+                    onClick={() => handleEdit(group)}
+                    disabled={isLoading}
+                  >
+                    <Edit className="h-3 w-3 mr-1" />
+                    Edit
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleToggleFeatured(group)}
+                    disabled={isLoading}
                   >
                     {group.is_featured ? 'Unfeature' : 'Feature'}
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => toggleGroupStatus(group.id)}
-                    disabled={loading}
+                    onClick={() => handleToggleStatus(group)}
+                    disabled={isLoading}
                   >
                     {group.status === 'active' ? 'Deactivate' : 'Activate'}
                   </Button>
                   <Button
                     size="sm"
                     variant="destructive"
-                    onClick={() => handleDeleteGroup(group.id)}
-                    disabled={loading}
+                    onClick={() => handleDelete(group.id)}
+                    disabled={isLoading}
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
@@ -467,10 +536,9 @@ const AdminGroupManagement = () => {
           </Card>
         ))}
         
-        {groups.length === 0 && !loading && (
+        {groups.length === 0 && !isLoading && (
           <Card>
             <CardContent className="p-12 text-center">
-              <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No Groups Created</h3>
               <p className="text-muted-foreground mb-4">Create your first group buying session to get started.</p>
               <Button 

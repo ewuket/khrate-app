@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAdminBundles, AdminBundle, BundleFormData } from "@/hooks/useAdminBundles";
 import AdminBundleForm from "./AdminBundleForm";
@@ -5,6 +6,7 @@ import AdminBundleHeader from "./bundle-management/AdminBundleHeader";
 import AdminBundleGrid from "./bundle-management/AdminBundleGrid";
 import AdminBundleEmptyState from "./bundle-management/AdminBundleEmptyState";
 import AdminBundleLoadingState from "./bundle-management/AdminBundleLoadingState";
+import AdminBundleDebugInfo from "./bundle-management/AdminBundleDebugInfo";
 
 const AdminBundleManagement: React.FC = () => {
   const { 
@@ -16,7 +18,8 @@ const AdminBundleManagement: React.FC = () => {
     deleteBundle,
     isCreating,
     isUpdating,
-    isDeleting
+    isDeleting,
+    error
   } = useAdminBundles();
   
   const [showForm, setShowForm] = useState(false);
@@ -95,6 +98,14 @@ const AdminBundleManagement: React.FC = () => {
         onCreateBundle={handleCreateBundleClick}
         onRefresh={handleRefresh}
         isRefreshing={isLoading}
+      />
+
+      {/* Debug Information */}
+      <AdminBundleDebugInfo
+        bundles={bundles}
+        isLoading={isLoading}
+        error={error}
+        onRefresh={handleRefresh}
       />
 
       {!bundles || bundles.length === 0 ? (
