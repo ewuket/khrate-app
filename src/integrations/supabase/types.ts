@@ -579,6 +579,10 @@ export type Database = {
           avg_group_size: number
         }[]
       }
+      get_custom_items_count: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       get_featured_groups: {
         Args: Record<PropertyKey, never>
         Returns: {

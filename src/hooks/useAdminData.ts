@@ -1,138 +1,186 @@
 
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { AdminStats, AdminOrder } from "@/types/admin";
-import { useAdminBundles } from "./useAdminBundles";
-import { useCallback } from "react";
-
-export const useAdminStats = () => {
-  return useQuery({
-    queryKey: ['admin-stats'],
-    queryFn: async (): Promise<AdminStats> => {
-      console.log('Fetching admin stats...');
-      
-      try {
-        // Get total orders
-        const { count: totalOrders } = await supabase
-          .from('orders')
-          .select('*', { count: 'exact', head: true });
-
-        // Get pending orders
-        const { count: pendingOrders } = await supabase
-          .from('orders')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'pending');
-
-        // Get total revenue
-        const { data: revenueData } = await supabase
-          .from('orders')
-          .select('total_amount')
-          .eq('payment_status', 'completed');
-
-        const totalRevenue = revenueData?.reduce((sum, order) => sum + Number(order.total_amount), 0) || 0;
-
-        // Get active groups
-        const { count: activeGroups } = await supabase
-          .from('group_sessions')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'active');
-
-        // Get total users from user_profiles
-        const { count: totalUsers } = await supabase
-          .from('user_profiles')
-          .select('*', { count: 'exact', head: true });
-
-        console.log('Admin stats fetched successfully');
-
-        return {
-          total_orders: totalOrders || 0,
-          pending_orders: pendingOrders || 0,
-          total_revenue: totalRevenue,
-          active_groups: activeGroups || 0,
-          total_users: totalUsers || 0,
-        };
-      } catch (error) {
-        console.error('Error fetching admin stats:', error);
-        throw error;
-      }
-    },
-    staleTime: 30 * 1000, // 30 seconds
-    retry: 2,
-  });
-};
-
-export const useAdminOrders = () => {
-  return useQuery({
-    queryKey: ['admin-orders'],
-    queryFn: async (): Promise<AdminOrder[]> => {
-      console.log('Fetching admin orders...');
-      
-      try {
-        const { data: orders, error } = await supabase
-          .from('orders')
-          .select(`
-            *,
-            user_profiles!inner(
-              full_name,
-              email,
-              phone
-            )
-          `)
-          .order('created_at', { ascending: false })
-          .limit(50);
-
-        if (error) {
-          console.error('Error fetching orders:', error);
-          throw error;
-        }
-
-        console.log('Admin orders fetched:', orders?.length || 0);
-
-        return orders?.map(order => ({
-          id: order.id,
-          user_id: order.user_id,
-          items: Array.isArray(order.items) ? order.items : [],
-          total_amount: order.total_amount,
-          status: order.status,
-          payment_status: order.payment_status,
-          delivery_address: order.delivery_address,
-          delivery_date: order.delivery_date,
-          created_at: order.created_at,
-          user_profile: {
-            full_name: order.user_profiles?.full_name || 'Unknown',
-            email: order.user_profiles?.email || 'Unknown',
-            phone: order.user_profiles?.phone
-          }
-        })) || [];
-      } catch (error) {
-        console.error('Error fetching admin orders:', error);
-        throw error;
-      }
-    },
-    staleTime: 30 * 1000, // 30 seconds
-    retry: 2,
-  });
-};
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { AdminStats, AdminOrder, AdminBundle } from '@/types/admin';
+import { toast } from 'sonner';
 
 export const useAdminData = () => {
-  const statsQuery = useAdminStats();
-  const ordersQuery = useAdminOrders();
-  const bundlesQuery = useAdminBundles();
+  const [stats, setStats] = useState<AdminStats>({
+    total_orders: 0,
+    pending_orders: 0,
+    total_revenue: 0,
+    active_groups: 0,
+    total_users: 0
+  });
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
+  const [bundles, setBundles] = useState<AdminBundle[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const refreshAllData = useCallback(() => {
-    statsQuery.refetch();
-    ordersQuery.refetch();
-    bundlesQuery.refetch();
-  }, [statsQuery, ordersQuery, bundlesQuery]);
+  const fetchStats = async () => {
+    try {
+      console.log('Fetching admin stats...');
+      
+      // Fetch orders stats
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select('*');
+
+      if (ordersError) {
+        console.error('Error fetching orders:', ordersError);
+      }
+
+      // Fetch group sessions stats
+      const { data: groupsData, error: groupsError } = await supabase
+        .from('group_sessions')
+        .select('*');
+
+      if (groupsError) {
+        console.error('Error fetching groups:', groupsError);
+      }
+
+      // Fetch user profiles count
+      const { data: usersData, error: usersError } = await supabase
+        .from('user_profiles')
+        .select('id');
+
+      if (usersError) {
+        console.error('Error fetching users:', usersError);
+      }
+
+      // Calculate stats
+      const totalOrders = ordersData?.length || 0;
+      const pendingOrders = ordersData?.filter(order => order.status === 'pending').length || 0;
+      const totalRevenue = ordersData?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
+      const activeGroups = groupsData?.filter(group => group.status === 'active').length || 0;
+      const totalUsers = usersData?.length || 0;
+
+      console.log('Calculated stats:', {
+        totalOrders,
+        pendingOrders,
+        totalRevenue,
+        activeGroups,
+        totalUsers
+      });
+
+      setStats({
+        total_orders: totalOrders,
+        pending_orders: pendingOrders,
+        total_revenue: totalRevenue,
+        active_groups: activeGroups,
+        total_users: totalUsers
+      });
+
+    } catch (error) {
+      console.error('Error fetching admin stats:', error);
+      toast.error('Failed to load admin statistics');
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      console.log('Fetching admin orders...');
+      
+      const { data: ordersData, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          user_profiles!orders_user_id_fkey (
+            full_name,
+            email,
+            phone
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching orders:', error);
+        throw error;
+      }
+
+      console.log('Fetched orders:', ordersData);
+
+      // Transform the data to match AdminOrder interface
+      const transformedOrders = ordersData?.map(order => ({
+        ...order,
+        user_profile: {
+          full_name: order.user_profiles?.full_name || 'Unknown',
+          email: order.user_profiles?.email || 'unknown@example.com',
+          phone: order.user_profiles?.phone || null
+        }
+      })) || [];
+
+      setOrders(transformedOrders);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      toast.error('Failed to load orders');
+    }
+  };
+
+  const fetchBundles = async () => {
+    try {
+      console.log('Fetching admin bundles...');
+      
+      const { data: bundlesData, error } = await supabase
+        .from('bundles')
+        .select(`
+          *,
+          bundle_items (
+            id,
+            item_name,
+            quantity,
+            unit
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching bundles:', error);
+        throw error;
+      }
+
+      console.log('Fetched bundles:', bundlesData);
+
+      // Transform the data to match AdminBundle interface
+      const transformedBundles = bundlesData?.map(bundle => ({
+        ...bundle,
+        items: bundle.bundle_items || [],
+        items_count: bundle.bundle_items?.length || 0
+      })) || [];
+
+      setBundles(transformedBundles);
+    } catch (error) {
+      console.error('Error fetching bundles:', error);
+      toast.error('Failed to load bundles');
+    }
+  };
+
+  const refreshAllData = async () => {
+    setLoading(true);
+    try {
+      await Promise.all([
+        fetchStats(),
+        fetchOrders(),
+        fetchBundles()
+      ]);
+    } catch (error) {
+      console.error('Error refreshing admin data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    refreshAllData();
+  }, []);
 
   return {
-    stats: statsQuery.data,
-    orders: ordersQuery.data || [],
-    bundles: bundlesQuery.data?.map(bundle => ({
-      ...bundle,
-      items_count: bundle.items?.length || 0
-    })) || [],
-    loading: statsQuery.isLoading || ordersQuery.isLoading || bundlesQuery.isLoading,
-    refreshAllData
+    stats,
+    orders,
+    bundles,
+    loading,
+    refreshAllData,
+    fetchStats,
+    fetchOrders,
+    fetchBundles
   };
 };

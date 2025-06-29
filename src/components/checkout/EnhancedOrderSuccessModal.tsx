@@ -1,183 +1,215 @@
 
-import React from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import React from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, Package, Calendar, MapPin, CreditCard, Phone, Copy } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle, Package, Clock, MapPin, Phone, Mail, Copy } from "lucide-react";
+import { Order, OrderItem } from "@/types/order";
+import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface EnhancedOrderSuccessModalProps {
   isOpen: boolean;
   onClose: () => void;
-  orderData: any;
+  order: Order | null;
 }
 
-const EnhancedOrderSuccessModal: React.FC<EnhancedOrderSuccessModalProps> = ({
-  isOpen,
-  onClose,
-  orderData
+const EnhancedOrderSuccessModal: React.FC<EnhancedOrderSuccessModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  order 
 }) => {
-  if (!orderData) return null;
+  if (!order) return null;
 
-  const copyTransactionId = () => {
-    navigator.clipboard.writeText(orderData.transactionId);
-    toast.success("Transaction ID copied to clipboard!");
+  const handleCopyOrderId = () => {
+    navigator.clipboard.writeText(order.id);
+    toast.success('Order ID copied to clipboard!');
   };
 
-  const formatTimeSlot = (slot: string) => {
-    const slots = {
-      'morning': '8AM–11AM',
-      'midday': '11AM–2PM', 
-      'afternoon': '2PM–5PM',
-      'evening': '5PM–8PM'
-    };
-    return slots[slot] || slot;
+  const getDeliveryMessage = () => {
+    if (order.delivery_date && order.delivery_time_slot) {
+      return `${new Date(order.delivery_date).toLocaleDateString()} at ${order.delivery_time_slot}`;
+    }
+    return 'We will contact you to schedule delivery';
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] bg-gradient-to-br from-green-50 to-white border-2 border-green-200">
-        <div className="text-center space-y-6 p-6">
-          {/* Success Header */}
-          <div className="space-y-4">
-            <div className="flex justify-center">
-              <div className="bg-green-100 p-4 rounded-full">
-                <CheckCircle className="h-12 w-12 text-green-600" />
-              </div>
-            </div>
-            
-            <div>
-              <h2 className="text-2xl font-bold text-green-800 mb-2">
-                Order Placed Successfully!
-              </h2>
-              <p className="text-green-700">
-                Thank you for your order. We'll prepare your fresh items for delivery.
-              </p>
-            </div>
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-green-600">
+            <CheckCircle className="h-6 w-6" />
+            Order Placed Successfully!
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          {/* Success Message */}
+          <div className="text-center p-6 bg-green-50 rounded-lg">
+            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-green-800 mb-2">Thank You!</h2>
+            <p className="text-green-700">
+              Your order has been successfully placed and will be processed shortly.
+            </p>
           </div>
 
-          {/* Order Details Card */}
-          <Card className="border-2 border-green-200 bg-white/80">
-            <CardContent className="p-6 space-y-4">
-              <div className="flex items-center justify-between border-b pb-4">
-                <span className="font-semibold text-gray-700">Order ID:</span>
-                <span className="font-mono text-sm bg-gray-100 px-3 py-1 rounded">
-                  #{orderData.id?.slice(0, 8)}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between border-b pb-4">
-                <span className="font-semibold text-gray-700">Transaction ID:</span>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-sm bg-khrate-100 px-3 py-1 rounded text-khrate-700">
-                    {orderData.transactionId}
-                  </span>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={copyTransactionId}
-                    className="h-8 w-8 p-0"
-                  >
-                    <Copy className="h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between border-b pb-4">
-                <span className="font-semibold text-gray-700 flex items-center gap-2">
-                  <Package className="h-4 w-4" />
-                  Total Amount:
-                </span>
-                <span className="text-2xl font-bold text-khrate-600">
-                  {orderData.total_amount?.toLocaleString()} RWF
-                </span>
-              </div>
-
-              <div className="space-y-3 pt-2">
-                <div className="flex items-start gap-3">
-                  <MapPin className="h-4 w-4 text-gray-500 mt-1" />
-                  <div>
-                    <span className="font-semibold text-gray-700">Delivery Address:</span>
-                    <p className="text-gray-600 text-sm">{orderData.delivery_address}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Calendar className="h-4 w-4 text-gray-500" />
-                  <div>
-                    <span className="font-semibold text-gray-700">Delivery Schedule:</span>
-                    <p className="text-gray-600 text-sm">
-                      {new Date(orderData.delivery_date).toLocaleDateString()} at {formatTimeSlot(orderData.delivery_time_slot)}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <CreditCard className="h-4 w-4 text-gray-500" />
-                  <div>
-                    <span className="font-semibold text-gray-700">Payment Method:</span>
-                    <p className="text-gray-600 text-sm capitalize">{orderData.payment_method}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Phone className="h-4 w-4 text-gray-500" />
-                  <div>
-                    <span className="font-semibold text-gray-700">Contact Number:</span>
-                    <p className="text-gray-600 text-sm">{orderData.phone_number}</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Order Items Summary */}
-          <Card className="border-2 border-green-200 bg-white/80">
+          {/* Order Details */}
+          <Card>
             <CardContent className="p-6">
-              <h3 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                <Package className="h-4 w-4" />
-                Items Ordered ({orderData.items?.length || 0})
-              </h3>
-              <div className="space-y-2 max-h-32 overflow-y-auto">
-                {orderData.items?.map((item, index) => (
-                  <div key={index} className="flex justify-between items-center text-sm">
-                    <span className="text-gray-600">
-                      {item.name} x{item.quantity} {item.unit}
-                    </span>
-                    <span className="font-medium text-khrate-600">
-                      {item.total?.toLocaleString()} RWF
-                    </span>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Order Details</h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopyOrderId}
+                  className="flex items-center gap-1"
+                >
+                  <Copy className="h-3 w-3" />
+                  Copy ID
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                  <p className="text-sm text-muted-foreground">Order ID</p>
+                  <p className="font-mono text-sm bg-gray-100 p-2 rounded">
+                    {order.id.substring(0, 8)}...
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <Badge variant="secondary" className="mt-1">
+                    {order.status}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Payment Method</p>
+                  <p className="font-medium">{order.payment_method}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Payment Status</p>
+                  <Badge variant="outline" className="mt-1">
+                    {order.payment_status}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Order Items */}
+              <div className="space-y-3">
+                <h4 className="font-medium flex items-center gap-2">
+                  <Package className="h-4 w-4" />
+                  Items Ordered
+                </h4>
+                {order.items.map((item: OrderItem, index: number) => (
+                  <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <div>
+                      <p className="font-medium">{item.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Quantity: {item.quantity} {item.unit || 'item'}(s)
+                      </p>
+                      {item.items && item.items.length > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          Bundle includes: {item.items.join(', ')}
+                        </p>
+                      )}
+                    </div>
+                    <p className="font-semibold">{formatCurrency(item.price * item.quantity)}</p>
                   </div>
                 ))}
               </div>
             </CardContent>
           </Card>
 
+          {/* Payment Summary */}
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Payment Summary</h3>
+              <div className="space-y-2">
+                {order.original_amount && order.original_amount !== order.total_amount && (
+                  <div className="flex justify-between text-sm">
+                    <span>Original Amount</span>
+                    <span className="line-through text-muted-foreground">
+                      {formatCurrency(order.original_amount)}
+                    </span>
+                  </div>
+                )}
+                {order.discount_applied && order.discount_applied > 0 && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>
+                      Discount Applied ({order.discount_percentage || 0}%)
+                    </span>
+                    <span>-{formatCurrency(order.discount_applied)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-lg font-bold pt-2 border-t">
+                  <span>Total Amount</span>
+                  <span className="text-green-600">{formatCurrency(order.total_amount)}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Delivery Information */}
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <MapPin className="h-5 w-5" />
+                Delivery Information
+              </h3>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm text-muted-foreground">Delivery Address</p>
+                  <p className="font-medium">{order.delivery_address}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    Expected Delivery
+                  </p>
+                  <p className="font-medium">{getDeliveryMessage()}</p>
+                </div>
+                {order.phone_number && (
+                  <div>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      <Phone className="h-3 w-3" />
+                      Contact Number
+                    </p>
+                    <p className="font-medium">{order.phone_number}</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Next Steps */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="font-semibold text-blue-800 mb-2">What happens next?</h3>
-            <ul className="text-sm text-blue-700 space-y-1 text-left">
-              <li>• We'll confirm your order and prepare your items</li>
-              <li>• You'll receive updates about your delivery status</li>
-              <li>• Our delivery team will contact you before delivery</li>
-              <li>• Keep your transaction ID for reference</li>
-            </ul>
-          </div>
+          <Card className="bg-blue-50">
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold mb-3 text-blue-800">What's Next?</h3>
+              <ul className="space-y-2 text-sm text-blue-700">
+                <li className="flex items-start gap-2">
+                  <Mail className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>You'll receive an email confirmation shortly</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Phone className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>Our team will contact you to confirm delivery details</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Package className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>Track your order status in your profile</span>
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
 
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
-            <Button
-              onClick={onClose}
-              className="flex-1 bg-khrate-500 hover:bg-khrate-600 text-white"
-            >
+            <Button onClick={onClose} className="flex-1 bg-khrate-500 hover:bg-khrate-600">
               Continue Shopping
             </Button>
-            <Button
-              onClick={() => window.location.href = '/orders'}
-              variant="outline"
-              className="flex-1 border-khrate-300 text-khrate-700 hover:bg-khrate-50"
-            >
-              View My Orders
+            <Button variant="outline" onClick={() => window.location.href = '/orders'} className="flex-1">
+              View Order History
             </Button>
           </div>
         </div>

@@ -125,7 +125,15 @@ export const useOrderOperations = () => {
       }
 
       console.log('Order submitted successfully:', data);
-      toast.success('Order placed successfully! 🎉');
+      
+      // Show success message with amount
+      toast.success(
+        `Order placed successfully! 🎉`, 
+        {
+          description: `Total amount: ${data.total_amount.toLocaleString()} RWF. Thank you for your order!`,
+          duration: 5000
+        }
+      );
       
       // Refresh orders after successful submission
       await fetchOrders();
