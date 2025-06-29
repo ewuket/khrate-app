@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { AdminStats, AdminOrder, AdminBundle } from '@/types/admin';
 import { toast } from 'sonner';
+import { Json } from '@/integrations/supabase/types';
 
 export const useAdminData = () => {
   const [stats, setStats] = useState<AdminStats>({
@@ -100,8 +101,14 @@ export const useAdminData = () => {
       console.log('Fetched orders:', ordersData);
 
       // Transform the data to match AdminOrder interface
-      const transformedOrders = ordersData?.map(order => ({
+      const transformedOrders: AdminOrder[] = ordersData?.map(order => ({
         ...order,
+        // Ensure items is always an array
+        items: Array.isArray(order.items) 
+          ? order.items 
+          : typeof order.items === 'string' 
+            ? JSON.parse(order.items) 
+            : [],
         user_profile: {
           full_name: order.user_profiles?.full_name || 'Unknown',
           email: order.user_profiles?.email || 'unknown@example.com',

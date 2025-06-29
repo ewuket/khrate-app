@@ -2,35 +2,41 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus, RefreshCw, Package } from "lucide-react";
-import { useAdminBundles, useCreateBundle, useUpdateBundle, useDeleteBundle } from "@/hooks/useAdminBundles";
+import { useAdminBundles, AdminBundle, BundleFormData } from "@/hooks/useAdminBundles";
 import AdminBundleCard from "./AdminBundleCard";
 import AdminBundleForm from "./AdminBundleForm";
-import { AdminBundle } from "@/hooks/useAdminBundles";
 
 const AdminBundlesList = () => {
-  const { data: bundles, isLoading, refetch, isFetching } = useAdminBundles();
-  const createBundleMutation = useCreateBundle();
-  const updateBundleMutation = useUpdateBundle();
-  const deleteBundleMutation = useDeleteBundle();
+  const { 
+    bundles, 
+    isLoading, 
+    fetchBundles, 
+    createBundle, 
+    updateBundle, 
+    deleteBundle 
+  } = useAdminBundles();
   
   const [showForm, setShowForm] = useState(false);
   const [editingBundle, setEditingBundle] = useState<AdminBundle | null>(null);
 
-  const handleCreateBundle = (bundleData: any) => {
-    createBundleMutation.mutate(bundleData, {
-      onSuccess: () => {
-        setShowForm(false);
-      }
-    });
+  const handleCreateBundle = async (bundleData: BundleFormData) => {
+    try {
+      await createBundle(bundleData);
+      setShowForm(false);
+    } catch (error) {
+      console.error('Error creating bundle:', error);
+    }
   };
 
-  const handleUpdateBundle = (bundleData: any) => {
-    updateBundleMutation.mutate(bundleData, {
-      onSuccess: () => {
-        setShowForm(false);
-        setEditingBundle(null);
-      }
-    });
+  const handleUpdateBundle = async (bundleData: Partial<BundleFormData> & { id: number }) => {
+    try {
+      const { id, ...updateData } = bundleData;
+      await updateBundle(id, updateData);
+      setShowForm(false);
+      setEditingBundle(null);
+    } catch (error) {
+      console.error('Error updating bundle:', error);
+    }
   };
 
   const handleEdit = (bundle: AdminBundle) => {
@@ -38,24 +44,30 @@ const AdminBundlesList = () => {
     setShowForm(true);
   };
 
-  const handleDelete = (bundleId: number) => {
+  const handleDelete = async (bundleId: number) => {
     if (confirm('Are you sure you want to delete this bundle?')) {
-      deleteBundleMutation.mutate(bundleId);
+      try {
+        await deleteBundle(bundleId);
+      } catch (error) {
+        console.error('Error deleting bundle:', error);
+      }
     }
   };
 
-  const handleToggleActive = (bundleId: number, isActive: boolean) => {
-    updateBundleMutation.mutate({
-      id: bundleId,
-      is_active: !isActive
-    });
+  const handleToggleActive = async (bundleId: number, isActive: boolean) => {
+    try {
+      await updateBundle(bundleId, { is_active: !isActive });
+    } catch (error) {
+      console.error('Error toggling bundle status:', error);
+    }
   };
 
-  const handleToggleFeatured = (bundleId: number, isFeatured: boolean) => {
-    updateBundleMutation.mutate({
-      id: bundleId,
-      is_featured: !isFeatured
-    });
+  const handleToggleFeatured = async (bundleId: number, isFeatured: boolean) => {
+    try {
+      await updateBundle(bundleId, { is_featured: !isFeatured });
+    } catch (error) {
+      console.error('Error toggling featured status:', error);
+    }
   };
 
   const handleCloseForm = () => {
@@ -81,11 +93,11 @@ const AdminBundlesList = () => {
         </div>
         <div className="flex gap-2">
           <Button
-            onClick={() => refetch()}
+            onClick={() => fetchBundles()}
             variant="outline"
-            disabled={isFetching}
+            disabled={isLoading}
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
           <Button

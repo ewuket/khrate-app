@@ -6,7 +6,7 @@ import AdminGroupsList from './AdminGroupsList';
 import { useAdminGroups } from '@/hooks/useAdminGroups';
 
 const AdminGroupBuyingManagement = () => {
-  const { groupSessions, loading } = useAdminGroups();
+  const { groups, isLoading } = useAdminGroups();
 
   return (
     <div className="space-y-6">
@@ -21,7 +21,7 @@ const AdminGroupBuyingManagement = () => {
         </TabsContent>
         
         <TabsContent value="overview" className="space-y-6">
-          <AdminGroupsList groupSessions={groupSessions} loading={loading} />
+          <AdminGroupsList groupSessions={groups} loading={isLoading} />
         </TabsContent>
       </Tabs>
     </div>

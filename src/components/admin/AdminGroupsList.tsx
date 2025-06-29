@@ -1,10 +1,11 @@
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Users, Calendar, MapPin, Percent, Edit } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
-import { AdminGroupSession } from "@/types/admin";
+import { Button } from "@/components/ui/button";
+import { Users, Calendar, MapPin, Edit, Trash2, Star, StarOff } from "lucide-react";
+import { AdminGroupSession } from '@/types/admin';
+import { useAdminGroups } from '@/hooks/useAdminGroups';
 
 interface AdminGroupsListProps {
   groupSessions: AdminGroupSession[];
@@ -12,146 +13,135 @@ interface AdminGroupsListProps {
 }
 
 const AdminGroupsList = ({ groupSessions, loading }: AdminGroupsListProps) => {
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'default';
-      case 'active':
-        return 'secondary';
-      case 'inactive':
-        return 'outline';
-      default:
-        return 'secondary';
+  const { updateGroup, deleteGroup, toggleFeatured } = useAdminGroups();
+  const [selectedGroup, setSelectedGroup] = useState<AdminGroupSession | null>(null);
+
+  const handleEdit = (group: AdminGroupSession) => {
+    setSelectedGroup(group);
+  };
+
+  const handleDelete = async (groupId: string) => {
+    if (confirm('Are you sure you want to delete this group?')) {
+      deleteGroup(groupId);
     }
+  };
+
+  const handleToggleFeatured = async (groupId: string, isFeatured: boolean) => {
+    toggleFeatured({ id: groupId, is_featured: !isFeatured });
   };
 
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Group Sessions</CardTitle>
-          <CardDescription>Loading group sessions...</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-khrate-500"></div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="text-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-khrate-500 mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading groups...</p>
+      </div>
+    );
+  }
+
+  if (!groupSessions || groupSessions.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+        <p className="text-gray-500">No groups found</p>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Users className="h-5 w-5" />
-          Group Sessions ({groupSessions.length})
-        </CardTitle>
-        <CardDescription>All group buying sessions in the system</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {groupSessions.length === 0 ? (
-          <div className="text-center py-8">
-            <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">No group sessions found</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {groupSessions.map((session) => (
-              <div key={session.id} className="border rounded-lg p-4 space-y-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-semibold text-lg">{session.name || 'Unnamed Group'}</h3>
-                      <Badge variant={getStatusBadgeVariant(session.status)}>
-                        {session.status}
-                      </Badge>
-                      {session.is_featured && (
-                        <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
-                          Featured
-                        </Badge>
-                      )}
-                      {session.is_public && (
-                        <Badge variant="outline" className="bg-green-50 text-green-700">
-                          Public
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">Join Code:</span>
-                        <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
-                          {session.join_code}
-                        </code>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <span>{session.location || 'Not specified'}, {session.region || 'Unknown'}</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Percent className="h-4 w-4 text-muted-foreground" />
-                        <span>{session.discount_percentage}% discount</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                        <span>{session.member_count || 0}/{session.max_participants} members</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span>{new Date(session.created_at).toLocaleDateString()}</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">Min participants:</span>
-                        <span>{session.min_participants}</span>
-                      </div>
-                      
-                      {session.total_amount && (
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">Total amount:</span>
-                          <span>{formatCurrency(session.total_amount)}</span>
-                        </div>
-                      )}
-                      
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">Order status:</span>
-                        <Badge variant="outline" size="sm">
-                          {session.order_status || 'collecting'}
-                        </Badge>
-                      </div>
-                    </div>
-                    
-                    {session.admin_notes && (
-                      <div className="mt-3 p-3 bg-gray-50 rounded-md">
-                        <span className="font-medium text-sm">Admin Notes:</span>
-                        <p className="text-sm text-gray-600 mt-1">{session.admin_notes}</p>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex flex-col gap-2 ml-4">
-                    <Button size="sm" variant="outline">
-                      <Eye className="h-3 w-3 mr-1" />
-                      View Details
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      <Edit className="h-3 w-3 mr-1" />
-                      Edit
-                    </Button>
-                  </div>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold">Groups Overview</h2>
+          <p className="text-gray-600">Manage active group buying sessions</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {groupSessions.map((group) => (
+          <Card key={group.id} className="border-khrate-200">
+            <CardHeader className="pb-2">
+              <div className="flex justify-between items-start">
+                <CardTitle className="text-lg font-bold text-gray-900 line-clamp-1">
+                  {group.name || 'Unnamed Group'}
+                </CardTitle>
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleToggleFeatured(group.id, group.is_featured)}
+                    className={group.is_featured ? 'text-yellow-600' : 'text-gray-400'}
+                  >
+                    {group.is_featured ? <Star className="h-4 w-4 fill-current" /> : <StarOff className="h-4 w-4" />}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEdit(group)}
+                    className="text-blue-600 hover:text-blue-700"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDelete(group.id)}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+            </CardHeader>
+
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <MapPin className="h-4 w-4" />
+                <span>{group.location || 'No location'}</span>
+                {group.region && <span>• {group.region}</span>}
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Users className="h-4 w-4" />
+                <span>{group.member_count || 0} / {group.max_participants} members</span>
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Calendar className="h-4 w-4" />
+                <span>{new Date(group.created_at).toLocaleDateString()}</span>
+              </div>
+
+              <div className="flex gap-2 flex-wrap">
+                <Badge 
+                  variant={group.status === 'active' ? "default" : "secondary"}
+                  className="text-xs"
+                >
+                  {group.status}
+                </Badge>
+                <Badge 
+                  variant={group.is_featured ? "default" : "outline"}
+                  className="text-xs"
+                >
+                  {group.is_featured ? 'Featured' : 'Not Featured'}
+                </Badge>
+                <Badge variant="outline" className="text-xs">
+                  {group.discount_percentage}% discount
+                </Badge>
+                <Badge variant="outline" className="text-xs">
+                  Code: {group.join_code}
+                </Badge>
+              </div>
+
+              {group.admin_notes && (
+                <div className="mt-2 p-2 bg-gray-50 rounded text-xs">
+                  <strong>Admin Notes:</strong> {group.admin_notes}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
   );
 };
 

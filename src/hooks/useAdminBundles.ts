@@ -19,6 +19,8 @@ interface BundleFormData {
   }>;
 }
 
+export type { AdminBundle, BundleFormData };
+
 export const useAdminBundles = () => {
   const [bundles, setBundles] = useState<AdminBundle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -273,4 +275,20 @@ export const useAdminBundles = () => {
     toggleBundleStatus,
     refetch: fetchBundles
   };
+};
+
+// Export individual hooks for better compatibility
+export const useCreateBundle = () => {
+  const { createBundle, isCreating } = useAdminBundles();
+  return { mutate: createBundle, isPending: isCreating };
+};
+
+export const useUpdateBundle = () => {
+  const { updateBundle, isUpdating } = useAdminBundles();
+  return { mutate: updateBundle, isPending: isUpdating };
+};
+
+export const useDeleteBundle = () => {
+  const { deleteBundle, isDeleting } = useAdminBundles();
+  return { mutate: deleteBundle, isPending: isDeleting };
 };
