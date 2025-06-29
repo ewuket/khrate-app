@@ -140,6 +140,16 @@ export const useGroupBuyingActions = () => {
         return groupData;
       }
 
+      // Check if group is full
+      const { data: memberCount } = await supabase
+        .from('group_members')
+        .select('id', { count: 'exact' })
+        .eq('group_session_id', groupData.id);
+
+      if (memberCount && memberCount.length >= groupData.max_participants) {
+        throw new Error('This group is full');
+      }
+
       // Add user as a member
       const { error: memberError } = await supabase
         .from('group_members')
@@ -365,7 +375,6 @@ export const useGroupBuyingActions = () => {
   };
 
   return {
-    createGroup,
     joinGroup,
     leaveGroup,
     addItemToGroupCart,

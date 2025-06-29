@@ -1,122 +1,133 @@
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AdminGroupSession, GroupStats } from "@/types/admin";
+import { AdminGroupSession } from '@/types/admin';
 
 export const useAdminGroups = () => {
   const queryClient = useQueryClient();
 
-  const {
-    data: groups = [],
-    isLoading,
+  const { 
+    data: groups = [], 
+    isLoading, 
     error,
-    refetch
+    refetch 
   } = useQuery({
     queryKey: ['admin-groups'],
     queryFn: async (): Promise<AdminGroupSession[]> => {
-      console.log('🔄 Fetching admin groups...');
+      console.log('Fetching admin groups...');
       
       const { data, error } = await supabase
         .from('group_sessions')
         .select(`
           *,
-          group_members(count)
+          group_members!group_members_group_session_id_fkey(count)
         `)
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Error fetching admin groups:', error);
+        console.error('Error fetching groups:', error);
         throw error;
       }
 
-      console.log('✅ Admin groups fetched:', data?.length || 0);
+      console.log('Raw groups data:', data);
 
-      return data?.map(group => ({
+      const groupsWithMemberCount = data.map(group => ({
         ...group,
-        status: group.status as 'active' | 'inactive' | 'completed',
-        member_count: group.group_members?.[0]?.count || 0
-      })) || [];
-    },
-    staleTime: 30 * 1000,
-    retry: 2,
+        member_count: Array.isArray(group.group_members) 
+          ? group.group_members.length 
+          : (group.group_members as any)?.count || 0
+      }));
+
+      console.log('Processed groups with member count:', groupsWithMemberCount);
+      return groupsWithMemberCount;
+    }
   });
 
   const createGroupMutation = useMutation({
     mutationFn: async (groupData: Partial<AdminGroupSession>) => {
-      console.log('🔄 Creating group with data:', groupData);
-      
+      console.log('Creating group with data:', groupData);
+
+      // Generate unique join code
+      const { data: joinCodeData, error: joinCodeError } = await supabase
+        .rpc('generate_join_code');
+
+      if (joinCodeError) {
+        console.error('Error generating join code:', joinCodeError);
+        throw new Error('Failed to generate join code');
+      }
+
+      const insertData = {
+        ...groupData,
+        join_code: joinCodeData,
+        is_public: true, // Make groups public so they appear on user side
+        group_type: 'public',
+        items: groupData.items || []
+      };
+
+      console.log('Inserting group data:', insertData);
+
       const { data, error } = await supabase
         .from('group_sessions')
-        .insert({
-          name: groupData.name,
-          discount_percentage: groupData.discount_percentage || 10,
-          min_participants: groupData.min_participants || 3,
-          max_participants: groupData.max_participants || 10,
-          status: groupData.status || 'active',
-          join_code: generateJoinCode(),
-          leader_id: groupData.leader_id,
-          location: groupData.location,
-          region: groupData.region,
-          is_featured: groupData.is_featured || false,
-          is_public: true, // Make groups public so users can see them
-          admin_notes: groupData.admin_notes
-        })
+        .insert(insertData)
         .select()
         .single();
 
       if (error) {
-        console.error('❌ Error creating group:', error);
+        console.error('Error creating group:', error);
         throw error;
       }
-      
-      console.log('✅ Group created successfully:', data);
+
+      console.log('Group created successfully:', data);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-groups'] });
-      queryClient.invalidateQueries({ queryKey: ['featured-groups'] }); // Refresh featured groups
-      toast.success('Group created successfully!');
+      queryClient.invalidateQueries({ queryKey: ['admin-group-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['featured-groups'] });
+      toast.success(`Group "${data.name}" created successfully!`);
     },
-    onError: (error) => {
-      console.error('❌ Error creating group:', error);
-      toast.error('Failed to create group');
+    onError: (error: any) => {
+      console.error('Error in createGroup:', error);
+      toast.error(`Failed to create group: ${error.message}`);
     }
   });
 
   const updateGroupMutation = useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<AdminGroupSession> & { id: string }) => {
-      console.log('🔄 Updating group:', id, updates);
+    mutationFn: async (groupData: Partial<AdminGroupSession> & { id: string }) => {
+      console.log('Updating group:', groupData);
+      
+      const { id, ...updateData } = groupData;
       
       const { data, error } = await supabase
         .from('group_sessions')
-        .update(updates)
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
 
       if (error) {
-        console.error('❌ Error updating group:', error);
+        console.error('Error updating group:', error);
         throw error;
       }
-      
-      console.log('✅ Group updated successfully:', data);
+
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-groups'] });
-      queryClient.invalidateQueries({ queryKey: ['featured-groups'] }); // Refresh featured groups
-      toast.success('Group updated successfully!');
+      queryClient.invalidateQueries({ queryKey: ['admin-group-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['featured-groups'] });
+      toast.success(`Group "${data.name}" updated successfully!`);
     },
-    onError: (error) => {
-      console.error('❌ Error updating group:', error);
-      toast.error('Failed to update group');
+    onError: (error: any) => {
+      console.error('Error updating group:', error);
+      toast.error(`Failed to update group: ${error.message}`);
     }
   });
 
   const deleteGroupMutation = useMutation({
     mutationFn: async (groupId: string) => {
-      console.log('🔄 Deleting group:', groupId);
+      console.log('Deleting group:', groupId);
       
       const { error } = await supabase
         .from('group_sessions')
@@ -124,26 +135,27 @@ export const useAdminGroups = () => {
         .eq('id', groupId);
 
       if (error) {
-        console.error('❌ Error deleting group:', error);
+        console.error('Error deleting group:', error);
         throw error;
       }
-      
-      console.log('✅ Group deleted successfully');
+
+      return groupId;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-groups'] });
-      queryClient.invalidateQueries({ queryKey: ['featured-groups'] }); // Refresh featured groups
+      queryClient.invalidateQueries({ queryKey: ['admin-group-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['featured-groups'] });
       toast.success('Group deleted successfully!');
     },
-    onError: (error) => {
-      console.error('❌ Error deleting group:', error);
-      toast.error('Failed to delete group');
+    onError: (error: any) => {
+      console.error('Error deleting group:', error);
+      toast.error(`Failed to delete group: ${error.message}`);
     }
   });
 
   const toggleFeaturedMutation = useMutation({
     mutationFn: async ({ id, is_featured }: { id: string; is_featured: boolean }) => {
-      console.log('🔄 Toggling featured status:', id, is_featured);
+      console.log('Toggling featured status:', { id, is_featured });
       
       const { data, error } = await supabase
         .from('group_sessions')
@@ -153,21 +165,21 @@ export const useAdminGroups = () => {
         .single();
 
       if (error) {
-        console.error('❌ Error toggling featured status:', error);
+        console.error('Error toggling featured:', error);
         throw error;
       }
-      
-      console.log('✅ Featured status toggled successfully:', data);
+
       return data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-groups'] });
-      queryClient.invalidateQueries({ queryKey: ['featured-groups'] }); // Refresh featured groups
-      toast.success(data.is_featured ? 'Group featured successfully!' : 'Group unfeatured successfully!');
+      queryClient.invalidateQueries({ queryKey: ['admin-group-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['featured-groups'] });
+      toast.success(`Group ${data.is_featured ? 'featured' : 'unfeatured'} successfully!`);
     },
-    onError: (error) => {
-      console.error('❌ Error toggling featured status:', error);
-      toast.error('Failed to update featured status');
+    onError: (error: any) => {
+      console.error('Error toggling featured:', error);
+      toast.error(`Failed to update featured status: ${error.message}`);
     }
   });
 
@@ -182,26 +194,25 @@ export const useAdminGroups = () => {
     toggleFeatured: toggleFeaturedMutation.mutate,
     isCreating: createGroupMutation.isPending,
     isUpdating: updateGroupMutation.isPending,
-    isDeleting: deleteGroupMutation.isPending,
+    isDeleting: deleteGroupMutation.isPending
   };
 };
 
 export const useAdminGroupStats = () => {
   return useQuery({
     queryKey: ['admin-group-stats'],
-    queryFn: async (): Promise<GroupStats> => {
-      console.log('🔄 Fetching admin group stats...');
+    queryFn: async () => {
+      console.log('Fetching admin group stats...');
       
       const { data, error } = await supabase
         .rpc('get_admin_group_stats');
 
       if (error) {
-        console.error('❌ Error fetching group stats:', error);
+        console.error('Error fetching group stats:', error);
         throw error;
       }
 
-      console.log('✅ Admin group stats fetched:', data?.[0]);
-
+      console.log('Group stats:', data);
       return data?.[0] || {
         total_groups: 0,
         active_groups: 0,
@@ -210,17 +221,6 @@ export const useAdminGroupStats = () => {
         total_members: 0,
         avg_group_size: 0
       };
-    },
-    staleTime: 60 * 1000,
-    retry: 2,
+    }
   });
-};
-
-const generateJoinCode = (): string => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let result = '';
-  for (let i = 0; i < 6; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
 };
