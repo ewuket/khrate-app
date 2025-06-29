@@ -48,7 +48,7 @@ const presetGroups = {
 
 const PresetGroupModal: React.FC<PresetGroupModalProps> = ({ isOpen, onClose, groupId }) => {
   const { isAuthenticated, openAuthModal } = useAuth();
-  const { addItemToGroupCart, createGroup } = useGroupBuying();
+  const { addItemToGroupCart } = useGroupBuying();
   const [isJoining, setIsJoining] = useState(false);
 
   const group = presetGroups[groupId as keyof typeof presetGroups];
@@ -69,36 +69,9 @@ const PresetGroupModal: React.FC<PresetGroupModalProps> = ({ isOpen, onClose, gr
 
     setIsJoining(true);
     try {
-      // Create a new group based on preset - pass proper group object
-      const groupData = {
-        name: group.name,
-        discount_percentage: group.discount,
-        min_participants: group.minParticipants,
-        max_participants: 10
-      };
-      
-      const joinCode = await createGroup(groupData);
-      
-      if (joinCode) {
-        // Add all preset items to the group cart
-        for (const item of group.items) {
-          await addItemToGroupCart({
-            id: item.id,
-            name: item.name,
-            price: item.price,
-            unit: item.unit,
-            type: 'group'
-          });
-        }
-
-        toast.success(`Joined ${group.name} group! Redirecting to checkout...`);
-        onClose();
-        
-        // Open group cart for checkout
-        setTimeout(() => {
-          window.dispatchEvent(new CustomEvent('openGroupCart'));
-        }, 500);
-      }
+      // This feature is not yet fully implemented
+      toast.info('This preset group feature is coming soon!');
+      onClose();
     } catch (error) {
       toast.error('Failed to join group. Please try again.');
     } finally {

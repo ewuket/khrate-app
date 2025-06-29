@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { useGroupBuying } from "@/contexts/GroupBuyingContext";
 import { toast } from 'sonner';
 
 interface CreateGroupModalProps {
@@ -14,7 +13,6 @@ interface CreateGroupModalProps {
 }
 
 const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ isOpen, onClose }) => {
-  const { createGroup } = useGroupBuying();
   const [groupName, setGroupName] = useState('');
   const [isPublic, setIsPublic] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -30,22 +28,9 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ isOpen, onClose }) 
     setIsCreating(true);
     
     try {
-      const groupData = {
-        name: groupName.trim(),
-        is_public: isPublic,
-        group_type: isPublic ? 'public' : 'private'
-      };
-
-      const group = await createGroup(groupData);
-      
-      if (group) {
-        setGroupName('');
-        setIsPublic(false);
-        onClose();
-        toast.success(`Group "${group.name}" created successfully!`, {
-          description: `Join code: ${group.join_code}`
-        });
-      }
+      // This feature is not yet implemented
+      toast.info('Group creation feature coming soon!');
+      onClose();
     } catch (error) {
       console.error('Error creating group:', error);
       toast.error('Failed to create group');
