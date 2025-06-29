@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
@@ -88,6 +88,13 @@ export const useOrderOperations = () => {
       setLoading(false);
     }
   };
+
+  // Auto-fetch orders when user changes
+  useEffect(() => {
+    if (user?.id) {
+      fetchOrders();
+    }
+  }, [user?.id]);
 
   const submitOrder = async (orderData: OrderData): Promise<OrderResult> => {
     if (isSubmitting) {

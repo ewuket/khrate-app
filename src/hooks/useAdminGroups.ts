@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -17,7 +18,7 @@ export const useAdminGroups = () => {
       console.log('Fetching admin groups...');
       
       try {
-        // First, try to get the current user to check admin status
+        // Check if user is authenticated first
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         
         if (userError || !user) {
@@ -25,9 +26,9 @@ export const useAdminGroups = () => {
           throw new Error('Authentication required');
         }
 
-        console.log('Current user:', user.email);
+        console.log('Current user authenticated:', user.email);
 
-        // Fetch groups with member count using a simpler approach to avoid RLS issues
+        // Fetch groups - now works with optimized RLS policies
         const { data: groupsData, error: groupsError } = await supabase
           .from('group_sessions')
           .select('*')
@@ -38,42 +39,39 @@ export const useAdminGroups = () => {
           throw new Error(`Failed to fetch groups: ${groupsError.message}`);
         }
 
-        console.log('Raw groups data:', groupsData);
+        console.log('Successfully fetched groups:', groupsData?.length || 0);
 
         if (!groupsData) {
           return [];
         }
 
-        // For each group, get member count separately
-        const groupsWithMemberCount = await Promise.all(
-          groupsData.map(async (group) => {
-            try {
-              const { count, error: countError } = await supabase
-                .from('group_members')
-                .select('*', { count: 'exact', head: true })
-                .eq('group_session_id', group.id);
+        // Get member counts for all groups in a single query
+        const groupIds = groupsData.map(g => g.id);
+        let memberCounts: Record<string, number> = {};
+        
+        if (groupIds.length > 0) {
+          const { data: membersData, error: membersError } = await supabase
+            .from('group_members')
+            .select('group_session_id')
+            .in('group_session_id', groupIds);
 
-              if (countError) {
-                console.warn(`Error getting member count for group ${group.id}:`, countError);
-              }
+          if (!membersError && membersData) {
+            // Count members per group
+            memberCounts = membersData.reduce((acc, member) => {
+              acc[member.group_session_id] = (acc[member.group_session_id] || 0) + 1;
+              return acc;
+            }, {} as Record<string, number>);
+          }
+        }
 
-              return {
-                ...group,
-                member_count: count || 0,
-                status: group.status as 'active' | 'completed' | 'inactive'
-              };
-            } catch (error) {
-              console.warn(`Error processing group ${group.id}:`, error);
-              return {
-                ...group,
-                member_count: 0,
-                status: group.status as 'active' | 'completed' | 'inactive'
-              };
-            }
-          })
-        );
+        // Combine groups with member counts
+        const groupsWithMemberCount = groupsData.map(group => ({
+          ...group,
+          member_count: memberCounts[group.id] || 0,
+          status: group.status as 'active' | 'completed' | 'inactive'
+        }));
 
-        console.log('Processed groups with member count:', groupsWithMemberCount);
+        console.log('Processed groups with member count:', groupsWithMemberCount.length);
         return groupsWithMemberCount;
 
       } catch (error) {
@@ -81,7 +79,7 @@ export const useAdminGroups = () => {
         throw error;
       }
     },
-    retry: 3,
+    retry: 2,
     retryDelay: 1000
   });
 

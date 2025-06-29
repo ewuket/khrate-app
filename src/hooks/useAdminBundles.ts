@@ -1,90 +1,96 @@
 
 import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { AdminBundle } from '@/types/admin';
 import { toast } from 'sonner';
 
-interface BundleFormData {
+export interface AdminBundle {
+  id: number;
   title: string;
-  description: string;
+  description?: string;
   price: number;
   original_price?: number;
   image_url?: string;
-  is_active: boolean;
   is_featured: boolean;
-  items: Array<{
-    item_name: string;
-    quantity: number;
-    unit: string;
-  }>;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  bundle_items?: AdminBundleItem[];
 }
 
-export type { AdminBundle, BundleFormData };
+export interface AdminBundleItem {
+  id: number;
+  bundle_id: number;
+  item_name: string;
+  quantity: number;
+  unit?: string;
+  created_at: string;
+}
+
+export interface BundleFormData {
+  title: string;
+  description?: string;
+  price: number;
+  original_price?: number;
+  image_url?: string;
+  is_featured?: boolean;
+  is_active?: boolean;
+  bundle_items?: Omit<AdminBundleItem, 'id' | 'bundle_id' | 'created_at'>[];
+}
 
 export const useAdminBundles = () => {
-  const [bundles, setBundles] = useState<AdminBundle[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const queryClient = useQueryClient();
 
-  const fetchBundles = async () => {
-    try {
-      setIsLoading(true);
+  const {
+    data: bundles = [],
+    isLoading,
+    error,
+    refetch: fetchBundles
+  } = useQuery({
+    queryKey: ['admin-bundles'],
+    queryFn: async (): Promise<AdminBundle[]> => {
       console.log('Fetching bundles...');
 
-      const { data: bundlesData, error } = await supabase
+      // First, check if user is authenticated
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        console.error('User authentication error:', userError);
+        throw new Error('Authentication required');
+      }
+
+      console.log('User authenticated, fetching bundles...');
+
+      const { data: bundlesData, error: bundlesError } = await supabase
         .from('bundles')
         .select(`
           *,
-          bundle_items (
-            id,
-            item_name,
-            quantity,
-            unit
-          )
+          bundle_items (*)
         `)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching bundles:', error);
-        throw error;
+      if (bundlesError) {
+        console.error('Error fetching bundles:', bundlesError);
+        throw bundlesError;
       }
 
-      console.log('Fetched bundles:', bundlesData);
+      console.log('Successfully fetched bundles:', bundlesData?.length || 0);
+      return bundlesData || [];
+    },
+    retry: 2,
+    retryDelay: 1000
+  });
 
-      const transformedBundles = bundlesData?.map(bundle => ({
-        ...bundle,
-        items: bundle.bundle_items || [],
-        items_count: bundle.bundle_items?.length || 0
-      })) || [];
-
-      setBundles(transformedBundles);
-    } catch (error) {
-      console.error('Error in fetchBundles:', error);
-      toast.error('Failed to load bundles');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const createBundle = async (bundleData: BundleFormData) => {
-    try {
-      setIsCreating(true);
+  const createBundleMutation = useMutation({
+    mutationFn: async (bundleData: BundleFormData) => {
       console.log('Creating bundle:', bundleData);
 
-      // Create bundle first
-      const { data: bundle, error: bundleError } = await supabase
+      const { bundle_items, ...bundleInfo } = bundleData;
+
+      // Insert bundle first
+      const { data: newBundle, error: bundleError } = await supabase
         .from('bundles')
-        .insert({
-          title: bundleData.title,
-          description: bundleData.description,
-          price: bundleData.price,
-          original_price: bundleData.original_price,
-          image_url: bundleData.image_url || '/placeholder.svg',
-          is_active: bundleData.is_active,
-          is_featured: bundleData.is_featured
-        })
+        .insert([bundleInfo])
         .select()
         .single();
 
@@ -93,20 +99,16 @@ export const useAdminBundles = () => {
         throw bundleError;
       }
 
-      console.log('Bundle created:', bundle);
-
-      // Create bundle items
-      if (bundleData.items && bundleData.items.length > 0) {
-        const bundleItems = bundleData.items.map(item => ({
-          bundle_id: bundle.id,
-          item_name: item.item_name,
-          quantity: item.quantity,
-          unit: item.unit
+      // Insert bundle items if provided
+      if (bundle_items && bundle_items.length > 0) {
+        const itemsToInsert = bundle_items.map(item => ({
+          ...item,
+          bundle_id: newBundle.id
         }));
 
         const { error: itemsError } = await supabase
           .from('bundle_items')
-          .insert(bundleItems);
+          .insert(itemsToInsert);
 
         if (itemsError) {
           console.error('Error creating bundle items:', itemsError);
@@ -114,181 +116,114 @@ export const useAdminBundles = () => {
         }
       }
 
+      return newBundle;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-bundles'] });
+      queryClient.invalidateQueries({ queryKey: ['bundles'] });
       toast.success('Bundle created successfully!');
-      await fetchBundles();
-    } catch (error) {
+    },
+    onError: (error: any) => {
       console.error('Error creating bundle:', error);
-      toast.error('Failed to create bundle. Please check your data and try again.');
-      throw error;
-    } finally {
-      setIsCreating(false);
+      toast.error(`Failed to create bundle: ${error.message}`);
     }
-  };
+  });
 
-  const updateBundle = async (id: number, bundleData: Partial<BundleFormData>) => {
-    try {
-      setIsUpdating(true);
+  const updateBundleMutation = useMutation({
+    mutationFn: async ({ id, ...bundleData }: { id: number } & Partial<BundleFormData>) => {
       console.log('Updating bundle:', id, bundleData);
 
+      const { bundle_items, ...bundleInfo } = bundleData;
+
       // Update bundle
-      const { error: bundleError } = await supabase
+      const { data: updatedBundle, error: bundleError } = await supabase
         .from('bundles')
-        .update({
-          title: bundleData.title,
-          description: bundleData.description,
-          price: bundleData.price,
-          original_price: bundleData.original_price,
-          image_url: bundleData.image_url,
-          is_active: bundleData.is_active,
-          is_featured: bundleData.is_featured,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id);
+        .update(bundleInfo)
+        .eq('id', id)
+        .select()
+        .single();
 
       if (bundleError) {
         console.error('Error updating bundle:', bundleError);
         throw bundleError;
       }
 
-      // Update bundle items if provided
-      if (bundleData.items) {
+      // If bundle_items provided, update them
+      if (bundle_items) {
         // Delete existing items
-        const { error: deleteError } = await supabase
+        await supabase
           .from('bundle_items')
           .delete()
           .eq('bundle_id', id);
 
-        if (deleteError) {
-          console.error('Error deleting old bundle items:', deleteError);
-          throw deleteError;
-        }
-
         // Insert new items
-        if (bundleData.items.length > 0) {
-          const bundleItems = bundleData.items.map(item => ({
-            bundle_id: id,
-            item_name: item.item_name,
-            quantity: item.quantity,
-            unit: item.unit
+        if (bundle_items.length > 0) {
+          const itemsToInsert = bundle_items.map(item => ({
+            ...item,
+            bundle_id: id
           }));
 
           const { error: itemsError } = await supabase
             .from('bundle_items')
-            .insert(bundleItems);
+            .insert(itemsToInsert);
 
           if (itemsError) {
-            console.error('Error creating new bundle items:', itemsError);
+            console.error('Error updating bundle items:', itemsError);
             throw itemsError;
           }
         }
       }
 
+      return updatedBundle;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-bundles'] });
+      queryClient.invalidateQueries({ queryKey: ['bundles'] });
       toast.success('Bundle updated successfully!');
-      await fetchBundles();
-    } catch (error) {
+    },
+    onError: (error: any) => {
       console.error('Error updating bundle:', error);
-      toast.error('Failed to update bundle. Please check your data and try again.');
-      throw error;
-    } finally {
-      setIsUpdating(false);
+      toast.error(`Failed to update bundle: ${error.message}`);
     }
-  };
+  });
 
-  const deleteBundle = async (id: number) => {
-    try {
-      setIsDeleting(true);
-      console.log('Deleting bundle:', id);
-
-      // Delete bundle items first
-      const { error: itemsError } = await supabase
-        .from('bundle_items')
-        .delete()
-        .eq('bundle_id', id);
-
-      if (itemsError) {
-        console.error('Error deleting bundle items:', itemsError);
-        throw itemsError;
-      }
-
-      // Delete bundle
-      const { error: bundleError } = await supabase
-        .from('bundles')
-        .delete()
-        .eq('id', id);
-
-      if (bundleError) {
-        console.error('Error deleting bundle:', bundleError);
-        throw bundleError;
-      }
-
-      toast.success('Bundle deleted successfully!');
-      await fetchBundles();
-    } catch (error) {
-      console.error('Error deleting bundle:', error);
-      toast.error('Failed to delete bundle');
-      throw error;
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const toggleBundleStatus = async (id: number, currentStatus: boolean) => {
-    try {
-      console.log('Toggling bundle status:', id, 'from', currentStatus, 'to', !currentStatus);
+  const deleteBundleMutation = useMutation({
+    mutationFn: async (bundleId: number) => {
+      console.log('Deleting bundle:', bundleId);
 
       const { error } = await supabase
         .from('bundles')
-        .update({ 
-          is_active: !currentStatus,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id);
+        .delete()
+        .eq('id', bundleId);
 
       if (error) {
-        console.error('Error toggling bundle status:', error);
+        console.error('Error deleting bundle:', error);
         throw error;
       }
 
-      toast.success(`Bundle ${!currentStatus ? 'activated' : 'deactivated'} successfully!`);
-      await fetchBundles();
-    } catch (error) {
-      console.error('Error toggling bundle status:', error);
-      toast.error('Failed to update bundle status');
-      throw error;
+      return bundleId;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-bundles'] });
+      queryClient.invalidateQueries({ queryKey: ['bundles'] });
+      toast.success('Bundle deleted successfully!');
+    },
+    onError: (error: any) => {
+      console.error('Error deleting bundle:', error);
+      toast.error(`Failed to delete bundle: ${error.message}`);
     }
-  };
-
-  useEffect(() => {
-    fetchBundles();
-  }, []);
+  });
 
   return {
     bundles,
     isLoading,
-    isCreating,
-    isUpdating,
-    isDeleting,
+    error,
     fetchBundles,
-    createBundle,
-    updateBundle,
-    deleteBundle,
-    toggleBundleStatus,
-    refetch: fetchBundles
+    createBundle: createBundleMutation.mutateAsync,
+    updateBundle: updateBundleMutation.mutateAsync,
+    deleteBundle: deleteBundleMutation.mutateAsync,
+    isCreating: createBundleMutation.isPending,
+    isUpdating: updateBundleMutation.isPending,
+    isDeleting: deleteBundleMutation.isPending
   };
-};
-
-// Export individual hooks for better compatibility
-export const useCreateBundle = () => {
-  const { createBundle, isCreating } = useAdminBundles();
-  return { mutate: createBundle, isPending: isCreating };
-};
-
-export const useUpdateBundle = () => {
-  const { updateBundle, isUpdating } = useAdminBundles();
-  return { mutate: updateBundle, isPending: isUpdating };
-};
-
-export const useDeleteBundle = () => {
-  const { deleteBundle, isDeleting } = useAdminBundles();
-  return { mutate: deleteBundle, isPending: isDeleting };
 };
