@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -17,32 +16,73 @@ export const useAdminGroups = () => {
     queryFn: async (): Promise<AdminGroupSession[]> => {
       console.log('Fetching admin groups...');
       
-      const { data, error } = await supabase
-        .from('group_sessions')
-        .select(`
-          *,
-          group_members!group_members_group_session_id_fkey(count)
-        `)
-        .order('created_at', { ascending: false });
+      try {
+        // First, try to get the current user to check admin status
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError || !user) {
+          console.error('User authentication error:', userError);
+          throw new Error('Authentication required');
+        }
 
-      if (error) {
-        console.error('Error fetching groups:', error);
+        console.log('Current user:', user.email);
+
+        // Fetch groups with member count using a simpler approach to avoid RLS issues
+        const { data: groupsData, error: groupsError } = await supabase
+          .from('group_sessions')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (groupsError) {
+          console.error('Error fetching groups:', groupsError);
+          throw new Error(`Failed to fetch groups: ${groupsError.message}`);
+        }
+
+        console.log('Raw groups data:', groupsData);
+
+        if (!groupsData) {
+          return [];
+        }
+
+        // For each group, get member count separately
+        const groupsWithMemberCount = await Promise.all(
+          groupsData.map(async (group) => {
+            try {
+              const { count, error: countError } = await supabase
+                .from('group_members')
+                .select('*', { count: 'exact', head: true })
+                .eq('group_session_id', group.id);
+
+              if (countError) {
+                console.warn(`Error getting member count for group ${group.id}:`, countError);
+              }
+
+              return {
+                ...group,
+                member_count: count || 0,
+                status: group.status as 'active' | 'completed' | 'inactive'
+              };
+            } catch (error) {
+              console.warn(`Error processing group ${group.id}:`, error);
+              return {
+                ...group,
+                member_count: 0,
+                status: group.status as 'active' | 'completed' | 'inactive'
+              };
+            }
+          })
+        );
+
+        console.log('Processed groups with member count:', groupsWithMemberCount);
+        return groupsWithMemberCount;
+
+      } catch (error) {
+        console.error('Failed to fetch admin groups:', error);
         throw error;
       }
-
-      console.log('Raw groups data:', data);
-
-      const groupsWithMemberCount = data.map(group => ({
-        ...group,
-        member_count: Array.isArray(group.group_members) 
-          ? group.group_members.length 
-          : (group.group_members as any)?.count || 0,
-        status: group.status as 'active' | 'completed' | 'inactive'
-      }));
-
-      console.log('Processed groups with member count:', groupsWithMemberCount);
-      return groupsWithMemberCount;
-    }
+    },
+    retry: 3,
+    retryDelay: 1000
   });
 
   const createGroupMutation = useMutation({
@@ -210,23 +250,38 @@ export const useAdminGroupStats = () => {
     queryFn: async () => {
       console.log('Fetching admin group stats...');
       
-      const { data, error } = await supabase
-        .rpc('get_admin_group_stats');
+      try {
+        const { data, error } = await supabase
+          .rpc('get_admin_group_stats');
 
-      if (error) {
-        console.error('Error fetching group stats:', error);
-        throw error;
+        if (error) {
+          console.error('Error fetching group stats:', error);
+          throw error;
+        }
+
+        console.log('Group stats:', data);
+        return data?.[0] || {
+          total_groups: 0,
+          active_groups: 0,
+          featured_groups: 0,
+          completed_groups: 0,
+          total_members: 0,
+          avg_group_size: 0
+        };
+      } catch (error) {
+        console.error('Failed to fetch group stats:', error);
+        // Return default values on error to prevent UI crashes
+        return {
+          total_groups: 0,
+          active_groups: 0,
+          featured_groups: 0,
+          completed_groups: 0,
+          total_members: 0,
+          avg_group_size: 0
+        };
       }
-
-      console.log('Group stats:', data);
-      return data?.[0] || {
-        total_groups: 0,
-        active_groups: 0,
-        featured_groups: 0,
-        completed_groups: 0,
-        total_members: 0,
-        avg_group_size: 0
-      };
-    }
+    },
+    retry: 2,
+    retryDelay: 1000
   });
 };

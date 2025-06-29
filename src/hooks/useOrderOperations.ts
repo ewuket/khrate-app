@@ -1,24 +1,21 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useAuth } from '@/contexts/AuthContext';
 
-export interface OrderData {
-  user_id?: string;
+interface OrderData {
+  user_id: string;
   items: any[];
   total_amount: number;
   original_amount: number;
-  discount_applied?: number;
-  discount_percentage?: number;
+  delivery_date: string;
+  delivery_time_slot: string;
   delivery_address: string;
-  delivery_date?: string;
-  delivery_time_slot?: string;
   payment_method: string;
-  phone_number?: string;
+  phone_number: string;
 }
 
-export interface OrderResult {
+interface OrderResult {
   success: boolean;
   order?: any;
   error?: string;
@@ -26,126 +23,93 @@ export interface OrderResult {
 
 export const useOrderOperations = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [orders, setOrders] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const { user, isAuthenticated } = useAuth();
-
-  const fetchOrders = async () => {
-    if (!user) {
-      console.log('No user authenticated, checking localStorage for guest orders');
-      const guestOrders = JSON.parse(localStorage.getItem(`khrate_orders_guest`) || '[]');
-      setOrders(guestOrders);
-      setLoading(false);
-      return;
-    }
-    
-    setLoading(true);
-    try {
-      console.log('Fetching orders for user:', user.id);
-      
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching orders:', error);
-        throw error;
-      }
-
-      console.log('Fetched orders from Supabase:', data);
-      setOrders(data || []);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      
-      // Fallback to localStorage
-      const localOrders = JSON.parse(localStorage.getItem(`khrate_orders_${user.id}`) || '[]');
-      console.log('Fallback to localStorage orders:', localOrders);
-      setOrders(localOrders);
-      
-      if (localOrders.length === 0) {
-        toast.error('Failed to load orders');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const submitOrder = async (orderData: OrderData): Promise<OrderResult> => {
-    console.log('Starting order submission...', { isAuthenticated, userId: user?.id });
-    
-    if (!isAuthenticated || !user) {
-      console.error('User not authenticated');
-      toast.error('Please log in to place an order');
-      return { success: false, error: 'User not authenticated' };
+    if (isSubmitting) {
+      return { success: false, error: 'Order already being processed' };
     }
 
     setIsSubmitting(true);
+    
     try {
       console.log('Submitting order with data:', orderData);
 
-      // Ensure items is properly formatted
-      const formattedItems = orderData.items.map(item => ({
-        id: item.id || item.product_id,
-        name: item.name || item.product_name,
-        price: Number(item.price || item.product_price),
-        quantity: Number(item.quantity),
-        unit: item.unit || item.product_unit || 'item',
-        type: item.type || item.product_type || 'bundle'
-      }));
+      // Validate required fields
+      if (!orderData.user_id) {
+        throw new Error('User ID is required');
+      }
+      
+      if (!orderData.items || orderData.items.length === 0) {
+        throw new Error('Order items are required');
+      }
+      
+      if (!orderData.total_amount || orderData.total_amount <= 0) {
+        throw new Error('Invalid order total');
+      }
 
-      const orderPayload = {
-        user_id: user.id,
-        items: formattedItems,
-        total_amount: Number(orderData.total_amount),
-        original_amount: Number(orderData.original_amount || orderData.total_amount),
-        discount_applied: Number(orderData.discount_applied || 0),
-        discount_percentage: Number(orderData.discount_percentage || 0),
-        delivery_address: orderData.delivery_address,
+      if (!orderData.delivery_address?.trim()) {
+        throw new Error('Delivery address is required');
+      }
+
+      if (!orderData.delivery_date) {
+        throw new Error('Delivery date is required');
+      }
+
+      if (!orderData.payment_method) {
+        throw new Error('Payment method is required');
+      }
+
+      if (!orderData.phone_number?.trim()) {
+        throw new Error('Phone number is required');
+      }
+
+      // Prepare order data for insertion
+      const insertData = {
+        user_id: orderData.user_id,
+        items: JSON.stringify(orderData.items),
+        total_amount: orderData.total_amount,
+        original_amount: orderData.original_amount,
         delivery_date: orderData.delivery_date,
         delivery_time_slot: orderData.delivery_time_slot,
+        delivery_address: orderData.delivery_address.trim(),
         payment_method: orderData.payment_method,
-        phone_number: orderData.phone_number,
+        phone_number: orderData.phone_number.trim(),
         status: 'pending',
-        payment_status: 'pending'
+        payment_status: 'pending',
+        discount_applied: 0,
+        discount_percentage: 0
       };
 
-      console.log('Final order payload:', orderPayload);
+      console.log('Inserting order with prepared data:', insertData);
 
-      const { data, error } = await supabase
+      const { data: order, error } = await supabase
         .from('orders')
-        .insert([orderPayload])
+        .insert([insertData])
         .select()
         .single();
 
       if (error) {
-        console.error('Order submission error:', error);
-        throw error;
+        console.error('Supabase order insertion error:', error);
+        throw new Error(`Failed to create order: ${error.message}`);
       }
 
-      console.log('Order submitted successfully:', data);
-      
-      // Show success message with amount
-      toast.success(
-        `Order placed successfully! 🎉`, 
-        {
-          description: `Total amount: ${data.total_amount.toLocaleString()} RWF. Thank you for your order!`,
-          duration: 5000
-        }
-      );
-      
-      // Refresh orders after successful submission
-      await fetchOrders();
+      if (!order) {
+        throw new Error('Order was not created successfully');
+      }
+
+      console.log('Order created successfully:', order);
       
       return {
         success: true,
-        order: data
+        order: {
+          ...order,
+          items: typeof order.items === 'string' ? JSON.parse(order.items) : order.items
+        }
       };
+
     } catch (error: any) {
-      console.error('Error submitting order:', error);
-      const errorMessage = error.message || 'Failed to place order';
-      toast.error(errorMessage);
+      console.error('Order submission error:', error);
+      const errorMessage = error.message || 'Failed to place order. Please try again.';
       
       return {
         success: false,
@@ -156,17 +120,8 @@ export const useOrderOperations = () => {
     }
   };
 
-  useEffect(() => {
-    if (user && isAuthenticated) {
-      fetchOrders();
-    }
-  }, [user, isAuthenticated]);
-
   return {
     submitOrder,
-    isSubmitting,
-    orders,
-    loading,
-    fetchOrders
+    isSubmitting
   };
 };

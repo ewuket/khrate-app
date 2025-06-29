@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, Calendar, MapPin, Edit, Trash2, Star, StarOff } from "lucide-react";
+import { Users, Calendar, MapPin, Edit, Trash2, Star, StarOff, AlertCircle } from "lucide-react";
 import { AdminGroupSession } from '@/types/admin';
 import { useAdminGroups } from '@/hooks/useAdminGroups';
 
@@ -13,7 +13,7 @@ interface AdminGroupsListProps {
 }
 
 const AdminGroupsList = ({ groupSessions, loading }: AdminGroupsListProps) => {
-  const { updateGroup, deleteGroup, toggleFeatured } = useAdminGroups();
+  const { updateGroup, deleteGroup, toggleFeatured, error } = useAdminGroups();
   const [selectedGroup, setSelectedGroup] = useState<AdminGroupSession | null>(null);
 
   const handleEdit = (group: AdminGroupSession) => {
@@ -35,6 +35,16 @@ const AdminGroupsList = ({ groupSessions, loading }: AdminGroupsListProps) => {
       <div className="text-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-khrate-500 mx-auto mb-4"></div>
         <p className="text-gray-600">Loading groups...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+        <p className="text-red-600 mb-2">Failed to load groups</p>
+        <p className="text-gray-500 text-sm">{error.message}</p>
       </div>
     );
   }
