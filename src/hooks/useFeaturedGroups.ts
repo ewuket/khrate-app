@@ -33,7 +33,14 @@ export const useFeaturedGroups = () => {
         }
 
         console.log('Fetched featured groups:', data?.length || 0);
-        return data || [];
+        
+        // Transform the data to match our interface
+        const transformedData: FeaturedGroup[] = (data || []).map(group => ({
+          ...group,
+          items: Array.isArray(group.items) ? group.items : []
+        }));
+
+        return transformedData;
       } catch (error) {
         console.error('Failed to fetch featured groups:', error);
         return [];

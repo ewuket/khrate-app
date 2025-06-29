@@ -14,7 +14,7 @@ interface NoGroupViewProps {
 }
 
 const NoGroupView: React.FC<NoGroupViewProps> = ({ onJoinGroup, isJoining }) => {
-  const { featuredGroups, isLoading } = useFeaturedGroups();
+  const { data: featuredGroups = [], isLoading } = useFeaturedGroups();
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
   const [showPreview, setShowPreview] = useState(false);
 

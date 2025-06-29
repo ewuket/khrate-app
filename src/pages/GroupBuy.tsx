@@ -23,6 +23,7 @@ const GroupBuy = () => {
   
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showGroupCart, setShowGroupCart] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
 
   const handleJoinGroup = () => {
     if (!isAuthenticated) {
@@ -39,11 +40,14 @@ const GroupBuy = () => {
     }
     
     try {
+      setIsJoining(true);
       await joinGroup(joinCode);
       toast.success(`Successfully joined group! Start adding items to your group cart.`);
     } catch (error) {
       console.error('Error joining preset group:', error);
       toast.error('Failed to join group. Please try again.');
+    } finally {
+      setIsJoining(false);
     }
   };
 
@@ -71,7 +75,7 @@ const GroupBuy = () => {
           {!currentGroup ? (
             <NoGroupView
               onJoinGroup={handleJoinPresetGroup}
-              isJoining={false}
+              isJoining={isJoining}
             />
           ) : (
             <ActiveGroupView
