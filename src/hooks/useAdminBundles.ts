@@ -16,6 +16,7 @@ export interface AdminBundle {
   created_at: string;
   updated_at: string;
   bundle_items?: AdminBundleItem[];
+  items?: AdminBundleItem[]; // Add this for backward compatibility
 }
 
 export interface AdminBundleItem {
@@ -75,7 +76,14 @@ export const useAdminBundles = () => {
       }
 
       console.log('Successfully fetched bundles:', bundlesData?.length || 0);
-      return bundlesData || [];
+      
+      // Transform data to include both bundle_items and items for backward compatibility
+      const transformedBundles = (bundlesData || []).map(bundle => ({
+        ...bundle,
+        items: bundle.bundle_items || []
+      }));
+
+      return transformedBundles;
     },
     retry: 2,
     retryDelay: 1000
@@ -149,7 +157,7 @@ export const useAdminBundles = () => {
       }
 
       // If bundle_items provided, update them
-      if (bundle_items) {
+      if (bundle_items !== undefined) {
         // Delete existing items
         await supabase
           .from('bundle_items')

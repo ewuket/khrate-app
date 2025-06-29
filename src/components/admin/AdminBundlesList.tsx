@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus, RefreshCw, Package } from "lucide-react";
@@ -30,8 +29,7 @@ const AdminBundlesList = () => {
 
   const handleUpdateBundle = async (bundleData: Partial<BundleFormData> & { id: number }) => {
     try {
-      const { id, ...updateData } = bundleData;
-      await updateBundle(id, updateData);
+      await updateBundle(bundleData);
       setShowForm(false);
       setEditingBundle(null);
     } catch (error) {
@@ -56,7 +54,7 @@ const AdminBundlesList = () => {
 
   const handleToggleActive = async (bundleId: number, isActive: boolean) => {
     try {
-      await updateBundle(bundleId, { is_active: !isActive });
+      await updateBundle({ id: bundleId, is_active: !isActive });
     } catch (error) {
       console.error('Error toggling bundle status:', error);
     }
@@ -64,7 +62,7 @@ const AdminBundlesList = () => {
 
   const handleToggleFeatured = async (bundleId: number, isFeatured: boolean) => {
     try {
-      await updateBundle(bundleId, { is_featured: !isFeatured });
+      await updateBundle({ id: bundleId, is_featured: !isFeatured });
     } catch (error) {
       console.error('Error toggling featured status:', error);
     }
