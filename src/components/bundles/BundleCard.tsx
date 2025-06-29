@@ -13,10 +13,12 @@ interface BundleCardProps {
   description: string;
   price: number;
   originalPrice: number;
-  discount: number;
-  items: string[];
+  discount?: number;
+  items?: string[];
   image: string;
   features?: string[];
+  onAuthRequired?: () => void;
+  isAuthenticated?: boolean;
   onClick?: () => void;
 }
 
@@ -26,10 +28,12 @@ const BundleCard: React.FC<BundleCardProps> = ({
   description,
   price,
   originalPrice,
-  discount,
-  items,
+  discount = 0,
+  items = [],
   image,
   features = [],
+  onAuthRequired,
+  isAuthenticated = false,
   onClick
 }) => {
   const { addToCart } = useCartContext();
@@ -39,6 +43,12 @@ const BundleCard: React.FC<BundleCardProps> = ({
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Check if user needs to authenticate
+    if (!isAuthenticated && onAuthRequired) {
+      onAuthRequired();
+      return;
+    }
     
     if (isAdding) return;
     
