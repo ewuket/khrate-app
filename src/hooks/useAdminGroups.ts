@@ -17,6 +17,7 @@ export interface GroupFormData {
   items?: any[];
   admin_notes?: string;
   total_amount?: number;
+  status?: 'active' | 'inactive' | 'completed';
 }
 
 export const useAdminGroups = () => {
@@ -53,11 +54,28 @@ export const useAdminGroups = () => {
           return [];
         }
 
-        const transformedGroups = groupsData.map(group => ({
-          ...group,
+        const transformedGroups: AdminGroupSession[] = groupsData.map(group => ({
+          id: group.id,
+          name: group.name,
+          join_code: group.join_code,
+          leader_id: group.leader_id,
+          min_participants: group.min_participants,
+          max_participants: group.max_participants,
+          discount_percentage: group.discount_percentage,
+          status: (group.status as 'active' | 'inactive' | 'completed') || 'active',
+          order_status: group.order_status,
+          created_at: group.created_at,
+          updated_at: group.updated_at,
+          group_type: group.group_type,
+          is_public: group.is_public || false,
+          is_featured: group.is_featured || false,
+          location: group.location,
+          region: group.region,
+          featured_at: group.featured_at,
+          admin_notes: group.admin_notes,
+          items: group.items,
           member_count: group.group_members?.[0]?.count || 0,
-          // Handle total_amount properly - it may not exist in database yet
-          total_amount: group.total_amount || 0
+          total_amount: 0 // Will be calculated from items if needed
         }));
 
         return transformedGroups;

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +12,7 @@ interface AdminGroupsListProps {
 }
 
 const AdminGroupsList = ({ groupSessions, loading }: AdminGroupsListProps) => {
-  const { updateGroup, deleteGroup, toggleFeatured, error } = useAdminGroups();
+  const { updateGroup, deleteGroup, error } = useAdminGroups();
   const [selectedGroup, setSelectedGroup] = useState<AdminGroupSession | null>(null);
 
   const handleEdit = (group: AdminGroupSession) => {
@@ -27,7 +26,7 @@ const AdminGroupsList = ({ groupSessions, loading }: AdminGroupsListProps) => {
   };
 
   const handleToggleFeatured = async (groupId: string, isFeatured: boolean) => {
-    toggleFeatured({ id: groupId, is_featured: !isFeatured });
+    updateGroup({ id: groupId, is_featured: !isFeatured });
   };
 
   if (loading) {

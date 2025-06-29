@@ -57,7 +57,12 @@ const Bundles = () => {
           {bundles.map((bundle) => (
             <BundleCard
               key={bundle.id}
-              bundle={bundle}
+              id={bundle.id}
+              title={bundle.title}
+              description={bundle.description}
+              price={bundle.price}
+              originalPrice={bundle.original_price}
+              image={bundle.image_url}
               onAuthRequired={openAuthModal}
               isAuthenticated={isAuthenticated}
             />
