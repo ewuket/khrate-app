@@ -2,6 +2,8 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { Order } from '@/types/order';
 
 interface OrderData {
   user_id: string;
@@ -23,6 +25,69 @@ interface OrderResult {
 
 export const useOrderOperations = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
+
+  const fetchOrders = async () => {
+    if (!user?.id) {
+      console.log('No user ID, checking localStorage for guest orders');
+      const guestOrders = JSON.parse(localStorage.getItem(`khrate_orders_guest`) || '[]');
+      setOrders(guestOrders);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      console.log('Fetching orders for user:', user.id);
+
+      const { data: supabaseOrders, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Supabase query error:', error);
+        throw error;
+      }
+
+      console.log('Supabase orders:', supabaseOrders);
+
+      const localOrders = JSON.parse(localStorage.getItem(`khrate_orders_${user.id}`) || '[]');
+      console.log('Local storage orders:', localOrders);
+
+      const allOrders = [...(supabaseOrders || []), ...localOrders];
+      const uniqueOrders = allOrders.reduce((acc, current) => {
+        const existingOrder = acc.find(order => order.id === current.id);
+        if (!existingOrder) {
+          acc.push(current);
+        }
+        return acc;
+      }, [] as Order[]);
+
+      console.log('Combined unique orders:', uniqueOrders);
+
+      uniqueOrders.sort((a, b) => 
+        new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime()
+      );
+
+      setOrders(uniqueOrders);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      
+      const localOrders = JSON.parse(localStorage.getItem(`khrate_orders_${user.id}`) || '[]');
+      console.log('Fallback to localStorage orders:', localOrders);
+      setOrders(localOrders);
+      
+      if (localOrders.length === 0) {
+        toast.error('Failed to load orders');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const submitOrder = async (orderData: OrderData): Promise<OrderResult> => {
     if (isSubmitting) {
@@ -99,6 +164,9 @@ export const useOrderOperations = () => {
 
       console.log('Order created successfully:', order);
       
+      // Refresh orders list after successful submission
+      await fetchOrders();
+      
       return {
         success: true,
         order: {
@@ -122,6 +190,9 @@ export const useOrderOperations = () => {
 
   return {
     submitOrder,
-    isSubmitting
+    isSubmitting,
+    orders,
+    loading,
+    fetchOrders
   };
 };
