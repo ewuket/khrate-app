@@ -11,9 +11,9 @@ interface PresetGroupsProps {
 }
 
 const PresetGroups = ({ onSelectGroup }: PresetGroupsProps) => {
-  const { data: featuredGroups = [], isLoading } = useFeaturedGroups();
+  const { featuredGroups, loading, error } = useFeaturedGroups();
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="space-y-4">
         <h3 className="text-xl font-semibold mb-4">Popular Group Buying Sessions</h3>

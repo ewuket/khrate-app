@@ -70,8 +70,8 @@ const GroupBuy = () => {
         <div className="container mx-auto">
           {!currentGroup ? (
             <NoGroupView
-              onJoinGroup={handleJoinGroup}
-              onJoinPresetGroup={handleJoinPresetGroup}
+              onJoinGroup={handleJoinPresetGroup}
+              isJoining={false}
             />
           ) : (
             <ActiveGroupView

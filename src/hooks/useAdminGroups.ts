@@ -36,7 +36,8 @@ export const useAdminGroups = () => {
         ...group,
         member_count: Array.isArray(group.group_members) 
           ? group.group_members.length 
-          : (group.group_members as any)?.count || 0
+          : (group.group_members as any)?.count || 0,
+        status: group.status as 'active' | 'completed' | 'inactive'
       }));
 
       console.log('Processed groups with member count:', groupsWithMemberCount);
@@ -58,9 +59,14 @@ export const useAdminGroups = () => {
       }
 
       const insertData = {
-        ...groupData,
+        name: groupData.name,
+        location: groupData.location,
+        region: groupData.region,
+        max_participants: groupData.max_participants,
+        discount_percentage: groupData.discount_percentage,
+        leader_id: groupData.leader_id || '',
         join_code: joinCodeData,
-        is_public: true, // Make groups public so they appear on user side
+        is_public: true,
         group_type: 'public',
         items: groupData.items || []
       };

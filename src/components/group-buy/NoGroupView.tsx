@@ -108,16 +108,12 @@ const NoGroupView = ({ onJoinGroup, isJoining }: NoGroupViewProps) => {
       <JoinGroupModal
         isOpen={showJoinModal}
         onClose={() => setShowJoinModal(false)}
-        onJoin={onJoinGroup}
-        isJoining={isJoining}
       />
 
       <GroupPreviewModal
         isOpen={showPreviewModal}
         onClose={() => setShowPreviewModal(false)}
         group={selectedGroup}
-        onJoin={handleJoinSelectedGroup}
-        isJoining={isJoining}
       />
     </div>
   );

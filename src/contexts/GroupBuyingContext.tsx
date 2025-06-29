@@ -16,7 +16,6 @@ interface GroupBuyingContextType {
   isLoading: boolean;
 
   // Actions
-  createGroup: (groupData: any) => Promise<GroupSession | null>;
   joinGroup: (joinCode: string) => Promise<GroupSession | null>;
   leaveGroup: () => Promise<void>;
   addItemToGroupCart: (item: any) => Promise<void>;
@@ -115,15 +114,6 @@ export const GroupBuyingProvider: React.FC<GroupBuyingProviderProps> = ({ childr
   };
 
   // Wrapped actions that update local state
-  const createGroup = async (groupData: any): Promise<GroupSession | null> => {
-    const group = await actions.createGroup(user, isAuthenticated, groupData);
-    if (group) {
-      setCurrentGroup(group);
-      await loadAvailableGroups(); // Refresh available groups
-    }
-    return group;
-  };
-
   const joinGroup = async (joinCode: string): Promise<GroupSession | null> => {
     const group = await actions.joinGroup(user, isAuthenticated, joinCode);
     if (group) {
@@ -188,7 +178,6 @@ export const GroupBuyingProvider: React.FC<GroupBuyingProviderProps> = ({ childr
     isLoading,
 
     // Actions
-    createGroup,
     joinGroup,
     leaveGroup,
     addItemToGroupCart,
