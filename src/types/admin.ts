@@ -1,3 +1,4 @@
+
 import { Json } from "@/integrations/supabase/types";
 
 export interface AdminUser {
@@ -7,7 +8,7 @@ export interface AdminUser {
   is_active: boolean;
   created_at: string;
   updated_at: string;
-  last_login?: string; // Add the missing last_login property
+  last_login?: string;
 }
 
 export interface AdminStats {

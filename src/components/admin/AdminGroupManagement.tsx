@@ -9,34 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { useAdminGroups } from '@/hooks/useAdminGroups';
+import { AdminGroupSession } from '@/types/admin';
 
 interface GroupItem {
   name: string;
   quantity: number;
   unit: string;
-}
-
-interface AdminGroupSession {
-  id: string;
-  name: string | null;
-  description?: string;
-  discount_percentage: number;
-  min_participants: number;
-  max_participants: number;
-  status: 'active' | 'inactive';
-  created_at: string;
-  join_code: string;
-  leader_id: string;
-  group_type: string;
-  order_status: string | null;
-  is_public: boolean;
-  items: GroupItem[];
-  updated_at: string;
-  location?: string;
-  region?: string;
-  admin_notes?: string;
-  is_featured: boolean;
-  member_count?: number;
 }
 
 const AdminGroupManagement = () => {
@@ -49,6 +27,7 @@ const AdminGroupManagement = () => {
     description: '',
     location: '',
     region: '',
+    price: 0,
     discount_percentage: 10,
     min_participants: 3,
     max_participants: 10,
@@ -68,9 +47,10 @@ const AdminGroupManagement = () => {
     if (editingGroup) {
       setFormData({
         name: editingGroup.name || '',
-        description: editingGroup.description || '',
+        description: '',
         location: editingGroup.location || '',
         region: editingGroup.region || '',
+        price: editingGroup.total_amount || 0,
         discount_percentage: editingGroup.discount_percentage,
         min_participants: editingGroup.min_participants,
         max_participants: editingGroup.max_participants,
@@ -115,6 +95,7 @@ const AdminGroupManagement = () => {
       description: '',
       location: '',
       region: '',
+      price: 0,
       discount_percentage: 10,
       min_participants: 3,
       max_participants: 10,
@@ -133,11 +114,17 @@ const AdminGroupManagement = () => {
       return;
     }
 
+    if (formData.price <= 0) {
+      toast.error('Group price is required and must be greater than 0');
+      return;
+    }
+
     try {
       const groupData = {
         name: formData.name,
         location: formData.location,
         region: formData.region,
+        total_amount: formData.price,
         discount_percentage: formData.discount_percentage,
         min_participants: formData.min_participants,
         max_participants: formData.max_participants,
@@ -162,12 +149,18 @@ const AdminGroupManagement = () => {
       return;
     }
 
+    if (formData.price <= 0) {
+      toast.error('Group price is required and must be greater than 0');
+      return;
+    }
+
     try {
       const groupData = {
         id: editingGroup.id,
         name: formData.name,
         location: formData.location,
         region: formData.region,
+        total_amount: formData.price,
         discount_percentage: formData.discount_percentage,
         min_participants: formData.min_participants,
         max_participants: formData.max_participants,
@@ -276,6 +269,18 @@ const AdminGroupManagement = () => {
               </div>
               
               <div className="space-y-2">
+                <Label htmlFor="price">Group Price (RWF) *</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  min="1"
+                  value={formData.price}
+                  onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                  placeholder="e.g., 20000"
+                />
+              </div>
+              
+              <div className="space-y-2">
                 <Label htmlFor="location">Location</Label>
                 <Input
                   id="location"
@@ -332,7 +337,7 @@ const AdminGroupManagement = () => {
 
             {/* Items Management Section */}
             <div className="space-y-4">
-              <Label>Group Items</Label>
+              <Label>Group Items *</Label>
               
               {/* Add Item Form */}
               <div className="flex gap-2 p-4 border rounded-lg bg-gray-50">
@@ -413,7 +418,7 @@ const AdminGroupManagement = () => {
               <Button 
                 onClick={editingGroup ? handleUpdateGroup : handleCreateGroup}
                 className="bg-khrate-500 hover:bg-khrate-600"
-                disabled={!formData.name.trim() || isLoading}
+                disabled={!formData.name.trim() || formData.price <= 0 || isLoading}
               >
                 {editingGroup ? 'Update Group' : 'Create Group'}
               </Button>
@@ -455,10 +460,14 @@ const AdminGroupManagement = () => {
                     )}
                   </div>
                   
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm mb-4">
                     <div>
                       <span className="font-medium">Join Code:</span>
                       <p className="font-mono bg-gray-100 px-2 py-1 rounded text-xs">{group.join_code}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Price:</span>
+                      <p>RWF {group.total_amount?.toLocaleString() || 'Not set'}</p>
                     </div>
                     <div>
                       <span className="font-medium">Location:</span>

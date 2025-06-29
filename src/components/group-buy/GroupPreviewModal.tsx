@@ -2,127 +2,182 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Users, MapPin, Clock, ShoppingCart, X } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useGroupBuying } from "@/contexts/GroupBuyingContext";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Users, MapPin, Tag, Clock, DollarSign } from "lucide-react";
 
 interface GroupPreviewModalProps {
+  group: any;
   isOpen: boolean;
   onClose: () => void;
-  group: {
-    id: string;
-    name: string;
-    description: string;
-    location: string;
-    memberCount: number;
-    estimatedDelivery: string;
-    discount: string;
-    sampleItems: string[];
-    totalValue: number;
-  } | null;
+  onJoinGroup: (joinCode: string) => void;
+  isJoining: boolean;
 }
 
-const GroupPreviewModal: React.FC<GroupPreviewModalProps> = ({ isOpen, onClose, group }) => {
-  const { isAuthenticated, openAuthModal } = useAuth();
-  const { joinGroup } = useGroupBuying();
+const GroupPreviewModal: React.FC<GroupPreviewModalProps> = ({
+  group,
+  isOpen,
+  onClose,
+  onJoinGroup,
+  isJoining
+}) => {
+  if (!group) return null;
 
-  const handleJoinGroup = async () => {
-    if (!group) return;
-    
-    if (!isAuthenticated) {
-      openAuthModal();
-      return;
-    }
-    
-    // For open groups, we'll simulate joining with the group ID
-    const success = await joinGroup(group.id);
-    if (success) {
-      onClose();
-    }
-  };
-
-  if (!isOpen || !group) {
-    return null;
-  }
+  const memberProgress = ((group.member_count || 0) / group.max_participants) * 100;
+  const isNearlyFull = memberProgress >= 80;
+  const qualifiesForDiscount = (group.member_count || 0) >= group.min_participants;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl font-bold">{group.name || 'Group Preview'}</DialogTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="h-6 w-6 p-0 hover:bg-gray-100"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+          <DialogTitle className="text-xl font-bold">{group.name}</DialogTitle>
         </DialogHeader>
-
-        <div className="space-y-4">
-          <p className="text-muted-foreground">{group.description || 'Join this group to enjoy bulk buying discounts!'}</p>
-
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm">
-              <MapPin className="h-4 w-4 text-khrate-500" />
-              <span>{group.location || 'Location TBD'}</span>
+        
+        <div className="space-y-6">
+          {/* Group Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <Users className="h-5 w-5 mx-auto mb-1 text-khrate-600" />
+              <div className="text-sm font-medium">{group.member_count || 0}/{group.max_participants}</div>
+              <div className="text-xs text-gray-500">Members</div>
             </div>
             
-            <div className="flex items-center gap-2 text-sm">
-              <Users className="h-4 w-4 text-khrate-500" />
-              <span>{group.memberCount || 0} members</span>
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <Tag className="h-5 w-5 mx-auto mb-1 text-green-600" />
+              <div className="text-sm font-medium">{group.discount_percentage}%</div>
+              <div className="text-xs text-gray-500">Discount</div>
             </div>
             
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="h-4 w-4 text-khrate-500" />
-              <span>{group.estimatedDelivery || 'Delivery date TBD'}</span>
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <MapPin className="h-5 w-5 mx-auto mb-1 text-blue-600" />
+              <div className="text-sm font-medium">{group.location || 'TBD'}</div>
+              <div className="text-xs text-gray-500">Location</div>
+            </div>
+            
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <DollarSign className="h-5 w-5 mx-auto mb-1 text-purple-600" />
+              <div className="text-sm font-medium">
+                {group.total_amount ? `RWF ${group.total_amount.toLocaleString()}` : 'TBD'}
+              </div>
+              <div className="text-xs text-gray-500">Total Price</div>
             </div>
           </div>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <ShoppingCart className="h-4 w-4 text-khrate-500" />
-                <span className="font-medium">Items in this group:</span>
-                <span className="text-sm bg-green-100 text-green-700 px-2 py-1 rounded ml-auto">
-                  {group.discount || '10% off'}
-                </span>
+          {/* Member Progress */}
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium">Group Progress</span>
+              <span className="text-sm text-gray-500">
+                {group.member_count || 0} of {group.max_participants} joined
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full transition-all ${
+                  qualifiesForDiscount ? 'bg-green-500' : 'bg-khrate-500'
+                }`}
+                style={{ width: `${Math.min(memberProgress, 100)}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>Minimum: {group.min_participants}</span>
+              <span>Maximum: {group.max_participants}</span>
+            </div>
+          </div>
+
+          {/* Status Badges */}
+          <div className="flex gap-2">
+            {qualifiesForDiscount && (
+              <Badge className="bg-green-100 text-green-800">
+                ✓ Discount Qualified
+              </Badge>
+            )}
+            {isNearlyFull && (
+              <Badge className="bg-orange-100 text-orange-800">
+                ⚡ Nearly Full
+              </Badge>
+            )}
+            {group.is_featured && (
+              <Badge className="bg-purple-100 text-purple-800">
+                ⭐ Featured
+              </Badge>
+            )}
+          </div>
+
+          <Separator />
+
+          {/* Items List */}
+          {group.items && Array.isArray(group.items) && group.items.length > 0 && (
+            <div>
+              <h3 className="font-semibold mb-3">What's Included</h3>
+              <div className="grid gap-2">
+                {group.items.map((item: any, index: number) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="font-medium">{item.name}</span>
+                    <Badge variant="outline">
+                      {item.quantity} {item.unit}
+                    </Badge>
+                  </div>
+                ))}
               </div>
-              
-              <div className="space-y-2">
-                {group.sampleItems && group.sampleItems.length > 0 ? (
-                  group.sampleItems.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between text-sm">
-                      <span>• {item}</span>
+            </div>
+          )}
+
+          {/* Pricing Breakdown */}
+          {group.total_amount && (
+            <div className="bg-khrate-50 p-4 rounded-lg">
+              <h3 className="font-semibold mb-2">Pricing</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>Base Price:</span>
+                  <span>RWF {group.total_amount.toLocaleString()}</span>
+                </div>
+                {qualifiesForDiscount && (
+                  <>
+                    <div className="flex justify-between text-green-600">
+                      <span>Group Discount ({group.discount_percentage}%):</span>
+                      <span>-RWF {((group.total_amount * group.discount_percentage) / 100).toLocaleString()}</span>
                     </div>
-                  ))
-                ) : (
-                  <div className="text-sm text-muted-foreground">No items added yet</div>
+                    <Separator />
+                    <div className="flex justify-between font-semibold">
+                      <span>Your Price:</span>
+                      <span>RWF {(group.total_amount * (1 - group.discount_percentage / 100)).toLocaleString()}</span>
+                    </div>
+                  </>
+                )}
+                {!qualifiesForDiscount && (
+                  <p className="text-sm text-amber-600">
+                    ⚠️ Need {group.min_participants - (group.member_count || 0)} more members for discount
+                  </p>
                 )}
               </div>
-              
-              <div className="mt-3 pt-3 border-t">
-                <div className="flex justify-between items-center font-medium">
-                  <span>Estimated Total:</span>
-                  <span className="text-khrate-600">{(group.totalValue || 0).toLocaleString()} RWF</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          )}
 
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose} className="flex-1">
+          {/* Additional Info */}
+          {group.region && (
+            <div>
+              <h3 className="font-semibold mb-2">Region</h3>
+              <p className="text-gray-600">{group.region}</p>
+            </div>
+          )}
+
+          {/* Join Button */}
+          <div className="flex gap-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className="flex-1"
+            >
               Cancel
             </Button>
-            <Button 
-              onClick={handleJoinGroup}
+            <Button
+              onClick={() => onJoinGroup(group.join_code)}
+              disabled={isJoining || memberProgress >= 100}
               className="flex-1 bg-khrate-500 hover:bg-khrate-600"
             >
-              {isAuthenticated ? 'Join Group' : 'Login to Join'}
+              {isJoining ? 'Joining...' : memberProgress >= 100 ? 'Group Full' : 'Join Group'}
             </Button>
           </div>
         </div>

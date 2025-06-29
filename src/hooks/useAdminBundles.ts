@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -52,7 +53,7 @@ export const useAdminBundles = () => {
       console.log('Fetching bundles for admin...');
 
       try {
-        // First try to get all bundles - fallback approach for admin visibility
+        // Direct query without RLS complications
         const { data: bundlesData, error: bundlesError } = await supabase
           .from('bundles')
           .select(`
@@ -63,7 +64,6 @@ export const useAdminBundles = () => {
 
         if (bundlesError) {
           console.error('Error fetching bundles:', bundlesError);
-          // If the admin query fails, throw error to show user what's wrong
           throw new Error(`Database error: ${bundlesError.message}`);
         }
 

@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -57,7 +58,8 @@ export const useAdminGroups = () => {
           ...group,
           member_count: memberCounts[group.id] || 0,
           status: group.status as 'active' | 'completed' | 'inactive',
-          items: Array.isArray(group.items) ? group.items : []
+          items: Array.isArray(group.items) ? group.items : [],
+          total_amount: group.total_amount || 0
         }));
 
         console.log('Processed groups with member count:', groupsWithMemberCount.length);
@@ -86,6 +88,7 @@ export const useAdminGroups = () => {
         name: groupData.name,
         location: groupData.location,
         region: groupData.region,
+        total_amount: groupData.total_amount || 0,
         max_participants: groupData.max_participants,
         min_participants: groupData.min_participants,
         discount_percentage: groupData.discount_percentage,
