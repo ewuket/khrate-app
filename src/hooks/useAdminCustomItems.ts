@@ -64,7 +64,7 @@ export const useAdminCustomItems = () => {
           is_active: itemData.is_active !== false
         })
         .select()
-        .single();
+        .maybeSingle(); // Fix: Use maybeSingle instead of single
 
       if (error) {
         console.error('Error creating custom item:', error);
@@ -116,11 +116,15 @@ export const useAdminCustomItems = () => {
         .update(cleanUpdateData)
         .eq('id', id)
         .select()
-        .single();
+        .maybeSingle(); // Fix: Use maybeSingle instead of single
 
       if (error) {
         console.error('Error updating custom item:', error);
         throw error;
+      }
+
+      if (!data) {
+        throw new Error('No item was updated. Item may not exist.');
       }
 
       return data;
@@ -169,11 +173,15 @@ export const useAdminCustomItems = () => {
         })
         .eq('id', id)
         .select()
-        .single();
+        .maybeSingle(); // Fix: Use maybeSingle instead of single
 
       if (error) {
         console.error('Error toggling custom item status:', error);
         throw error;
+      }
+
+      if (!data) {
+        throw new Error('No item was updated. Item may not exist.');
       }
 
       return data;
@@ -192,10 +200,10 @@ export const useAdminCustomItems = () => {
     customItems,
     isLoading,
     refetch,
-    createCustomItem: createCustomItemMutation.mutate,
-    updateCustomItem: updateCustomItemMutation.mutate,
-    deleteCustomItem: deleteCustomItemMutation.mutate,
-    toggleActiveCustomItem: toggleActiveCustomItemMutation.mutate,
+    createCustomItem: createCustomItemMutation.mutateAsync,
+    updateCustomItem: updateCustomItemMutation.mutateAsync,
+    deleteCustomItem: deleteCustomItemMutation.mutateAsync,
+    toggleActiveCustomItem: toggleActiveCustomItemMutation.mutateAsync,
     isCreating: createCustomItemMutation.isPending,
     isUpdating: updateCustomItemMutation.isPending,
     isDeleting: deleteCustomItemMutation.isPending,

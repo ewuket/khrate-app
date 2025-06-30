@@ -39,7 +39,7 @@ export const useAdminData = () => {
         console.error('Error fetching groups:', groupsError);
       }
 
-      // Fetch user profiles count
+      // Fetch user profiles count - Fix: Get from user_profiles table instead of auth.users
       const { data: usersData, error: usersError } = await supabase
         .from('user_profiles')
         .select('id');
@@ -48,7 +48,7 @@ export const useAdminData = () => {
         console.error('Error fetching users:', usersError);
       }
 
-      // Calculate stats
+      // Calculate stats with null safety
       const totalOrders = ordersData?.length || 0;
       const pendingOrders = ordersData?.filter(order => order.status === 'pending').length || 0;
       const totalRevenue = ordersData?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
@@ -98,19 +98,29 @@ export const useAdminData = () => {
         throw error;
       }
 
-      console.log('Fetched orders:', ordersData);
+      console.log('Fetched orders:', ordersData?.length || 0);
 
       // Transform the data to match AdminOrder interface
       const transformedOrders: AdminOrder[] = ordersData?.map(order => ({
         ...order,
-        // Ensure items is always an array
-        items: Array.isArray(order.items) 
-          ? order.items 
-          : typeof order.items === 'string' 
-            ? JSON.parse(order.items) 
-            : [],
+        // Ensure items is always an array, handle JSON parsing properly
+        items: (() => {
+          try {
+            if (Array.isArray(order.items)) {
+              return order.items;
+            } else if (typeof order.items === 'string') {
+              return JSON.parse(order.items);
+            } else if (order.items && typeof order.items === 'object') {
+              return [order.items];
+            }
+            return [];
+          } catch (e) {
+            console.warn('Failed to parse order items:', order.items);
+            return [];
+          }
+        })(),
         user_profile: {
-          full_name: order.user_profiles?.full_name || 'Unknown',
+          full_name: order.user_profiles?.full_name || 'Unknown User',
           email: order.user_profiles?.email || 'unknown@example.com',
           phone: order.user_profiles?.phone || null
         }
@@ -145,7 +155,7 @@ export const useAdminData = () => {
         throw error;
       }
 
-      console.log('Fetched bundles:', bundlesData);
+      console.log('Fetched bundles:', bundlesData?.length || 0);
 
       // Transform the data to match AdminBundle interface
       const transformedBundles = bundlesData?.map(bundle => ({

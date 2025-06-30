@@ -124,11 +124,15 @@ export const useAdminGroups = () => {
           leader_id: (await supabase.auth.getUser()).data.user?.id
         }])
         .select()
-        .single();
+        .maybeSingle(); // Fix: Use maybeSingle instead of single
 
       if (groupError) {
         console.error('Error creating group:', groupError);
         throw groupError;
+      }
+
+      if (!newGroup) {
+        throw new Error('No group was created');
       }
 
       return newGroup;
@@ -151,14 +155,21 @@ export const useAdminGroups = () => {
 
       const { data: updatedGroup, error: groupError } = await supabase
         .from('group_sessions')
-        .update(groupData)
+        .update({
+          ...groupData,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', id)
         .select()
-        .single();
+        .maybeSingle(); // Fix: Use maybeSingle instead of single
 
       if (groupError) {
         console.error('Error updating group:', groupError);
         throw groupError;
+      }
+
+      if (!updatedGroup) {
+        throw new Error('No group was updated. Group may not exist.');
       }
 
       return updatedGroup;

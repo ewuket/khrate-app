@@ -30,9 +30,13 @@ const AdminBundleManagement: React.FC = () => {
 
   const handleCreateBundle = async (bundleData: BundleFormData) => {
     try {
+      console.log('Creating bundle with data:', bundleData);
       await createBundle(bundleData);
       setShowForm(false);
-      fetchBundles(); // Refresh the list
+      // Force refresh after creation
+      setTimeout(() => {
+        fetchBundles();
+      }, 1000);
     } catch (error) {
       console.error('Error creating bundle:', error);
     }
@@ -40,16 +44,21 @@ const AdminBundleManagement: React.FC = () => {
 
   const handleUpdateBundle = async (bundleData: Partial<BundleFormData> & { id: number }) => {
     try {
+      console.log('Updating bundle with data:', bundleData);
       await updateBundle(bundleData);
       setShowForm(false);
       setEditingBundle(null);
-      fetchBundles(); // Refresh the list
+      // Force refresh after update
+      setTimeout(() => {
+        fetchBundles();
+      }, 1000);
     } catch (error) {
       console.error('Error updating bundle:', error);
     }
   };
 
   const handleEdit = (bundle: AdminBundle) => {
+    console.log('Editing bundle:', bundle);
     setEditingBundle(bundle);
     setShowForm(true);
   };
@@ -58,7 +67,10 @@ const AdminBundleManagement: React.FC = () => {
     if (confirm('Are you sure you want to delete this bundle?')) {
       try {
         await deleteBundle(bundleId);
-        fetchBundles(); // Refresh the list
+        // Force refresh after deletion
+        setTimeout(() => {
+          fetchBundles();
+        }, 1000);
       } catch (error) {
         console.error('Error deleting bundle:', error);
       }
@@ -67,8 +79,12 @@ const AdminBundleManagement: React.FC = () => {
 
   const handleToggleActive = async (bundleId: number, isActive: boolean) => {
     try {
+      console.log('Toggling bundle active status:', bundleId, 'from', isActive, 'to', !isActive);
       await toggleBundleActive(bundleId, isActive);
-      fetchBundles(); // Refresh the list
+      // Force refresh after toggle
+      setTimeout(() => {
+        fetchBundles();
+      }, 1000);
     } catch (error) {
       console.error('Error toggling bundle status:', error);
     }
@@ -76,8 +92,12 @@ const AdminBundleManagement: React.FC = () => {
 
   const handleToggleFeatured = async (bundleId: number, isFeatured: boolean) => {
     try {
+      console.log('Toggling bundle featured status:', bundleId, 'from', isFeatured, 'to', !isFeatured);
       await toggleBundleFeatured(bundleId, isFeatured);
-      fetchBundles(); // Refresh the list
+      // Force refresh after toggle
+      setTimeout(() => {
+        fetchBundles();
+      }, 1000);
     } catch (error) {
       console.error('Error toggling featured status:', error);
     }
@@ -89,10 +109,12 @@ const AdminBundleManagement: React.FC = () => {
   };
 
   const handleRefresh = () => {
+    console.log('Refreshing bundles...');
     fetchBundles();
   };
 
   const handleCreateBundleClick = () => {
+    setEditingBundle(null);
     setShowForm(true);
   };
 

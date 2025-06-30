@@ -53,10 +53,13 @@ const AdminBundleForm: React.FC<AdminBundleFormProps> = ({
         is_active: bundle.is_active,
         is_featured: bundle.is_featured
       });
-      setItems(bundle.items.length > 0 ? bundle.items.map(item => ({
+      
+      // Fix: Use bundle_items if available, otherwise fallback to items
+      const bundleItems = bundle.bundle_items || bundle.items || [];
+      setItems(bundleItems.length > 0 ? bundleItems.map(item => ({
         item_name: item.item_name,
         quantity: item.quantity,
-        unit: item.unit
+        unit: item.unit || 'pieces'
       })) : [{ item_name: '', quantity: 1, unit: 'pieces' }]);
     } else {
       setFormData({
@@ -75,9 +78,10 @@ const AdminBundleForm: React.FC<AdminBundleFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Fix: Send bundle_items instead of items to match backend expectations
     const submitData: any = {
       ...formData,
-      items: items.filter(item => item.item_name.trim() !== '')
+      bundle_items: items.filter(item => item.item_name.trim() !== '')
     };
 
     // Add ID for updates
@@ -85,6 +89,7 @@ const AdminBundleForm: React.FC<AdminBundleFormProps> = ({
       submitData.id = bundle.id;
     }
 
+    console.log('Submitting bundle data:', submitData);
     onSubmit(submitData);
   };
 

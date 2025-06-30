@@ -7,17 +7,23 @@ export const useAdminOperations = () => {
     try {
       console.log('Updating order status:', orderId, 'to:', newStatus);
       
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('orders')
         .update({ 
           status: newStatus, 
           updated_at: new Date().toISOString() 
         })
-        .eq('id', orderId);
+        .eq('id', orderId)
+        .select()
+        .maybeSingle();
 
       if (error) {
         console.error('Error updating order status:', error);
         throw error;
+      }
+
+      if (!data) {
+        throw new Error('Order not found or no changes made');
       }
 
       toast.success(`Order status updated to ${newStatus}`);
@@ -33,17 +39,23 @@ export const useAdminOperations = () => {
     try {
       console.log('Updating payment status:', orderId, 'to:', newPaymentStatus);
       
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('orders')
         .update({ 
           payment_status: newPaymentStatus, 
           updated_at: new Date().toISOString() 
         })
-        .eq('id', orderId);
+        .eq('id', orderId)
+        .select()
+        .maybeSingle();
 
       if (error) {
         console.error('Error updating payment status:', error);
         throw error;
+      }
+
+      if (!data) {
+        throw new Error('Order not found or no changes made');
       }
 
       toast.success(`Payment status updated to ${newPaymentStatus}`);
@@ -59,17 +71,23 @@ export const useAdminOperations = () => {
     try {
       console.log('Toggling bundle featured status:', bundleId, 'to:', !isFeatured);
       
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('bundles')
         .update({ 
           is_featured: !isFeatured,
           updated_at: new Date().toISOString()
         })
-        .eq('id', bundleId);
+        .eq('id', bundleId)
+        .select()
+        .maybeSingle();
 
       if (error) {
         console.error('Error toggling bundle featured status:', error);
         throw error;
+      }
+
+      if (!data) {
+        throw new Error('Bundle not found or no changes made');
       }
 
       toast.success(`Bundle ${!isFeatured ? 'featured' : 'unfeatured'} successfully`);
@@ -85,19 +103,26 @@ export const useAdminOperations = () => {
     try {
       console.log('Toggling bundle active status:', bundleId, 'to:', !isActive);
       
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('bundles')
         .update({ 
           is_active: !isActive,
           updated_at: new Date().toISOString()
         })
-        .eq('id', bundleId);
+        .eq('id', bundleId)
+        .select()
+        .maybeSingle();
 
       if (error) {
         console.error('Error toggling bundle active status:', error);
         throw error;
       }
 
+      if (!data) {
+        throw new Error('Bundle not found or no changes made');
+      }
+
+      console.log('Bundle status updated successfully:', data);
       toast.success(`Bundle ${!isActive ? 'activated' : 'deactivated'} successfully`);
       return true;
     } catch (error: any) {
@@ -111,17 +136,23 @@ export const useAdminOperations = () => {
     try {
       console.log('Toggling group featured status:', groupId, 'to:', !isFeatured);
       
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('group_sessions')
         .update({ 
           is_featured: !isFeatured,
           updated_at: new Date().toISOString()
         })
-        .eq('id', groupId);
+        .eq('id', groupId)
+        .select()
+        .maybeSingle();
 
       if (error) {
         console.error('Error toggling group featured status:', error);
         throw error;
+      }
+
+      if (!data) {
+        throw new Error('Group not found or no changes made');
       }
 
       toast.success(`Group ${!isFeatured ? 'featured' : 'unfeatured'} successfully`);
