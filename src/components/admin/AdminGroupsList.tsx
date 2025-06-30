@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -5,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Users, Calendar, MapPin, Edit, Trash2, Star, StarOff, AlertCircle } from "lucide-react";
 import { AdminGroupSession } from '@/types/admin';
 import { useAdminGroups } from '@/hooks/useAdminGroups';
+import { useAdminOperations } from '@/hooks/useAdminOperations';
 
 interface AdminGroupsListProps {
   groupSessions: AdminGroupSession[];
@@ -13,6 +15,7 @@ interface AdminGroupsListProps {
 
 const AdminGroupsList = ({ groupSessions, loading }: AdminGroupsListProps) => {
   const { updateGroup, deleteGroup, error } = useAdminGroups();
+  const { toggleGroupFeatured } = useAdminOperations();
   const [selectedGroup, setSelectedGroup] = useState<AdminGroupSession | null>(null);
 
   const handleEdit = (group: AdminGroupSession) => {
@@ -21,12 +24,12 @@ const AdminGroupsList = ({ groupSessions, loading }: AdminGroupsListProps) => {
 
   const handleDelete = async (groupId: string) => {
     if (confirm('Are you sure you want to delete this group?')) {
-      deleteGroup(groupId);
+      await deleteGroup(groupId);
     }
   };
 
   const handleToggleFeatured = async (groupId: string, isFeatured: boolean) => {
-    updateGroup({ id: groupId, is_featured: !isFeatured });
+    await toggleGroupFeatured(groupId, isFeatured);
   };
 
   if (loading) {

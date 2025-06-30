@@ -34,13 +34,23 @@ const AdminCustomItemsManagement = () => {
 
   const handleDeleteItem = async (itemId) => {
     if (window.confirm('Are you sure you want to delete this item?')) {
-      await deleteCustomItem(itemId);
+      try {
+        await deleteCustomItem(itemId);
+        refetch(); // Refresh the list
+      } catch (error) {
+        console.error('Error deleting item:', error);
+      }
     }
   };
 
   const handleToggleActive = async (itemId, isActive) => {
     console.log('Toggling item status:', itemId, 'from', isActive, 'to', !isActive);
-    await toggleActiveCustomItem({ id: itemId, is_active: !isActive });
+    try {
+      await toggleActiveCustomItem({ id: itemId, is_active: !isActive });
+      refetch(); // Refresh the list
+    } catch (error) {
+      console.error('Error toggling item status:', error);
+    }
   };
 
   const handleFormClose = () => {
@@ -56,6 +66,7 @@ const AdminCustomItemsManagement = () => {
         await createCustomItem(itemData);
       }
       handleFormClose();
+      refetch(); // Refresh the list
     } catch (error) {
       console.error('Form submission error:', error);
     }

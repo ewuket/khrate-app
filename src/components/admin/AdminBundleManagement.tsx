@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { useAdminBundles, AdminBundle, BundleFormData } from "@/hooks/useAdminBundles";
+import { useAdminOperations } from "@/hooks/useAdminOperations";
 import AdminBundleForm from "./AdminBundleForm";
 import AdminBundleHeader from "./bundle-management/AdminBundleHeader";
 import AdminBundleGrid from "./bundle-management/AdminBundleGrid";
@@ -22,6 +23,8 @@ const AdminBundleManagement: React.FC = () => {
     error
   } = useAdminBundles();
   
+  const { toggleBundleFeatured, toggleBundleActive } = useAdminOperations();
+  
   const [showForm, setShowForm] = useState(false);
   const [editingBundle, setEditingBundle] = useState<AdminBundle | null>(null);
 
@@ -29,6 +32,7 @@ const AdminBundleManagement: React.FC = () => {
     try {
       await createBundle(bundleData);
       setShowForm(false);
+      fetchBundles(); // Refresh the list
     } catch (error) {
       console.error('Error creating bundle:', error);
     }
@@ -39,6 +43,7 @@ const AdminBundleManagement: React.FC = () => {
       await updateBundle(bundleData);
       setShowForm(false);
       setEditingBundle(null);
+      fetchBundles(); // Refresh the list
     } catch (error) {
       console.error('Error updating bundle:', error);
     }
@@ -53,6 +58,7 @@ const AdminBundleManagement: React.FC = () => {
     if (confirm('Are you sure you want to delete this bundle?')) {
       try {
         await deleteBundle(bundleId);
+        fetchBundles(); // Refresh the list
       } catch (error) {
         console.error('Error deleting bundle:', error);
       }
@@ -61,7 +67,8 @@ const AdminBundleManagement: React.FC = () => {
 
   const handleToggleActive = async (bundleId: number, isActive: boolean) => {
     try {
-      await updateBundle({ id: bundleId, is_active: !isActive });
+      await toggleBundleActive(bundleId, isActive);
+      fetchBundles(); // Refresh the list
     } catch (error) {
       console.error('Error toggling bundle status:', error);
     }
@@ -69,7 +76,8 @@ const AdminBundleManagement: React.FC = () => {
 
   const handleToggleFeatured = async (bundleId: number, isFeatured: boolean) => {
     try {
-      await updateBundle({ id: bundleId, is_featured: !isFeatured });
+      await toggleBundleFeatured(bundleId, isFeatured);
+      fetchBundles(); // Refresh the list
     } catch (error) {
       console.error('Error toggling featured status:', error);
     }

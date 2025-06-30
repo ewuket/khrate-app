@@ -9,21 +9,41 @@ import AdminBundleManagement from "./AdminBundleManagement";
 import AdminCustomItemsManagement from "./custom-items/AdminCustomItemsManagement";
 import AdminNotifications from "./AdminNotifications";
 import { useAdminData } from "@/hooks/useAdminData";
+import { useAdminOperations } from "@/hooks/useAdminOperations";
 import AdminGroupsList from "./AdminGroupsList";
 import AdminGroupBuyingManagement from "./AdminGroupBuyingManagement";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const { stats, orders, bundles, loading, refreshAllData } = useAdminData();
+  const { updateOrderStatus, updatePaymentStatus } = useAdminOperations();
 
-  const handleUpdateOrderStatus = async (orderId: string, status: string) => {
-    console.log('Update order status:', orderId, status);
-    // TODO: Implement order status update
+  const handleUpdateOrderStatus = async (orderId: string, currentStatus: string) => {
+    // Cycle through status options
+    const statusOptions = ['pending', 'confirmed', 'delivered', 'cancelled'];
+    const currentIndex = statusOptions.indexOf(currentStatus);
+    const nextIndex = (currentIndex + 1) % statusOptions.length;
+    const newStatus = statusOptions[nextIndex];
+    
+    const success = await updateOrderStatus(orderId, newStatus);
+    if (success) {
+      // Refresh data to show updated status
+      refreshAllData();
+    }
   };
 
-  const handleUpdatePaymentStatus = async (orderId: string, paymentStatus: string) => {
-    console.log('Update payment status:', orderId, paymentStatus);
-    // TODO: Implement payment status update
+  const handleUpdatePaymentStatus = async (orderId: string, currentPaymentStatus: string) => {
+    // Cycle through payment status options
+    const paymentStatusOptions = ['pending', 'completed', 'failed'];
+    const currentIndex = paymentStatusOptions.indexOf(currentPaymentStatus);
+    const nextIndex = (currentIndex + 1) % paymentStatusOptions.length;
+    const newPaymentStatus = paymentStatusOptions[nextIndex];
+    
+    const success = await updatePaymentStatus(orderId, newPaymentStatus);
+    if (success) {
+      // Refresh data to show updated payment status
+      refreshAllData();
+    }
   };
 
   return (
