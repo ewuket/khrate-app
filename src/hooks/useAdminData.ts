@@ -39,7 +39,7 @@ export const useAdminData = () => {
         console.error('Error fetching groups:', groupsError);
       }
 
-      // Fetch user profiles count - Fix: Get from user_profiles table instead of auth.users
+      // Fetch user profiles count instead of auth.users
       const { data: usersData, error: usersError } = await supabase
         .from('user_profiles')
         .select('id');
@@ -160,6 +160,7 @@ export const useAdminData = () => {
       // Transform the data to match AdminBundle interface
       const transformedBundles = bundlesData?.map(bundle => ({
         ...bundle,
+        bundle_items: bundle.bundle_items || [],
         items: bundle.bundle_items || [],
         items_count: bundle.bundle_items?.length || 0
       })) || [];

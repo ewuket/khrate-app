@@ -11,10 +11,15 @@ export const useAdminGroupUpdate = () => {
     mutationFn: async ({ id, ...groupData }: { id: string } & Partial<GroupFormData>) => {
       console.log('Updating group:', id, groupData);
 
+      // Clean the data before update
+      const cleanData = Object.fromEntries(
+        Object.entries(groupData).filter(([_, value]) => value !== undefined)
+      );
+
       const { data: updatedGroup, error: groupError } = await supabase
         .from('group_sessions')
         .update({
-          ...groupData,
+          ...cleanData,
           updated_at: new Date().toISOString()
         })
         .eq('id', id)
@@ -23,13 +28,14 @@ export const useAdminGroupUpdate = () => {
 
       if (groupError) {
         console.error('Error updating group:', groupError);
-        throw groupError;
+        throw new Error(`Failed to update group: ${groupError.message}`);
       }
 
       if (!updatedGroup) {
-        throw new Error('No group was updated. Group may not exist.');
+        throw new Error('Group not found or no changes were made');
       }
 
+      console.log('Group updated successfully:', updatedGroup);
       return updatedGroup;
     },
     onSuccess: () => {
@@ -40,7 +46,7 @@ export const useAdminGroupUpdate = () => {
     },
     onError: (error: any) => {
       console.error('Error updating group:', error);
-      toast.error(`Failed to update group: ${error.message}`);
+      toast.error(error.message || 'Failed to update group');
     }
   });
 };

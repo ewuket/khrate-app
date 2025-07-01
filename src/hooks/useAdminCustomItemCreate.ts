@@ -10,24 +10,40 @@ export const useAdminCustomItemCreate = () => {
     mutationFn: async (itemData: any) => {
       console.log('Creating custom item with data:', itemData);
       
+      // Clean and validate the data before insertion
+      const cleanItemData = {
+        name: itemData.name?.trim(),
+        description: itemData.description?.trim() || null,
+        price: parseFloat(itemData.price),
+        unit: itemData.unit?.trim(),
+        category: itemData.category?.trim(),
+        stock_quantity: parseInt(itemData.stock_quantity) || 0,
+        image_url: itemData.image_url?.trim() || '/placeholder.svg',
+        is_active: Boolean(itemData.is_active ?? true)
+      };
+
+      // Validate required fields
+      if (!cleanItemData.name || !cleanItemData.unit || !cleanItemData.category) {
+        throw new Error('Name, unit, and category are required fields');
+      }
+
+      if (isNaN(cleanItemData.price) || cleanItemData.price < 0) {
+        throw new Error('Price must be a valid positive number');
+      }
+
       const { data, error } = await supabase
         .from('custom_buy_items')
-        .insert({
-          name: itemData.name,
-          description: itemData.description || null,
-          price: parseFloat(itemData.price),
-          unit: itemData.unit,
-          category: itemData.category,
-          stock_quantity: parseInt(itemData.stock_quantity) || 0,
-          image_url: itemData.image_url || '/placeholder.svg',
-          is_active: itemData.is_active !== false
-        })
+        .insert([cleanItemData])
         .select()
         .maybeSingle();
 
       if (error) {
         console.error('Error creating custom item:', error);
-        throw error;
+        throw new Error(`Failed to create item: ${error.message}`);
+      }
+
+      if (!data) {
+        throw new Error('No item was created');
       }
 
       return data;
@@ -38,7 +54,7 @@ export const useAdminCustomItemCreate = () => {
     },
     onError: (error) => {
       console.error('Error creating custom item:', error);
-      toast.error('Failed to create custom item');
+      toast.error(error.message || 'Failed to create custom item. Please check your data and try again.');
     }
   });
 };
