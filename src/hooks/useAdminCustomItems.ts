@@ -1,212 +1,30 @@
 
-import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useAdminCustomItemsQuery } from "./useAdminCustomItemsQuery";
+import { useAdminCustomItemCreate } from "./useAdminCustomItemCreate";
+import { useAdminCustomItemUpdate } from "./useAdminCustomItemUpdate";
+import { useAdminCustomItemDelete } from "./useAdminCustomItemDelete";
+import { useAdminCustomItemToggle } from "./useAdminCustomItemToggle";
 
-export interface AdminCustomItem {
-  id: number;
-  name: string;
-  category: string;
-  price: number;
-  unit: string;
-  image_url: string;
-  description: string | null;
-  is_active: boolean;
-  stock_quantity: number;
-  created_at: string;
-  updated_at: string;
-}
+export type { AdminCustomItem } from "./useAdminCustomItemsQuery";
 
 export const useAdminCustomItems = () => {
-  const queryClient = useQueryClient();
-
-  const {
-    data: customItems = [],
-    isLoading,
-    refetch
-  } = useQuery({
-    queryKey: ['admin-custom-items'],
-    queryFn: async () => {
-      console.log('Fetching admin custom items...');
-      
-      const { data, error } = await supabase
-        .from('custom_buy_items')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching custom items:', error);
-        throw error;
-      }
-
-      console.log('Admin custom items fetched:', data?.length || 0);
-      return data || [];
-    },
-    staleTime: 30 * 1000,
-    retry: 2,
-  });
-
-  const createCustomItemMutation = useMutation({
-    mutationFn: async (itemData: any) => {
-      console.log('Creating custom item with data:', itemData);
-      
-      const { data, error } = await supabase
-        .from('custom_buy_items')
-        .insert({
-          name: itemData.name,
-          description: itemData.description || null,
-          price: parseFloat(itemData.price),
-          unit: itemData.unit,
-          category: itemData.category,
-          stock_quantity: parseInt(itemData.stock_quantity) || 0,
-          image_url: itemData.image_url || '/placeholder.svg',
-          is_active: itemData.is_active !== false
-        })
-        .select()
-        .maybeSingle(); // Fix: Use maybeSingle instead of single
-
-      if (error) {
-        console.error('Error creating custom item:', error);
-        throw error;
-      }
-
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-custom-items'] });
-      toast.success('Custom item created successfully!');
-    },
-    onError: (error) => {
-      console.error('Error creating custom item:', error);
-      toast.error('Failed to create custom item');
-    }
-  });
-
-  const updateCustomItemMutation = useMutation({
-    mutationFn: async (itemData: any) => {
-      console.log('Updating custom item with data:', itemData);
-      
-      const { id, ...updateData } = itemData;
-      
-      // Clean and validate the data before update
-      const cleanUpdateData = {
-        name: updateData.name?.trim(),
-        description: updateData.description?.trim() || null,
-        price: parseFloat(updateData.price),
-        unit: updateData.unit?.trim(),
-        category: updateData.category?.trim(),
-        stock_quantity: parseInt(updateData.stock_quantity) || 0,
-        image_url: updateData.image_url?.trim() || '/placeholder.svg',
-        is_active: Boolean(updateData.is_active),
-        updated_at: new Date().toISOString()
-      };
-
-      // Validate required fields
-      if (!cleanUpdateData.name || !cleanUpdateData.unit || !cleanUpdateData.category) {
-        throw new Error('Name, unit, and category are required fields');
-      }
-
-      if (isNaN(cleanUpdateData.price) || cleanUpdateData.price < 0) {
-        throw new Error('Price must be a valid positive number');
-      }
-
-      const { data, error } = await supabase
-        .from('custom_buy_items')
-        .update(cleanUpdateData)
-        .eq('id', id)
-        .select()
-        .maybeSingle(); // Fix: Use maybeSingle instead of single
-
-      if (error) {
-        console.error('Error updating custom item:', error);
-        throw error;
-      }
-
-      if (!data) {
-        throw new Error('No item was updated. Item may not exist.');
-      }
-
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-custom-items'] });
-      toast.success('Custom item updated successfully!');
-    },
-    onError: (error) => {
-      console.error('Error updating custom item:', error);
-      toast.error(error.message || 'Failed to update custom item. Please check your data and try again.');
-    }
-  });
-
-  const deleteCustomItemMutation = useMutation({
-    mutationFn: async (itemId: number) => {
-      const { error } = await supabase
-        .from('custom_buy_items')
-        .delete()
-        .eq('id', itemId);
-
-      if (error) {
-        console.error('Error deleting custom item:', error);
-        throw error;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-custom-items'] });
-      toast.success('Custom item deleted successfully!');
-    },
-    onError: (error) => {
-      console.error('Error deleting custom item:', error);
-      toast.error('Failed to delete custom item');
-    }
-  });
-
-  const toggleActiveCustomItemMutation = useMutation({
-    mutationFn: async ({ id, is_active }: { id: number; is_active: boolean }) => {
-      console.log('Toggling custom item active status:', id, is_active);
-      
-      const { data, error } = await supabase
-        .from('custom_buy_items')
-        .update({ 
-          is_active: is_active,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id)
-        .select()
-        .maybeSingle(); // Fix: Use maybeSingle instead of single
-
-      if (error) {
-        console.error('Error toggling custom item status:', error);
-        throw error;
-      }
-
-      if (!data) {
-        throw new Error('No item was updated. Item may not exist.');
-      }
-
-      return data;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['admin-custom-items'] });
-      toast.success(`Custom item ${data.is_active ? 'activated' : 'deactivated'} successfully!`);
-    },
-    onError: (error) => {
-      console.error('Error toggling custom item status:', error);
-      toast.error('Failed to update item status');
-    }
-  });
+  const { data: customItems = [], isLoading, refetch } = useAdminCustomItemsQuery();
+  const createMutation = useAdminCustomItemCreate();
+  const updateMutation = useAdminCustomItemUpdate();
+  const deleteMutation = useAdminCustomItemDelete();
+  const toggleMutation = useAdminCustomItemToggle();
 
   return {
     customItems,
     isLoading,
     refetch,
-    createCustomItem: createCustomItemMutation.mutateAsync,
-    updateCustomItem: updateCustomItemMutation.mutateAsync,
-    deleteCustomItem: deleteCustomItemMutation.mutateAsync,
-    toggleActiveCustomItem: toggleActiveCustomItemMutation.mutateAsync,
-    isCreating: createCustomItemMutation.isPending,
-    isUpdating: updateCustomItemMutation.isPending,
-    isDeleting: deleteCustomItemMutation.isPending,
-    isToggling: toggleActiveCustomItemMutation.isPending,
+    createCustomItem: createMutation.mutateAsync,
+    updateCustomItem: updateMutation.mutateAsync,
+    deleteCustomItem: deleteMutation.mutateAsync,
+    toggleActiveCustomItem: toggleMutation.mutateAsync,
+    isCreating: createMutation.isPending,
+    isUpdating: updateMutation.isPending,
+    isDeleting: deleteMutation.isPending,
+    isToggling: toggleMutation.isPending,
   };
 };
