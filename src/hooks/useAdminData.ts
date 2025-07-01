@@ -21,41 +21,44 @@ export const useAdminData = () => {
     try {
       console.log('Fetching admin stats...');
       
-      // Fetch orders stats
+      // Fetch orders stats with proper error handling
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
-        .select('*');
+        .select('id, status, total_amount');
 
       if (ordersError) {
-        console.error('Error fetching orders:', ordersError);
+        console.error('Error fetching orders for stats:', ordersError);
+        throw new Error(`Orders fetch failed: ${ordersError.message}`);
       }
 
       // Fetch group sessions stats
       const { data: groupsData, error: groupsError } = await supabase
         .from('group_sessions')
-        .select('*');
+        .select('id, status');
 
       if (groupsError) {
-        console.error('Error fetching groups:', groupsError);
+        console.error('Error fetching groups for stats:', groupsError);
+        throw new Error(`Groups fetch failed: ${groupsError.message}`);
       }
 
-      // Fetch user profiles count instead of auth.users
+      // Fetch user profiles count
       const { data: usersData, error: usersError } = await supabase
         .from('user_profiles')
         .select('id');
 
       if (usersError) {
-        console.error('Error fetching users:', usersError);
+        console.error('Error fetching users for stats:', usersError);
+        throw new Error(`Users fetch failed: ${usersError.message}`);
       }
 
-      // Calculate stats with null safety
+      // Calculate stats with proper null safety
       const totalOrders = ordersData?.length || 0;
       const pendingOrders = ordersData?.filter(order => order.status === 'pending').length || 0;
-      const totalRevenue = ordersData?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
+      const totalRevenue = ordersData?.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0) || 0;
       const activeGroups = groupsData?.filter(group => group.status === 'active').length || 0;
       const totalUsers = usersData?.length || 0;
 
-      console.log('Calculated stats:', {
+      console.log('Successfully calculated stats:', {
         totalOrders,
         pendingOrders,
         totalRevenue,
@@ -72,8 +75,8 @@ export const useAdminData = () => {
       });
 
     } catch (error) {
-      console.error('Error fetching admin stats:', error);
-      toast.error('Failed to load admin statistics');
+      console.error('Critical error fetching admin stats:', error);
+      toast.error(`Failed to load admin statistics: ${error.message}`);
     }
   };
 
@@ -95,15 +98,20 @@ export const useAdminData = () => {
 
       if (error) {
         console.error('Error fetching orders:', error);
-        throw error;
+        throw new Error(`Orders fetch failed: ${error.message}`);
       }
 
-      console.log('Fetched orders:', ordersData?.length || 0);
+      console.log('Successfully fetched orders:', ordersData?.length || 0);
+
+      if (!ordersData || ordersData.length === 0) {
+        console.warn('No orders found in database');
+        setOrders([]);
+        return;
+      }
 
       // Transform the data to match AdminOrder interface
-      const transformedOrders: AdminOrder[] = ordersData?.map(order => ({
+      const transformedOrders: AdminOrder[] = ordersData.map(order => ({
         ...order,
-        // Ensure items is always an array, handle JSON parsing properly
         items: (() => {
           try {
             if (Array.isArray(order.items)) {
@@ -124,12 +132,13 @@ export const useAdminData = () => {
           email: order.user_profiles?.email || 'unknown@example.com',
           phone: order.user_profiles?.phone || null
         }
-      })) || [];
+      }));
 
       setOrders(transformedOrders);
     } catch (error) {
-      console.error('Error fetching orders:', error);
-      toast.error('Failed to load orders');
+      console.error('Critical error fetching orders:', error);
+      toast.error(`Failed to load orders: ${error.message}`);
+      setOrders([]);
     }
   };
 
@@ -152,30 +161,37 @@ export const useAdminData = () => {
 
       if (error) {
         console.error('Error fetching bundles:', error);
-        throw error;
+        throw new Error(`Bundles fetch failed: ${error.message}`);
       }
 
-      console.log('Fetched bundles:', bundlesData?.length || 0);
+      console.log('Successfully fetched bundles:', bundlesData?.length || 0);
+
+      if (!bundlesData || bundlesData.length === 0) {
+        console.warn('No bundles found in database');
+        setBundles([]);
+        return;
+      }
 
       // Transform the data to match AdminBundle interface
-      const transformedBundles = bundlesData?.map(bundle => ({
+      const transformedBundles = bundlesData.map(bundle => ({
         ...bundle,
         bundle_items: bundle.bundle_items || [],
         items: bundle.bundle_items || [],
         items_count: bundle.bundle_items?.length || 0
-      })) || [];
+      }));
 
       setBundles(transformedBundles);
     } catch (error) {
-      console.error('Error fetching bundles:', error);
-      toast.error('Failed to load bundles');
+      console.error('Critical error fetching bundles:', error);
+      toast.error(`Failed to load bundles: ${error.message}`);
+      setBundles([]);
     }
   };
 
   const refreshAllData = async () => {
     setLoading(true);
     try {
-      await Promise.all([
+      await Promise.allSettled([
         fetchStats(),
         fetchOrders(),
         fetchBundles()
@@ -188,6 +204,7 @@ export const useAdminData = () => {
   };
 
   useEffect(() => {
+    console.log('🚀 Admin data hook initialized - Starting data fetch...');
     refreshAllData();
   }, []);
 

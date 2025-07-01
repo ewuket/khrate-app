@@ -25,6 +25,7 @@ const AdminDashboard = () => {
     const nextIndex = (currentIndex + 1) % statusOptions.length;
     const newStatus = statusOptions[nextIndex];
     
+    console.log('🔄 Cycling order status from', currentStatus, 'to', newStatus);
     const success = await updateOrderStatus(orderId, newStatus);
     if (success) {
       // Refresh data to show updated status
@@ -39,6 +40,7 @@ const AdminDashboard = () => {
     const nextIndex = (currentIndex + 1) % paymentStatusOptions.length;
     const newPaymentStatus = paymentStatusOptions[nextIndex];
     
+    console.log('🔄 Cycling payment status from', currentPaymentStatus, 'to', newPaymentStatus);
     const success = await updatePaymentStatus(orderId, newPaymentStatus);
     if (success) {
       // Refresh data to show updated payment status
