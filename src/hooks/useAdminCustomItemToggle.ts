@@ -7,15 +7,20 @@ export const useAdminCustomItemToggle = () => {
   const [isToggling, setIsToggling] = useState<string | null>(null);
 
   const toggleActiveCustomItem = async ({ id, is_active }: { id: number; is_active: boolean }) => {
+    if (!id) {
+      throw new Error('Item ID is required');
+    }
+
     setIsToggling(id.toString());
     
     try {
-      console.log('🔄 Toggling custom item active status:', id, 'from', is_active, 'to', !is_active);
+      const newActiveStatus = !is_active;
+      console.log('🔄 Toggling custom item active status:', id, 'from', is_active, 'to', newActiveStatus);
       
       const { data, error } = await supabase
         .from('custom_buy_items')
         .update({ 
-          is_active: !is_active,
+          is_active: newActiveStatus,
           updated_at: new Date().toISOString()
         })
         .eq('id', id)
@@ -24,15 +29,15 @@ export const useAdminCustomItemToggle = () => {
 
       if (error) {
         console.error('❌ Error toggling custom item status:', error);
-        throw new Error(`Failed to update item: ${error.message}`);
+        throw new Error(`Database error: ${error.message}`);
       }
 
       if (!data) {
-        throw new Error('Item not found or no changes made');
+        throw new Error('Item not found or no changes were made');
       }
 
       console.log('✅ Custom item status updated successfully:', data);
-      toast.success(`Item ${!is_active ? 'activated' : 'deactivated'} successfully`);
+      toast.success(`Item ${newActiveStatus ? 'activated' : 'deactivated'} successfully`);
       
       return true;
     } catch (error: any) {

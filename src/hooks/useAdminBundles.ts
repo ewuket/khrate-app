@@ -142,24 +142,40 @@ export const useAdminBundles = () => {
 
       const { bundle_items, ...bundleInfo } = bundleData;
 
+      // First, update the bundle itself
       const { data: updatedBundle, error: bundleError } = await supabase
         .from('bundles')
-        .update(bundleInfo)
+        .update({
+          ...bundleInfo,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', id)
         .select()
-        .single();
+        .maybeSingle();
 
       if (bundleError) {
         console.error('Error updating bundle:', bundleError);
-        throw bundleError;
+        throw new Error(`Failed to update bundle: ${bundleError.message}`);
       }
 
+      if (!updatedBundle) {
+        throw new Error('Bundle not found or no changes were made');
+      }
+
+      // Handle bundle items update if provided
       if (bundle_items !== undefined) {
-        await supabase
+        // Delete existing items
+        const { error: deleteError } = await supabase
           .from('bundle_items')
           .delete()
           .eq('bundle_id', id);
 
+        if (deleteError) {
+          console.error('Error deleting existing bundle items:', deleteError);
+          throw new Error(`Failed to update bundle items: ${deleteError.message}`);
+        }
+
+        // Insert new items if any
         if (bundle_items.length > 0) {
           const itemsToInsert = bundle_items.map(item => ({
             ...item,
@@ -171,8 +187,8 @@ export const useAdminBundles = () => {
             .insert(itemsToInsert);
 
           if (itemsError) {
-            console.error('Error updating bundle items:', itemsError);
-            throw itemsError;
+            console.error('Error inserting new bundle items:', itemsError);
+            throw new Error(`Failed to update bundle items: ${itemsError.message}`);
           }
         }
       }

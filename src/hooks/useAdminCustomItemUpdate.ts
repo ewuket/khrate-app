@@ -12,12 +12,16 @@ export const useAdminCustomItemUpdate = () => {
       
       const { id, ...updateData } = itemData;
       
+      if (!id) {
+        throw new Error('Item ID is required for update');
+      }
+
       // Clean and validate the data before update
       const cleanUpdateData = {
         name: updateData.name?.trim(),
         description: updateData.description?.trim() || null,
-        price: parseFloat(updateData.price),
-        unit: updateData.unit?.trim(),
+        price: parseFloat(updateData.price) || 0,
+        unit: updateData.unit?.trim() || 'kg',
         category: updateData.category?.trim(),
         stock_quantity: parseInt(updateData.stock_quantity) || 0,
         image_url: updateData.image_url?.trim() || '/placeholder.svg',
@@ -34,6 +38,8 @@ export const useAdminCustomItemUpdate = () => {
         throw new Error('Price must be a valid positive number');
       }
 
+      console.log('Updating item with clean data:', cleanUpdateData);
+
       const { data, error } = await supabase
         .from('custom_buy_items')
         .update(cleanUpdateData)
@@ -43,20 +49,21 @@ export const useAdminCustomItemUpdate = () => {
 
       if (error) {
         console.error('Error updating custom item:', error);
-        throw error;
+        throw new Error(`Database error: ${error.message}`);
       }
 
       if (!data) {
-        throw new Error('No item was updated. Item may not exist.');
+        throw new Error('Item not found or no changes were made');
       }
 
+      console.log('Custom item updated successfully:', data);
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-custom-items'] });
       toast.success('Custom item updated successfully!');
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Error updating custom item:', error);
       toast.error(error.message || 'Failed to update custom item. Please check your data and try again.');
     }

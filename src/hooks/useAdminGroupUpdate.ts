@@ -11,24 +11,30 @@ export const useAdminGroupUpdate = () => {
     mutationFn: async ({ id, ...groupData }: { id: string } & Partial<GroupFormData>) => {
       console.log('Updating group:', id, groupData);
 
-      // Clean the data before update
+      if (!id) {
+        throw new Error('Group ID is required for update');
+      }
+
+      // Clean the data before update - remove undefined values
       const cleanData = Object.fromEntries(
         Object.entries(groupData).filter(([_, value]) => value !== undefined)
       );
 
+      // Add updated timestamp
+      cleanData.updated_at = new Date().toISOString();
+
+      console.log('Updating group with clean data:', cleanData);
+
       const { data: updatedGroup, error: groupError } = await supabase
         .from('group_sessions')
-        .update({
-          ...cleanData,
-          updated_at: new Date().toISOString()
-        })
+        .update(cleanData)
         .eq('id', id)
         .select()
         .maybeSingle();
 
       if (groupError) {
         console.error('Error updating group:', groupError);
-        throw new Error(`Failed to update group: ${groupError.message}`);
+        throw new Error(`Database error: ${groupError.message}`);
       }
 
       if (!updatedGroup) {
