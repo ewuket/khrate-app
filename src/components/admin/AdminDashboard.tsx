@@ -16,7 +16,14 @@ import AdminGroupBuyingManagement from "./AdminGroupBuyingManagement";
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const { stats, orders, bundles, loading, refreshAllData } = useAdminData();
-  const { updateOrderStatus, updatePaymentStatus } = useAdminOperations();
+  const { 
+    updateOrderStatus, 
+    updatePaymentStatus, 
+    toggleBundleFeatured, 
+    toggleBundleActive, 
+    toggleGroupFeatured,
+    toggleCustomItemActive 
+  } = useAdminOperations();
 
   const handleUpdateOrderStatus = async (orderId: string, currentStatus: string) => {
     // Cycle through status options
@@ -29,7 +36,7 @@ const AdminDashboard = () => {
     const success = await updateOrderStatus(orderId, newStatus);
     if (success) {
       // Refresh data to show updated status
-      refreshAllData();
+      await refreshAllData();
     }
   };
 
@@ -44,7 +51,35 @@ const AdminDashboard = () => {
     const success = await updatePaymentStatus(orderId, newPaymentStatus);
     if (success) {
       // Refresh data to show updated payment status
-      refreshAllData();
+      await refreshAllData();
+    }
+  };
+
+  const handleToggleBundleFeatured = async (bundleId: number, isFeatured: boolean) => {
+    const success = await toggleBundleFeatured(bundleId, isFeatured);
+    if (success) {
+      await refreshAllData();
+    }
+  };
+
+  const handleToggleBundleActive = async (bundleId: number, isActive: boolean) => {
+    const success = await toggleBundleActive(bundleId, isActive);
+    if (success) {
+      await refreshAllData();
+    }
+  };
+
+  const handleToggleGroupFeatured = async (groupId: string, isFeatured: boolean) => {
+    const success = await toggleGroupFeatured(groupId, isFeatured);
+    if (success) {
+      await refreshAllData();
+    }
+  };
+
+  const handleToggleCustomItemActive = async (itemId: number, isActive: boolean) => {
+    const success = await toggleCustomItemActive(itemId, isActive);
+    if (success) {
+      await refreshAllData();
     }
   };
 
@@ -71,7 +106,10 @@ const AdminDashboard = () => {
                 onUpdateOrderStatus={handleUpdateOrderStatus}
                 onUpdatePaymentStatus={handleUpdatePaymentStatus}
               />
-              <AdminBundlesList />
+              <AdminBundlesList 
+                onToggleFeatured={handleToggleBundleFeatured}
+                onToggleActive={handleToggleBundleActive}
+              />
             </div>
           </TabsContent>
 
@@ -84,15 +122,22 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="bundles">
-            <AdminBundleManagement />
+            <AdminBundleManagement 
+              onToggleFeatured={handleToggleBundleFeatured}
+              onToggleActive={handleToggleBundleActive}
+            />
           </TabsContent>
 
           <TabsContent value="custom-items">
-            <AdminCustomItemsManagement />
+            <AdminCustomItemsManagement 
+              onToggleActive={handleToggleCustomItemActive}
+            />
           </TabsContent>
 
           <TabsContent value="groups">
-            <AdminGroupBuyingManagement />
+            <AdminGroupBuyingManagement 
+              onToggleFeatured={handleToggleGroupFeatured}
+            />
           </TabsContent>
 
           <TabsContent value="notifications">

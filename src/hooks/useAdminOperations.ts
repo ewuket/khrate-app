@@ -7,6 +7,10 @@ export const useAdminOperations = () => {
     try {
       console.log('🔄 Updating order status:', orderId, 'to:', newStatus);
       
+      if (!orderId || !newStatus) {
+        throw new Error('Order ID and status are required');
+      }
+      
       const { data, error } = await supabase
         .from('orders')
         .update({ 
@@ -39,6 +43,10 @@ export const useAdminOperations = () => {
   const updatePaymentStatus = async (orderId: string, newPaymentStatus: string): Promise<boolean> => {
     try {
       console.log('🔄 Updating payment status:', orderId, 'to:', newPaymentStatus);
+      
+      if (!orderId || !newPaymentStatus) {
+        throw new Error('Order ID and payment status are required');
+      }
       
       const { data, error } = await supabase
         .from('orders')
@@ -73,6 +81,10 @@ export const useAdminOperations = () => {
     try {
       console.log('🔄 Toggling bundle featured status:', bundleId, 'from', isFeatured, 'to', !isFeatured);
       
+      if (!bundleId) {
+        throw new Error('Bundle ID is required');
+      }
+      
       const { data, error } = await supabase
         .from('bundles')
         .update({ 
@@ -105,6 +117,10 @@ export const useAdminOperations = () => {
   const toggleBundleActive = async (bundleId: number, isActive: boolean): Promise<boolean> => {
     try {
       console.log('🔄 Toggling bundle active status:', bundleId, 'from', isActive, 'to', !isActive);
+      
+      if (!bundleId) {
+        throw new Error('Bundle ID is required');
+      }
       
       const { data, error } = await supabase
         .from('bundles')
@@ -139,6 +155,10 @@ export const useAdminOperations = () => {
     try {
       console.log('🔄 Toggling group featured status:', groupId, 'from', isFeatured, 'to', !isFeatured);
       
+      if (!groupId) {
+        throw new Error('Group ID is required');
+      }
+      
       const { data, error } = await supabase
         .from('group_sessions')
         .update({ 
@@ -168,11 +188,49 @@ export const useAdminOperations = () => {
     }
   };
 
+  const toggleCustomItemActive = async (itemId: number, isActive: boolean): Promise<boolean> => {
+    try {
+      console.log('🔄 Toggling custom item active status:', itemId, 'from', isActive, 'to', !isActive);
+      
+      if (!itemId) {
+        throw new Error('Item ID is required');
+      }
+      
+      const { data, error } = await supabase
+        .from('custom_buy_items')
+        .update({ 
+          is_active: !isActive,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', itemId)
+        .select()
+        .maybeSingle();
+
+      if (error) {
+        console.error('❌ Error toggling custom item active status:', error);
+        throw new Error(`Failed to update item: ${error.message}`);
+      }
+
+      if (!data) {
+        throw new Error('Item not found or no changes made');
+      }
+
+      console.log('✅ Custom item active status updated successfully:', data);
+      toast.success(`Item ${!isActive ? 'activated' : 'deactivated'} successfully`);
+      return true;
+    } catch (error: any) {
+      console.error('❌ Critical error toggling custom item active status:', error);
+      toast.error(error.message || 'Failed to update item active status');
+      return false;
+    }
+  };
+
   return {
     updateOrderStatus,
     updatePaymentStatus,
     toggleBundleFeatured,
     toggleBundleActive,
-    toggleGroupFeatured
+    toggleGroupFeatured,
+    toggleCustomItemActive
   };
 };

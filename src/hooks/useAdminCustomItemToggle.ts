@@ -1,13 +1,15 @@
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export const useAdminCustomItemToggle = () => {
-  const queryClient = useQueryClient();
+  const [isToggling, setIsToggling] = useState<string | null>(null);
 
-  return useMutation({
-    mutationFn: async ({ id, is_active }: { id: number; is_active: boolean }) => {
+  const toggleActiveCustomItem = async ({ id, is_active }: { id: number; is_active: boolean }) => {
+    setIsToggling(id.toString());
+    
+    try {
       console.log('🔄 Toggling custom item active status:', id, 'from', is_active, 'to', !is_active);
       
       const { data, error } = await supabase
@@ -30,15 +32,20 @@ export const useAdminCustomItemToggle = () => {
       }
 
       console.log('✅ Custom item status updated successfully:', data);
-      return data;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['admin-custom-items'] });
-      toast.success(`Custom item ${data.is_active ? 'activated' : 'deactivated'} successfully!`);
-    },
-    onError: (error: any) => {
-      console.error('❌ Error toggling custom item status:', error);
+      toast.success(`Item ${!is_active ? 'activated' : 'deactivated'} successfully`);
+      
+      return true;
+    } catch (error: any) {
+      console.error('❌ Failed to toggle custom item status:', error);
       toast.error(error.message || 'Failed to update item status');
+      return false;
+    } finally {
+      setIsToggling(null);
     }
-  });
+  };
+
+  return {
+    toggleActiveCustomItem,
+    isToggling
+  };
 };

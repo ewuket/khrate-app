@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { AdminStats, AdminOrder, AdminBundle } from '@/types/admin';
 import { toast } from 'sonner';
-import { Json } from '@/integrations/supabase/types';
 
 export const useAdminData = () => {
   const [stats, setStats] = useState<AdminStats>({
@@ -19,134 +18,104 @@ export const useAdminData = () => {
 
   const fetchStats = async () => {
     try {
-      console.log('Fetching admin stats...');
+      console.log('📊 Fetching admin statistics...');
       
-      // Fetch orders stats with proper error handling
+      // Get orders stats
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
-        .select('id, status, total_amount');
-
+        .select('total_amount, status');
+        
       if (ordersError) {
-        console.error('Error fetching orders for stats:', ordersError);
+        console.error('❌ Orders fetch failed:', ordersError);
         throw new Error(`Orders fetch failed: ${ordersError.message}`);
       }
 
-      // Fetch group sessions stats
-      const { data: groupsData, error: groupsError } = await supabase
-        .from('group_sessions')
-        .select('id, status');
-
-      if (groupsError) {
-        console.error('Error fetching groups for stats:', groupsError);
-        throw new Error(`Groups fetch failed: ${groupsError.message}`);
-      }
-
-      // Fetch user profiles count
-      const { data: usersData, error: usersError } = await supabase
+      // Get users count from user_profiles instead of auth.users
+      const { count: usersCount, error: usersError } = await supabase
         .from('user_profiles')
-        .select('id');
-
+        .select('*', { count: 'exact', head: true });
+        
       if (usersError) {
-        console.error('Error fetching users for stats:', usersError);
+        console.error('❌ Users count failed:', usersError);
         throw new Error(`Users fetch failed: ${usersError.message}`);
       }
 
-      // Calculate stats with proper null safety
+      // Get active groups count
+      const { count: groupsCount, error: groupsError } = await supabase
+        .from('group_sessions')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'active');
+        
+      if (groupsError) {
+        console.error('❌ Groups fetch failed:', groupsError);
+        throw new Error(`Groups fetch failed: ${groupsError.message}`);
+      }
+
+      // Calculate stats
       const totalOrders = ordersData?.length || 0;
       const pendingOrders = ordersData?.filter(order => order.status === 'pending').length || 0;
       const totalRevenue = ordersData?.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0) || 0;
-      const activeGroups = groupsData?.filter(group => group.status === 'active').length || 0;
-      const totalUsers = usersData?.length || 0;
 
-      console.log('Successfully calculated stats:', {
-        totalOrders,
-        pendingOrders,
-        totalRevenue,
-        activeGroups,
-        totalUsers
-      });
-
-      setStats({
+      const calculatedStats = {
         total_orders: totalOrders,
         pending_orders: pendingOrders,
         total_revenue: totalRevenue,
-        active_groups: activeGroups,
-        total_users: totalUsers
-      });
+        active_groups: groupsCount || 0,
+        total_users: usersCount || 0
+      };
 
-    } catch (error) {
-      console.error('Critical error fetching admin stats:', error);
+      console.log('✅ Admin statistics loaded:', calculatedStats);
+      setStats(calculatedStats);
+    } catch (error: any) {
+      console.error('❌ Failed to load admin statistics:', error);
       toast.error(`Failed to load admin statistics: ${error.message}`);
     }
   };
 
   const fetchOrders = async () => {
     try {
-      console.log('Fetching admin orders...');
+      console.log('📋 Fetching admin orders...');
       
-      const { data: ordersData, error } = await supabase
+      const { data, error } = await supabase
         .from('orders')
         .select(`
           *,
-          user_profiles!orders_user_id_fkey (
+          user_profiles!left (
             full_name,
             email,
             phone
           )
         `)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(50);
 
       if (error) {
-        console.error('Error fetching orders:', error);
+        console.error('❌ Orders fetch failed:', error);
         throw new Error(`Orders fetch failed: ${error.message}`);
       }
 
-      console.log('Successfully fetched orders:', ordersData?.length || 0);
-
-      if (!ordersData || ordersData.length === 0) {
-        console.warn('No orders found in database');
-        setOrders([]);
-        return;
-      }
-
-      // Transform the data to match AdminOrder interface
-      const transformedOrders: AdminOrder[] = ordersData.map(order => ({
+      const formattedOrders = (data || []).map(order => ({
         ...order,
-        items: (() => {
-          try {
-            if (Array.isArray(order.items)) {
-              return order.items;
-            } else if (typeof order.items === 'string') {
-              return JSON.parse(order.items);
-            } else if (order.items && typeof order.items === 'object') {
-              return [order.items];
-            }
-            return [];
-          } catch (e) {
-            console.warn('Failed to parse order items:', order.items);
-            return [];
-          }
-        })(),
-        user_profile: {
-          full_name: order.user_profiles?.full_name || 'Unknown User',
-          email: order.user_profiles?.email || 'unknown@example.com',
-          phone: order.user_profiles?.phone || null
+        user_profile: order.user_profiles || {
+          full_name: 'Guest User',
+          email: 'guest@example.com',
+          phone: null
         }
       }));
 
-      setOrders(transformedOrders);
-    } catch (error) {
-      console.error('Critical error fetching orders:', error);
+      console.log('✅ Orders loaded:', formattedOrders.length);
+      setOrders(formattedOrders);
+    } catch (error: any) {
+      console.error('❌ Failed to load orders:', error);
       toast.error(`Failed to load orders: ${error.message}`);
-      setOrders([]);
     }
   };
 
   const fetchBundles = async () => {
     try {
-      console.log('Fetching admin bundles...');
+      console.log('📦 Fetching admin bundles...');
       
-      const { data: bundlesData, error } = await supabase
+      const { data, error } = await supabase
         .from('bundles')
         .select(`
           *,
@@ -160,51 +129,44 @@ export const useAdminData = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching bundles:', error);
+        console.error('❌ Bundles fetch failed:', error);
         throw new Error(`Bundles fetch failed: ${error.message}`);
       }
 
-      console.log('Successfully fetched bundles:', bundlesData?.length || 0);
-
-      if (!bundlesData || bundlesData.length === 0) {
-        console.warn('No bundles found in database');
-        setBundles([]);
-        return;
-      }
-
-      // Transform the data to match AdminBundle interface
-      const transformedBundles = bundlesData.map(bundle => ({
+      const formattedBundles = (data || []).map(bundle => ({
         ...bundle,
-        bundle_items: bundle.bundle_items || [],
         items: bundle.bundle_items || [],
         items_count: bundle.bundle_items?.length || 0
       }));
 
-      setBundles(transformedBundles);
-    } catch (error) {
-      console.error('Critical error fetching bundles:', error);
+      console.log('✅ Bundles loaded:', formattedBundles.length);
+      setBundles(formattedBundles);
+    } catch (error: any) {
+      console.error('❌ Failed to load bundles:', error);
       toast.error(`Failed to load bundles: ${error.message}`);
-      setBundles([]);
     }
   };
 
   const refreshAllData = async () => {
+    console.log('🔄 Refreshing all admin data...');
     setLoading(true);
+    
     try {
-      await Promise.allSettled([
+      await Promise.all([
         fetchStats(),
         fetchOrders(),
         fetchBundles()
       ]);
-    } catch (error) {
-      console.error('Error refreshing admin data:', error);
+      console.log('✅ All admin data refreshed successfully');
+    } catch (error: any) {
+      console.error('❌ Failed to refresh admin data:', error);
+      toast.error('Failed to refresh admin data');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    console.log('🚀 Admin data hook initialized - Starting data fetch...');
     refreshAllData();
   }, []);
 
