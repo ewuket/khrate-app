@@ -1,85 +1,86 @@
 
-/**
- * Auth State Cleanup Utilities
- * Prevents authentication limbo states and ensures clean auth transitions
- */
+import { SupabaseClient } from '@supabase/supabase-js';
 
 export const cleanupAuthState = () => {
-  console.log('Cleaning up auth state...');
-  
-  // Remove standard auth tokens
-  localStorage.removeItem('supabase.auth.token');
+  console.log('🧹 Cleaning up auth state...');
   
   // Remove all Supabase auth keys from localStorage
   Object.keys(localStorage).forEach((key) => {
-    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+    if (key.startsWith('supabase.auth.') || key.includes('sb-') || key.includes('khrate_')) {
+      console.log(`🗑️ Removing localStorage key: ${key}`);
       localStorage.removeItem(key);
-      console.log(`Removed localStorage key: ${key}`);
     }
   });
   
-  // Remove from sessionStorage if in use
+  // Remove from sessionStorage if it exists
   if (typeof sessionStorage !== 'undefined') {
     Object.keys(sessionStorage).forEach((key) => {
-      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-') || key.includes('khrate_')) {
+        console.log(`🗑️ Removing sessionStorage key: ${key}`);
         sessionStorage.removeItem(key);
-        console.log(`Removed sessionStorage key: ${key}`);
       }
     });
   }
 };
 
-export const performSecureSignOut = async (supabaseClient: any) => {
+export const performSecureSignOut = async (supabase: SupabaseClient): Promise<boolean> => {
   try {
-    console.log('Performing secure sign out...');
+    console.log('🚪 Performing secure sign out...');
     
-    // Clean up auth state first
+    // Clean up first
     cleanupAuthState();
     
     // Attempt global sign out
-    try {
-      await supabaseClient.auth.signOut({ scope: 'global' });
-      console.log('Global sign out successful');
-    } catch (err) {
-      console.warn('Global sign out failed, continuing...', err);
+    const { error } = await supabase.auth.signOut({ scope: 'global' });
+    
+    if (error) {
+      console.error('❌ Sign out error (ignoring):', error);
+      // Continue anyway - we've cleaned up the local state
     }
     
+    console.log('✅ Secure sign out completed');
     return true;
   } catch (error) {
-    console.error('Error during secure sign out:', error);
-    return false;
+    console.error('❌ Secure sign out failed:', error);
+    // Even if sign out fails, we've cleaned up local state
+    return true;
   }
 };
 
 export const performSecureSignIn = async (
-  supabaseClient: any, 
+  supabase: SupabaseClient, 
   email: string, 
   password: string
 ) => {
   try {
-    console.log('Performing secure sign in...');
+    console.log('🔐 Performing secure sign in...');
     
-    // Clean up existing state
+    // Clean up any existing state
     cleanupAuthState();
     
-    // Attempt global sign out first
+    // Attempt to sign out any existing session
     try {
-      await supabaseClient.auth.signOut({ scope: 'global' });
+      await supabase.auth.signOut({ scope: 'global' });
     } catch (err) {
-      console.warn('Pre-signin signout failed, continuing...', err);
+      // Ignore errors here
+      console.log('⚠️ Previous session cleanup (ignoring errors)');
     }
     
-    // Sign in with email/password
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
+    // Wait a moment for cleanup
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Sign in with fresh state
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
     
     if (error) throw error;
     
+    console.log('✅ Secure sign in completed');
     return { data, error: null };
   } catch (error) {
-    console.error('Error during secure sign in:', error);
+    console.error('❌ Secure sign in failed:', error);
     return { data: null, error };
   }
 };

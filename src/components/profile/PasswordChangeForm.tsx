@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, EyeOff, Lock } from "lucide-react";
+import { Eye, EyeOff, Lock, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -21,6 +21,15 @@ const PasswordChangeForm = () => {
   });
   const [loading, setLoading] = useState(false);
 
+  const validatePassword = (password: string) => {
+    const errors = [];
+    if (password.length < 8) errors.push("At least 8 characters");
+    if (!/(?=.*[a-z])/.test(password)) errors.push("One lowercase letter");
+    if (!/(?=.*[A-Z])/.test(password)) errors.push("One uppercase letter");
+    if (!/(?=.*\d)/.test(password)) errors.push("One number");
+    return errors;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -29,20 +38,27 @@ const PasswordChangeForm = () => {
       return;
     }
 
-    if (passwords.newPassword.length < 8) {
-      toast.error("Password must be at least 8 characters long");
+    const passwordErrors = validatePassword(passwords.newPassword);
+    if (passwordErrors.length > 0) {
+      toast.error(`Password must have: ${passwordErrors.join(", ")}`);
       return;
     }
 
     setLoading(true);
     
     try {
+      console.log('🔐 Updating user password...');
+      
       const { error } = await supabase.auth.updateUser({
         password: passwords.newPassword
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Password update error:', error);
+        throw error;
+      }
 
+      console.log('✅ Password updated successfully');
       toast.success("Password updated successfully");
       setPasswords({
         currentPassword: "",
@@ -50,6 +66,7 @@ const PasswordChangeForm = () => {
         confirmPassword: ""
       });
     } catch (error: any) {
+      console.error('❌ Failed to update password:', error);
       toast.error(error.message || "Failed to update password");
     } finally {
       setLoading(false);
@@ -69,6 +86,11 @@ const PasswordChangeForm = () => {
       [field]: !prev[field]
     }));
   };
+
+  const newPasswordErrors = validatePassword(passwords.newPassword);
+  const isFormValid = passwords.newPassword === passwords.confirmPassword && 
+                     newPasswordErrors.length === 0 && 
+                     passwords.newPassword.length > 0;
 
   return (
     <Card>
@@ -127,6 +149,26 @@ const PasswordChangeForm = () => {
                 {showPasswords.new ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </Button>
             </div>
+            {passwords.newPassword && (
+              <div className="text-xs text-gray-500 space-y-1 mt-2">
+                <div className="flex items-center gap-1">
+                  <CheckCircle className={`h-3 w-3 ${passwords.newPassword.length >= 8 ? 'text-green-500' : 'text-gray-300'}`} />
+                  <span>At least 8 characters</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <CheckCircle className={`h-3 w-3 ${/(?=.*[a-z])/.test(passwords.newPassword) ? 'text-green-500' : 'text-gray-300'}`} />
+                  <span>One lowercase letter</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <CheckCircle className={`h-3 w-3 ${/(?=.*[A-Z])/.test(passwords.newPassword) ? 'text-green-500' : 'text-gray-300'}`} />
+                  <span>One uppercase letter</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <CheckCircle className={`h-3 w-3 ${/(?=.*\d)/.test(passwords.newPassword) ? 'text-green-500' : 'text-gray-300'}`} />
+                  <span>One number</span>
+                </div>
+              </div>
+            )}
           </div>
 
           <div>
@@ -158,7 +200,7 @@ const PasswordChangeForm = () => {
 
           <Button 
             type="submit" 
-            disabled={loading || passwords.newPassword !== passwords.confirmPassword}
+            disabled={loading || !isFormValid}
             className="w-full bg-khrate-500 hover:bg-khrate-600"
           >
             {loading ? "Updating..." : "Update Password"}

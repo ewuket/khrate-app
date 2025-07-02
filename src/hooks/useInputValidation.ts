@@ -1,118 +1,114 @@
 
-import { useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-
-interface ValidationResult {
-  isValid: boolean;
-  error?: string;
-}
+import { useState } from 'react';
 
 export const useInputValidation = () => {
-  const [isValidating, setIsValidating] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
-  const validateEmail = useCallback(async (email: string): Promise<ValidationResult> => {
-    setIsValidating(true);
+  const validateEmail = async (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     
-    try {
-      // First do client-side basic validation
-      if (!email || email.trim() === '') {
-        return { isValid: false, error: 'Email is required' };
-      }
-
-      // Use the database validation function
-      const { data, error } = await supabase.rpc('validate_email_format', { email });
-      
-      if (error) {
-        console.error('Email validation error:', error);
-        return { isValid: false, error: 'Email validation failed' };
-      }
-      
-      if (!data) {
-        return { isValid: false, error: 'Please enter a valid email address' };
-      }
-      
-      return { isValid: true };
-    } catch (error) {
-      console.error('Email validation error:', error);
-      return { isValid: false, error: 'Email validation failed' };
-    } finally {
-      setIsValidating(false);
+    if (!email) {
+      return { isValid: false, error: 'Email is required' };
     }
-  }, []);
-
-  const validatePhoneNumber = useCallback(async (phone: string): Promise<ValidationResult> => {
-    setIsValidating(true);
     
-    try {
-      if (!phone || phone.trim() === '') {
-        return { isValid: false, error: 'Phone number is required' };
-      }
-
-      // Use the database validation function
-      const { data, error } = await supabase.rpc('validate_phone_number', { phone });
-      
-      if (error) {
-        console.error('Phone validation error:', error);
-        return { isValid: false, error: 'Phone validation failed' };
-      }
-      
-      if (!data) {
-        return { isValid: false, error: 'Please enter a valid Rwanda phone number' };
-      }
-      
-      return { isValid: true };
-    } catch (error) {
-      console.error('Phone validation error:', error);
-      return { isValid: false, error: 'Phone validation failed' };
-    } finally {
-      setIsValidating(false);
+    if (!emailRegex.test(email)) {
+      return { isValid: false, error: 'Please enter a valid email address' };
     }
-  }, []);
-
-  const sanitizeTextInput = useCallback(async (text: string, maxLength = 255): Promise<string> => {
-    try {
-      if (!text) return '';
-      
-      // Use the database sanitization function
-      const { data, error } = await supabase.rpc('sanitize_text_input', { 
-        input_text: text, 
-        max_length: maxLength 
-      });
-      
-      if (error) {
-        console.error('Text sanitization error:', error);
-        // Fallback to basic client-side sanitization
-        return text.trim().slice(0, maxLength).replace(/[<>"'&]/g, '');
-      }
-      
-      return data || '';
-    } catch (error) {
-      console.error('Text sanitization error:', error);
-      // Fallback to basic client-side sanitization
-      return text.trim().slice(0, maxLength).replace(/[<>"'&]/g, '');
+    
+    if (email.length > 100) {
+      return { isValid: false, error: 'Email is too long' };
     }
-  }, []);
+    
+    return { isValid: true, error: null };
+  };
 
-  const validateRequired = useCallback((value: string, fieldName: string): ValidationResult => {
-    if (!value || value.trim() === '') {
-      return { isValid: false, error: `${fieldName} is required` };
+  const sanitizeTextInput = async (input: string, maxLength: number = 255) => {
+    if (!input) return '';
+    
+    // Trim whitespace
+    let sanitized = input.trim();
+    
+    // Limit length
+    if (sanitized.length > maxLength) {
+      sanitized = sanitized.substring(0, maxLength);
     }
-    return { isValid: true };
-  }, []);
+    
+    // Basic XSS protection - remove potentially dangerous characters
+    sanitized = sanitized.replace(/[<>'"&]/g, '');
+    
+    return sanitized;
+  };
 
-  const validateMinLength = useCallback((value: string, minLength: number, fieldName: string): ValidationResult => {
-    if (value.length < minLength) {
-      return { isValid: false, error: `${fieldName} must be at least ${minLength} characters` };
+  const validatePassword = (password: string) => {
+    const errors = [];
+    
+    if (!password) {
+      return { isValid: false, errors: ['Password is required'] };
     }
-    return { isValid: true };
-  }, []);
+    
+    if (password.length < 8) {
+      errors.push('Password must be at least 8 characters long');
+    }
+    
+    if (!/(?=.*[a-z])/.test(password)) {
+      errors.push('Password must contain at least one lowercase letter');
+    }
+    
+    if (!/(?=.*[A-Z])/.test(password)) {
+      errors.push('Password must contain at least one uppercase letter');
+    }
+    
+    if (!/(?=.*\d)/.test(password)) {
+      errors.push('Password must contain at least one number');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  };
+
+  const validatePhoneNumber = (phone: string) => {
+    if (!phone) return { isValid: true, error: null }; // Phone is optional
+    
+    // Remove all non-numeric characters except +
+    const cleanPhone = phone.replace(/[^\d+]/g, '');
+    
+    // Basic phone validation (allowing international formats)
+    if (cleanPhone.length < 10 || cleanPhone.length > 15) {
+      return { isValid: false, error: 'Please enter a valid phone number' };
+    }
+    
+    return { isValid: true, error: null };
+  };
+
+  const setFieldError = (field: string, error: string) => {
+    setValidationErrors(prev => ({
+      ...prev,
+      [field]: error
+    }));
+  };
+
+  const clearFieldError = (field: string) => {
+    setValidationErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[field];
+      return newErrors;
+    });
+  };
+
+  const clearAllErrors = () => {
+    setValidationErrors({});
+  };
 
   return {
+    validationErrors,
     validateEmail,
-    validatePhoneNumber,
     sanitizeTextInput,
-    validateRequired,
-    validateMinLength,
-    isValidating
+    validatePassword,
+    validatePhoneNumber,
+    setFieldError,
+    clearFieldError,
+    clearAllErrors
   };
 };

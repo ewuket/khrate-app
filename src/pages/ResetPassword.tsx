@@ -24,25 +24,60 @@ const ResetPassword = () => {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        console.log('Checking reset session...');
+        console.log('🔍 Checking reset session...');
+        
+        // Check for hash fragments (email confirmation tokens)
+        const hashFragment = window.location.hash;
+        if (hashFragment) {
+          const params = new URLSearchParams(hashFragment.substring(1));
+          const accessToken = params.get('access_token');
+          const refreshToken = params.get('refresh_token');
+          const type = params.get('type');
+          
+          if (accessToken && refreshToken && type === 'recovery') {
+            console.log('✅ Valid reset token found in URL');
+            
+            // Set the session manually
+            const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken
+            });
+            
+            if (sessionError) {
+              console.error('❌ Session error:', sessionError);
+              toast.error('Invalid or expired reset link');
+              navigate('/', { replace: true });
+              return;
+            }
+            
+            if (sessionData.session) {
+              setIsValidToken(true);
+              setCheckingToken(false);
+              return;
+            }
+          }
+        }
+
+        // Fallback: check current session
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Error checking session:', error);
+          console.error('❌ Error checking session:', error);
           toast.error('Invalid or expired reset link');
           navigate('/', { replace: true });
           return;
         }
 
         if (session) {
-          console.log('Valid reset session found');
+          console.log('✅ Valid reset session found');
           setIsValidToken(true);
         } else {
-          toast.error('Invalid or expired reset link');
+          console.log('❌ No valid session found');
+          toast.error('Invalid or expired reset link. Please request a new password reset.');
           navigate('/', { replace: true });
         }
       } catch (error) {
-        console.error('Error in reset password flow:', error);
+        console.error('❌ Error in reset password flow:', error);
         toast.error('Something went wrong');
         navigate('/', { replace: true });
       } finally {
@@ -85,16 +120,19 @@ const ResetPassword = () => {
 
     setLoading(true);
     try {
+      console.log('🔐 Updating password...');
+      
       const { error } = await supabase.auth.updateUser({
         password: password
       });
 
       if (error) {
-        console.error('Error updating password:', error);
+        console.error('❌ Error updating password:', error);
         toast.error(error.message || 'Failed to update password');
         return;
       }
 
+      console.log('✅ Password updated successfully');
       toast.success('Password updated successfully!');
       
       // Sign out and redirect to home
@@ -102,7 +140,7 @@ const ResetPassword = () => {
       navigate('/', { replace: true });
       
     } catch (error: any) {
-      console.error('Password update error:', error);
+      console.error('❌ Password update error:', error);
       toast.error('Failed to update password');
     } finally {
       setLoading(false);
