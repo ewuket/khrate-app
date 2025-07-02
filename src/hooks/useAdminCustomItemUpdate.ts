@@ -8,13 +8,32 @@ export const useAdminCustomItemUpdate = () => {
 
   return useMutation({
     mutationFn: async (itemData: any) => {
-      console.log('Updating custom item with data:', itemData);
+      console.log('🔄 Updating custom item with data:', itemData);
       
       const { id, ...updateData } = itemData;
       
-      if (!id) {
-        throw new Error('Item ID is required for update');
+      if (!id || typeof id !== 'number') {
+        throw new Error('Valid item ID is required for update');
       }
+
+      // First, check if the item exists
+      const { data: existingItem, error: checkError } = await supabase
+        .from('custom_buy_items')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('❌ Error checking item existence:', checkError);
+        throw new Error(`Database error: ${checkError.message}`);
+      }
+
+      if (!existingItem) {
+        console.error('❌ Item not found with ID:', id);
+        throw new Error(`Item with ID ${id} not found`);
+      }
+
+      console.log('✅ Found existing item:', existingItem);
 
       // Clean and validate the data before update
       const cleanUpdateData = {
@@ -38,25 +57,21 @@ export const useAdminCustomItemUpdate = () => {
         throw new Error('Price must be a valid positive number');
       }
 
-      console.log('Updating item with clean data:', cleanUpdateData);
+      console.log('📝 Updating item with clean data:', cleanUpdateData);
 
       const { data, error } = await supabase
         .from('custom_buy_items')
         .update(cleanUpdateData)
         .eq('id', id)
         .select()
-        .maybeSingle();
+        .single();
 
       if (error) {
-        console.error('Error updating custom item:', error);
+        console.error('❌ Error updating custom item:', error);
         throw new Error(`Database error: ${error.message}`);
       }
 
-      if (!data) {
-        throw new Error('Item not found or no changes were made');
-      }
-
-      console.log('Custom item updated successfully:', data);
+      console.log('✅ Custom item updated successfully:', data);
       return data;
     },
     onSuccess: () => {
@@ -64,7 +79,7 @@ export const useAdminCustomItemUpdate = () => {
       toast.success('Custom item updated successfully!');
     },
     onError: (error: any) => {
-      console.error('Error updating custom item:', error);
+      console.error('❌ Error updating custom item:', error);
       toast.error(error.message || 'Failed to update custom item. Please check your data and try again.');
     }
   });
