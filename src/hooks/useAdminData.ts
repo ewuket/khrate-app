@@ -94,8 +94,9 @@ export const useAdminData = () => {
         throw new Error(`Orders fetch failed: ${error.message}`);
       }
 
-      const formattedOrders = (data || []).map(order => ({
+      const formattedOrders: AdminOrder[] = (data || []).map(order => ({
         ...order,
+        items: Array.isArray(order.items) ? order.items : [],
         user_profile: order.user_profiles || {
           full_name: 'Guest User',
           email: 'guest@example.com',

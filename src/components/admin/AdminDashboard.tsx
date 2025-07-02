@@ -106,10 +106,7 @@ const AdminDashboard = () => {
                 onUpdateOrderStatus={handleUpdateOrderStatus}
                 onUpdatePaymentStatus={handleUpdatePaymentStatus}
               />
-              <AdminBundlesList 
-                onToggleFeatured={handleToggleBundleFeatured}
-                onToggleActive={handleToggleBundleActive}
-              />
+              <AdminBundlesList />
             </div>
           </TabsContent>
 
@@ -122,22 +119,15 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="bundles">
-            <AdminBundleManagement 
-              onToggleFeatured={handleToggleBundleFeatured}
-              onToggleActive={handleToggleBundleActive}
-            />
+            <AdminBundleManagement />
           </TabsContent>
 
           <TabsContent value="custom-items">
-            <AdminCustomItemsManagement 
-              onToggleActive={handleToggleCustomItemActive}
-            />
+            <AdminCustomItemsManagement />
           </TabsContent>
 
           <TabsContent value="groups">
-            <AdminGroupBuyingManagement 
-              onToggleFeatured={handleToggleGroupFeatured}
-            />
+            <AdminGroupBuyingManagement />
           </TabsContent>
 
           <TabsContent value="notifications">

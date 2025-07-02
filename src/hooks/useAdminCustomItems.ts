@@ -12,7 +12,7 @@ export const useAdminCustomItems = () => {
   const createMutation = useAdminCustomItemCreate();
   const updateMutation = useAdminCustomItemUpdate();
   const deleteMutation = useAdminCustomItemDelete();
-  const toggleMutation = useAdminCustomItemToggle();
+  const { toggleActiveCustomItem, isToggling } = useAdminCustomItemToggle();
 
   return {
     customItems,
@@ -21,10 +21,10 @@ export const useAdminCustomItems = () => {
     createCustomItem: createMutation.mutateAsync,
     updateCustomItem: updateMutation.mutateAsync,
     deleteCustomItem: deleteMutation.mutateAsync,
-    toggleActiveCustomItem: toggleMutation.mutateAsync,
+    toggleActiveCustomItem,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
-    isToggling: toggleMutation.isPending,
+    isToggling: !!isToggling,
   };
 };

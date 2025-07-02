@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bell, CheckCircle, Trash2, MarkAsRead } from "lucide-react";
+import { Bell, CheckCircle, Trash2, Check } from "lucide-react";
 import { useAdminNotifications } from "@/hooks/useAdminNotifications";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -98,7 +98,7 @@ const AdminNotifications = () => {
               onClick={markAllAsRead}
               className="flex items-center gap-2"
             >
-              <MarkAsRead className="h-4 w-4" />
+              <Check className="h-4 w-4" />
               Mark All Read
             </Button>
           )}
