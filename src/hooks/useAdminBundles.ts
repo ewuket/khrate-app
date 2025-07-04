@@ -50,10 +50,9 @@ export const useAdminBundles = () => {
   } = useQuery({
     queryKey: ['admin-bundles'],
     queryFn: async (): Promise<AdminBundle[]> => {
-      console.log('Fetching bundles for admin...');
+      console.log('🔄 Fetching bundles for admin...');
 
       try {
-        // Direct query without RLS complications
         const { data: bundlesData, error: bundlesError } = await supabase
           .from('bundles')
           .select(`
@@ -63,18 +62,17 @@ export const useAdminBundles = () => {
           .order('created_at', { ascending: false });
 
         if (bundlesError) {
-          console.error('Error fetching bundles:', bundlesError);
+          console.error('❌ Error fetching bundles:', bundlesError);
           throw new Error(`Database error: ${bundlesError.message}`);
         }
 
-        console.log('Successfully fetched bundles:', bundlesData?.length || 0);
+        console.log('✅ Successfully fetched bundles:', bundlesData?.length || 0);
         
         if (!bundlesData || bundlesData.length === 0) {
-          console.warn('No bundles found in database');
+          console.warn('⚠️ No bundles found in database');
           return [];
         }
 
-        // Transform data to include both bundle_items and items for backward compatibility
         const transformedBundles = bundlesData.map(bundle => ({
           ...bundle,
           items: bundle.bundle_items || []
@@ -82,7 +80,7 @@ export const useAdminBundles = () => {
 
         return transformedBundles;
       } catch (error) {
-        console.error('Failed to fetch bundles:', error);
+        console.error('❌ Failed to fetch bundles:', error);
         throw error;
       }
     },
@@ -92,7 +90,7 @@ export const useAdminBundles = () => {
 
   const createBundleMutation = useMutation({
     mutationFn: async (bundleData: BundleFormData) => {
-      console.log('Creating bundle:', bundleData);
+      console.log('🔄 Creating bundle:', bundleData);
 
       const { bundle_items, ...bundleInfo } = bundleData;
 
@@ -100,11 +98,15 @@ export const useAdminBundles = () => {
         .from('bundles')
         .insert([bundleInfo])
         .select()
-        .single();
+        .maybeSingle();
 
       if (bundleError) {
-        console.error('Error creating bundle:', bundleError);
+        console.error('❌ Error creating bundle:', bundleError);
         throw bundleError;
+      }
+
+      if (!newBundle) {
+        throw new Error('Failed to create bundle - no data returned');
       }
 
       if (bundle_items && bundle_items.length > 0) {
@@ -118,7 +120,7 @@ export const useAdminBundles = () => {
           .insert(itemsToInsert);
 
         if (itemsError) {
-          console.error('Error creating bundle items:', itemsError);
+          console.error('❌ Error creating bundle items:', itemsError);
           throw itemsError;
         }
       }
@@ -131,7 +133,7 @@ export const useAdminBundles = () => {
       toast.success('Bundle created successfully!');
     },
     onError: (error: any) => {
-      console.error('Error creating bundle:', error);
+      console.error('❌ Error creating bundle:', error);
       toast.error(`Failed to create bundle: ${error.message}`);
     }
   });
@@ -144,86 +146,66 @@ export const useAdminBundles = () => {
         throw new Error('Valid bundle ID is required for update');
       }
 
-      // First, check if the bundle exists
-      const { data: existingBundle, error: checkError } = await supabase
-        .from('bundles')
-        .select('*')
-        .eq('id', id)
-        .maybeSingle();
+      try {
+        // Use the new safe update function
+        const { data, error } = await supabase.rpc('update_bundle_safe', {
+          bundle_id: id,
+          bundle_data: bundleData
+        });
 
-      if (checkError) {
-        console.error('❌ Error checking bundle existence:', checkError);
-        throw new Error(`Database error: ${checkError.message}`);
-      }
-
-      if (!existingBundle) {
-        console.error('❌ Bundle not found with ID:', id);
-        throw new Error(`Bundle with ID ${id} not found`);
-      }
-
-      console.log('✅ Found existing bundle:', existingBundle);
-
-      const { bundle_items, ...bundleInfo } = bundleData;
-
-      // Prepare update data with explicit timestamp
-      const updateData = {
-        ...bundleInfo,
-        updated_at: new Date().toISOString()
-      };
-
-      console.log('📝 Update data prepared:', updateData);
-
-      // Update the bundle
-      const { data: updatedBundle, error: bundleError } = await supabase
-        .from('bundles')
-        .update(updateData)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (bundleError) {
-        console.error('❌ Error updating bundle:', bundleError);
-        throw new Error(`Failed to update bundle: ${bundleError.message}`);
-      }
-
-      console.log('✅ Bundle updated successfully:', updatedBundle);
-
-      // Handle bundle items update if provided
-      if (bundle_items !== undefined) {
-        console.log('🔄 Updating bundle items...');
-        
-        // Delete existing items
-        const { error: deleteError } = await supabase
-          .from('bundle_items')
-          .delete()
-          .eq('bundle_id', id);
-
-        if (deleteError) {
-          console.error('❌ Error deleting existing bundle items:', deleteError);
-          throw new Error(`Failed to update bundle items: ${deleteError.message}`);
+        if (error) {
+          console.error('❌ Error updating bundle:', error);
+          throw new Error(`Database error: ${error.message}`);
         }
 
-        // Insert new items if any
-        if (bundle_items.length > 0) {
-          const itemsToInsert = bundle_items.map(item => ({
-            ...item,
-            bundle_id: id
-          }));
+        if (!data || data.length === 0) {
+          throw new Error('Bundle not found or no changes were made');
+        }
 
-          const { error: itemsError } = await supabase
+        const updatedBundle = data[0];
+        console.log('✅ Bundle updated successfully:', updatedBundle);
+
+        // Handle bundle items update if provided
+        const { bundle_items } = bundleData;
+        if (bundle_items !== undefined) {
+          console.log('🔄 Updating bundle items...');
+          
+          // Delete existing items
+          const { error: deleteError } = await supabase
             .from('bundle_items')
-            .insert(itemsToInsert);
+            .delete()
+            .eq('bundle_id', id);
 
-          if (itemsError) {
-            console.error('❌ Error inserting new bundle items:', itemsError);
-            throw new Error(`Failed to update bundle items: ${itemsError.message}`);
+          if (deleteError) {
+            console.error('❌ Error deleting existing bundle items:', deleteError);
+            throw new Error(`Failed to update bundle items: ${deleteError.message}`);
           }
 
-          console.log('✅ Bundle items updated successfully');
-        }
-      }
+          // Insert new items if any
+          if (bundle_items.length > 0) {
+            const itemsToInsert = bundle_items.map(item => ({
+              ...item,
+              bundle_id: id
+            }));
 
-      return updatedBundle;
+            const { error: itemsError } = await supabase
+              .from('bundle_items')
+              .insert(itemsToInsert);
+
+            if (itemsError) {
+              console.error('❌ Error inserting new bundle items:', itemsError);
+              throw new Error(`Failed to update bundle items: ${itemsError.message}`);
+            }
+
+            console.log('✅ Bundle items updated successfully');
+          }
+        }
+
+        return updatedBundle;
+      } catch (error: any) {
+        console.error('❌ Bundle update failed:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-bundles'] });
@@ -238,7 +220,7 @@ export const useAdminBundles = () => {
 
   const deleteBundleMutation = useMutation({
     mutationFn: async (bundleId: number) => {
-      console.log('Deleting bundle:', bundleId);
+      console.log('🔄 Deleting bundle:', bundleId);
 
       const { error } = await supabase
         .from('bundles')
@@ -246,7 +228,7 @@ export const useAdminBundles = () => {
         .eq('id', bundleId);
 
       if (error) {
-        console.error('Error deleting bundle:', error);
+        console.error('❌ Error deleting bundle:', error);
         throw error;
       }
 
@@ -258,7 +240,7 @@ export const useAdminBundles = () => {
       toast.success('Bundle deleted successfully!');
     },
     onError: (error: any) => {
-      console.error('Error deleting bundle:', error);
+      console.error('❌ Error deleting bundle:', error);
       toast.error(`Failed to delete bundle: ${error.message}`);
     }
   });

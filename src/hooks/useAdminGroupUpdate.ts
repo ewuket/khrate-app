@@ -9,7 +9,7 @@ export const useAdminGroupUpdate = () => {
 
   return useMutation({
     mutationFn: async ({ id, ...groupData }: { id: string } & Partial<GroupFormData>) => {
-      console.log('Updating group:', id, groupData);
+      console.log('🔄 Updating group:', id, groupData);
 
       if (!id) {
         throw new Error('Group ID is required for update');
@@ -23,8 +23,9 @@ export const useAdminGroupUpdate = () => {
       // Add updated timestamp
       cleanData.updated_at = new Date().toISOString();
 
-      console.log('Updating group with clean data:', cleanData);
+      console.log('📝 Updating group with clean data:', cleanData);
 
+      // Use maybeSingle instead of single to avoid "multiple rows" error
       const { data: updatedGroup, error: groupError } = await supabase
         .from('group_sessions')
         .update(cleanData)
@@ -33,7 +34,7 @@ export const useAdminGroupUpdate = () => {
         .maybeSingle();
 
       if (groupError) {
-        console.error('Error updating group:', groupError);
+        console.error('❌ Error updating group:', groupError);
         throw new Error(`Database error: ${groupError.message}`);
       }
 
@@ -41,7 +42,7 @@ export const useAdminGroupUpdate = () => {
         throw new Error('Group not found or no changes were made');
       }
 
-      console.log('Group updated successfully:', updatedGroup);
+      console.log('✅ Group updated successfully:', updatedGroup);
       return updatedGroup;
     },
     onSuccess: () => {
@@ -51,7 +52,7 @@ export const useAdminGroupUpdate = () => {
       toast.success('Group updated successfully!');
     },
     onError: (error: any) => {
-      console.error('Error updating group:', error);
+      console.error('❌ Error updating group:', error);
       toast.error(error.message || 'Failed to update group');
     }
   });

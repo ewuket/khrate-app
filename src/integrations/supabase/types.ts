@@ -613,6 +613,10 @@ export type Database = {
           avg_group_size: number
         }[]
       }
+      get_current_user_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_custom_items_count: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -679,6 +683,37 @@ export type Database = {
       sanitize_text_input: {
         Args: { input_text: string; max_length?: number }
         Returns: string
+      }
+      update_bundle_safe: {
+        Args: { bundle_id: number; bundle_data: Json }
+        Returns: {
+          id: number
+          title: string
+          description: string
+          price: number
+          original_price: number
+          image_url: string
+          is_featured: boolean
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }[]
+      }
+      update_custom_item_safe: {
+        Args: { item_id: number; item_data: Json }
+        Returns: {
+          id: number
+          name: string
+          description: string
+          price: number
+          unit: string
+          category: string
+          stock_quantity: number
+          image_url: string
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }[]
       }
       validate_email_format: {
         Args: { email: string }

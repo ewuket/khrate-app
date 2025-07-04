@@ -17,26 +17,24 @@ export const useAdminCustomItemToggle = () => {
       const newActiveStatus = !is_active;
       console.log('🔄 Toggling custom item active status:', id, 'from', is_active, 'to', newActiveStatus);
       
-      const { data, error } = await supabase
-        .from('custom_buy_items')
-        .update({ 
-          is_active: newActiveStatus,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id)
-        .select()
-        .maybeSingle();
+      // Use the safe update function for consistency
+      const { data, error } = await supabase.rpc('update_custom_item_safe', {
+        item_id: id,
+        item_data: { 
+          is_active: newActiveStatus
+        }
+      });
 
       if (error) {
         console.error('❌ Error toggling custom item status:', error);
         throw new Error(`Database error: ${error.message}`);
       }
 
-      if (!data) {
+      if (!data || data.length === 0) {
         throw new Error('Item not found or no changes were made');
       }
 
-      console.log('✅ Custom item status updated successfully:', data);
+      console.log('✅ Custom item status updated successfully:', data[0]);
       toast.success(`Item ${newActiveStatus ? 'activated' : 'deactivated'} successfully`);
       
       return true;
