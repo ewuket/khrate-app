@@ -24,7 +24,7 @@ export const useCustomBuyItems = () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('🔄 Fetching active custom buy items for user side...');
+      console.log('🔄 Fetching ACTIVE custom buy items for users...');
       
       // Test database connection first
       const { data: testConnection, error: connectionError } = await supabase
@@ -39,10 +39,11 @@ export const useCustomBuyItems = () => {
       
       console.log('✅ Database connection successful for custom items');
       
+      // Users should only see ACTIVE items
       const { data, error } = await supabase
         .from('custom_buy_items')
         .select('*')
-        .eq('is_active', true)
+        .eq('is_active', true) // Only active items for users
         .order('category', { ascending: true })
         .order('name', { ascending: true });
 
@@ -51,11 +52,11 @@ export const useCustomBuyItems = () => {
         throw new Error(`Failed to fetch custom items: ${error.message}`);
       }
 
-      console.log('✅ Raw custom items data from Supabase:', data);
-      console.log('📊 Number of active custom items fetched:', data?.length || 0);
+      console.log('✅ Raw active custom items data from Supabase:', data);
+      console.log('📊 Number of active custom items fetched for users:', data?.length || 0);
       
       if (!data || data.length === 0) {
-        console.warn('⚠️ No custom items found in database');
+        console.warn('⚠️ No active custom items found in database');
         setItems([]);
         setError(null);
         return;

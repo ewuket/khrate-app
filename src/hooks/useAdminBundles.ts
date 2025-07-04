@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -50,9 +49,21 @@ export const useAdminBundles = () => {
   } = useQuery({
     queryKey: ['admin-bundles'],
     queryFn: async (): Promise<AdminBundle[]> => {
-      console.log('🔄 Fetching bundles for admin...');
+      console.log('🔄 Fetching ALL bundles for admin (active and inactive)...');
+
+      // Check admin authentication
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Authentication required');
+      }
+
+      const { data: adminCheck } = await supabase.rpc('is_admin_user');
+      if (!adminCheck) {
+        throw new Error('Admin access required');
+      }
 
       try {
+        // Admin should see ALL bundles (both active and inactive)
         const { data: bundlesData, error: bundlesError } = await supabase
           .from('bundles')
           .select(`
@@ -66,7 +77,13 @@ export const useAdminBundles = () => {
           throw new Error(`Database error: ${bundlesError.message}`);
         }
 
-        console.log('✅ Successfully fetched bundles:', bundlesData?.length || 0);
+        console.log('✅ Successfully fetched ALL bundles for admin:', bundlesData?.length || 0);
+        console.log('📊 Bundle breakdown:', {
+          total: bundlesData?.length || 0,
+          active: bundlesData?.filter(bundle => bundle.is_active).length || 0,
+          inactive: bundlesData?.filter(bundle => !bundle.is_active).length || 0,
+          featured: bundlesData?.filter(bundle => bundle.is_featured).length || 0
+        });
         
         if (!bundlesData || bundlesData.length === 0) {
           console.warn('⚠️ No bundles found in database');
@@ -147,7 +164,7 @@ export const useAdminBundles = () => {
       }
 
       try {
-        // Use the new safe update function
+        // Use the safe update function
         const { data, error } = await supabase.rpc('update_bundle_safe', {
           bundle_id: id,
           bundle_data: bundleData

@@ -2,9 +2,11 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useStockManagement } from './useStockManagement';
 
 export const useAdminOperations = () => {
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
+  const { reduceStockAfterOrderConfirmation } = useStockManagement();
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     if (!orderId || !newStatus) {
@@ -37,6 +39,18 @@ export const useAdminOperations = () => {
       }
 
       console.log('✅ Order status updated successfully:', data);
+      
+      // If order is confirmed and payment is completed, reduce stock
+      if (newStatus === 'confirmed' && data.payment_status === 'completed') {
+        console.log('🔄 Order confirmed with completed payment - reducing stock...');
+        try {
+          await reduceStockAfterOrderConfirmation(orderId);
+        } catch (stockError) {
+          console.error('❌ Error reducing stock:', stockError);
+          toast.error('Order updated but failed to reduce stock levels');
+        }
+      }
+      
       toast.success(`Order status updated to ${newStatus}`);
       return true;
     } catch (error: any) {
@@ -79,6 +93,18 @@ export const useAdminOperations = () => {
       }
 
       console.log('✅ Payment status updated successfully:', data);
+      
+      // If payment is completed and order is confirmed, reduce stock
+      if (newPaymentStatus === 'completed' && data.status === 'confirmed') {
+        console.log('🔄 Payment completed for confirmed order - reducing stock...');
+        try {
+          await reduceStockAfterOrderConfirmation(orderId);
+        } catch (stockError) {
+          console.error('❌ Error reducing stock:', stockError);
+          toast.error('Payment updated but failed to reduce stock levels');
+        }
+      }
+      
       toast.success(`Payment status updated to ${newPaymentStatus}`);
       return true;
     } catch (error: any) {
@@ -140,7 +166,7 @@ export const useAdminOperations = () => {
     
     try {
       const newActiveStatus = !isActive;
-      console.log('🔄 Toggling bundle active status:', bundleId, 'to', newActiveStatus);
+      console.log('🔄 Toggling bundle active status:', bundleId, 'from', isActive, 'to', newActiveStatus);
       
       const { data, error } = await supabase.rpc('update_bundle_safe', {
         bundle_id: bundleId,
@@ -159,7 +185,14 @@ export const useAdminOperations = () => {
       }
 
       console.log('✅ Bundle active status updated successfully:', data[0]);
-      toast.success(`Bundle ${newActiveStatus ? 'activated' : 'deactivated'} successfully`);
+      
+      // Show different messages for activation vs deactivation
+      if (newActiveStatus) {
+        toast.success('Bundle activated - now visible to users');
+      } else {
+        toast.success('Bundle deactivated - hidden from users but still visible in admin panel');
+      }
+      
       return true;
     } catch (error: any) {
       console.error('❌ Failed to toggle bundle active status:', error);
@@ -223,7 +256,7 @@ export const useAdminOperations = () => {
     
     try {
       const newActiveStatus = !isActive;
-      console.log('🔄 Toggling custom item active status:', itemId, 'to', newActiveStatus);
+      console.log('🔄 Toggling custom item active status:', itemId, 'from', isActive, 'to', newActiveStatus);
       
       const { data, error } = await supabase.rpc('update_custom_item_safe', {
         item_id: itemId,
@@ -242,7 +275,14 @@ export const useAdminOperations = () => {
       }
 
       console.log('✅ Custom item status updated successfully:', data[0]);
-      toast.success(`Item ${newActiveStatus ? 'activated' : 'deactivated'} successfully`);
+      
+      // Show different messages for activation vs deactivation
+      if (newActiveStatus) {
+        toast.success('Item activated - now visible to users');
+      } else {
+        toast.success('Item deactivated - hidden from users but still visible in admin panel');
+      }
+      
       return true;
     } catch (error: any) {
       console.error('❌ Failed to toggle custom item status:', error);

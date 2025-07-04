@@ -29,7 +29,7 @@ export const useBundles = () => {
   return useQuery({
     queryKey: ['bundles'],
     queryFn: async (): Promise<Bundle[]> => {
-      console.log('Fetching bundles...');
+      console.log('🔄 Fetching ACTIVE bundles for users...');
       
       const { data, error } = await supabase
         .from('bundles')
@@ -37,15 +37,15 @@ export const useBundles = () => {
           *,
           bundle_items (*)
         `)
-        .eq('is_active', true)
+        .eq('is_active', true) // Only show active bundles to users
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching bundles:', error);
+        console.error('❌ Error fetching user bundles:', error);
         throw error;
       }
 
-      console.log('Fetched bundles:', data?.length);
+      console.log('✅ Fetched active bundles for users:', data?.length || 0);
       return data || [];
     },
     retry: 1,
@@ -57,7 +57,7 @@ export const useFeaturedBundles = () => {
   return useQuery({
     queryKey: ['featured-bundles'],
     queryFn: async (): Promise<Bundle[]> => {
-      console.log('Fetching featured bundles...');
+      console.log('🔄 Fetching featured bundles for users...');
       
       const { data, error } = await supabase
         .from('bundles')
@@ -65,17 +65,17 @@ export const useFeaturedBundles = () => {
           *,
           bundle_items (*)
         `)
-        .eq('is_active', true)
-        .eq('is_featured', true)
+        .eq('is_active', true) // Only active bundles
+        .eq('is_featured', true) // Only featured bundles
         .order('created_at', { ascending: false })
         .limit(6);
 
       if (error) {
-        console.error('Error fetching featured bundles:', error);
+        console.error('❌ Error fetching featured bundles:', error);
         throw error;
       }
 
-      console.log('Fetched featured bundles:', data?.length);
+      console.log('✅ Fetched featured bundles for users:', data?.length || 0);
       return data || [];
     },
     retry: 1,

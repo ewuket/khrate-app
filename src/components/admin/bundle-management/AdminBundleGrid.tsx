@@ -18,6 +18,14 @@ const AdminBundleGrid: React.FC<AdminBundleGridProps> = ({
   onToggleActive,
   onToggleFeatured
 }) => {
+  // Show ALL bundles (active and inactive) in admin view
+  console.log('🔍 Rendering admin bundle grid with bundles:', bundles.length);
+  console.log('📊 Bundle status breakdown:', {
+    active: bundles.filter(b => b.is_active).length,
+    inactive: bundles.filter(b => !b.is_active).length,
+    featured: bundles.filter(b => b.is_featured).length
+  });
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {bundles.map((bundle) => (
