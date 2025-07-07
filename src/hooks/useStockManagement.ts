@@ -9,6 +9,13 @@ export interface StockItem {
   name: string;
 }
 
+interface OrderItem {
+  product_id: number;
+  product_name: string;
+  quantity: number;
+  type: 'custom_item' | 'bundle';
+}
+
 export const useStockManagement = () => {
   const reduceStockAfterOrderConfirmation = async (orderId: string) => {
     try {
@@ -31,10 +38,18 @@ export const useStockManagement = () => {
         return;
       }
 
-      console.log('📦 Processing items for stock reduction:', order.items);
+      // Type guard to ensure items is an array
+      const orderItems = Array.isArray(order.items) ? order.items as OrderItem[] : [];
+      
+      if (orderItems.length === 0) {
+        console.warn('⚠️ Order items is not a valid array');
+        return;
+      }
+
+      console.log('📦 Processing items for stock reduction:', orderItems);
 
       // Process each item in the order
-      for (const item of order.items) {
+      for (const item of orderItems) {
         if (item.type === 'custom_item') {
           // Reduce stock for custom items
           await reduceCustomItemStock(item.product_id, item.quantity);
@@ -152,7 +167,7 @@ export const useStockManagement = () => {
     }
   };
 
-  const checkStockAvailability = async (items: any[]) => {
+  const checkStockAvailability = async (items: OrderItem[]) => {
     try {
       console.log('🔍 Checking stock availability for items:', items);
 
