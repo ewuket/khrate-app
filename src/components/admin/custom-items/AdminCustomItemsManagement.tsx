@@ -5,6 +5,7 @@ import AdminCustomItemsHeader from "./AdminCustomItemsHeader";
 import AdminCustomItemsGrid from "./AdminCustomItemsGrid";
 import AdminCustomItemsLoadingState from "./AdminCustomItemsLoadingState";
 import AdminCustomItemsEmptyState from "./AdminCustomItemsEmptyState";
+import AdminCustomItemsDebugInfo from "./AdminCustomItemsDebugInfo";
 import AdminCustomItemForm from "./AdminCustomItemForm";
 
 const AdminCustomItemsManagement = () => {
@@ -21,6 +22,7 @@ const AdminCustomItemsManagement = () => {
   
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [error, setError] = useState(null);
 
   const handleCreateItem = () => {
     setEditingItem(null);
@@ -35,10 +37,14 @@ const AdminCustomItemsManagement = () => {
   const handleDeleteItem = async (itemId) => {
     if (window.confirm('Are you sure you want to delete this item?')) {
       try {
+        setError(null);
         await deleteCustomItem(itemId);
-        refetch(); // Refresh the list
+        setTimeout(() => {
+          refetch(); // Force refresh after deletion
+        }, 1000);
       } catch (error) {
         console.error('Error deleting item:', error);
+        setError(error);
       }
     }
   };
@@ -46,10 +52,14 @@ const AdminCustomItemsManagement = () => {
   const handleToggleActive = async (itemId, isActive) => {
     console.log('Toggling item status:', itemId, 'from', isActive, 'to', !isActive);
     try {
-      await toggleActiveCustomItem({ id: itemId, is_active: !isActive });
-      refetch(); // Refresh the list
+      setError(null);
+      await toggleActiveCustomItem({ id: itemId, is_active: isActive });
+      setTimeout(() => {
+        refetch(); // Force refresh after toggle
+      }, 1000);
     } catch (error) {
       console.error('Error toggling item status:', error);
+      setError(error);
     }
   };
 
@@ -60,16 +70,25 @@ const AdminCustomItemsManagement = () => {
 
   const handleFormSubmit = async (itemData) => {
     try {
+      setError(null);
       if (editingItem) {
         await updateCustomItem({ id: editingItem.id, ...itemData });
       } else {
         await createCustomItem(itemData);
       }
       handleFormClose();
-      refetch(); // Refresh the list
+      setTimeout(() => {
+        refetch(); // Force refresh after creation/update
+      }, 1000);
     } catch (error) {
       console.error('Form submission error:', error);
+      setError(error);
     }
+  };
+
+  const handleRefresh = () => {
+    setError(null);
+    refetch();
   };
 
   if (isLoading) {
@@ -80,8 +99,16 @@ const AdminCustomItemsManagement = () => {
     <div className="space-y-6">
       <AdminCustomItemsHeader
         onCreateItem={handleCreateItem}
-        onRefresh={refetch}
+        onRefresh={handleRefresh}
         isRefreshing={isLoading}
+      />
+
+      {/* Debug Information */}
+      <AdminCustomItemsDebugInfo
+        items={customItems}
+        isLoading={isLoading}
+        error={error}
+        onRefresh={handleRefresh}
       />
 
       {customItems.length === 0 ? (

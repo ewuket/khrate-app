@@ -2,131 +2,66 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useStockManagement } from './useStockManagement';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const useAdminOperations = () => {
-  const [isUpdating, setIsUpdating] = useState<string | null>(null);
-  const { reduceStockAfterOrderConfirmation } = useStockManagement();
+  const [isToggling, setIsToggling] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const updateOrderStatus = async (orderId: string, newStatus: string) => {
-    if (!orderId || !newStatus) {
-      toast.error('Order ID and status are required');
-      return false;
-    }
-
-    setIsUpdating(`order-${orderId}`);
-    
-    try {
-      console.log('🔄 Updating order status:', orderId, 'to', newStatus);
-      
-      const { data, error } = await supabase
-        .from('orders')
-        .update({ 
-          status: newStatus,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', orderId)
-        .select()
-        .maybeSingle();
-
-      if (error) {
-        console.error('❌ Error updating order status:', error);
-        throw new Error(`Database error: ${error.message}`);
-      }
-
-      if (!data) {
-        throw new Error('Order not found or no changes were made');
-      }
-
-      console.log('✅ Order status updated successfully:', data);
-      
-      // If order is confirmed and payment is completed, reduce stock
-      if (newStatus === 'confirmed' && data.payment_status === 'completed') {
-        console.log('🔄 Order confirmed with completed payment - reducing stock...');
-        try {
-          await reduceStockAfterOrderConfirmation(orderId);
-        } catch (stockError) {
-          console.error('❌ Error reducing stock:', stockError);
-          toast.error('Order updated but failed to reduce stock levels');
-        }
-      }
-      
-      toast.success(`Order status updated to ${newStatus}`);
-      return true;
-    } catch (error: any) {
-      console.error('❌ Failed to update order status:', error);
-      toast.error(error.message || 'Failed to update order status');
-      return false;
-    } finally {
-      setIsUpdating(null);
-    }
-  };
-
-  const updatePaymentStatus = async (orderId: string, newPaymentStatus: string) => {
-    if (!orderId || !newPaymentStatus) {
-      toast.error('Order ID and payment status are required');
-      return false;
-    }
-
-    setIsUpdating(`payment-${orderId}`);
-    
-    try {
-      console.log('🔄 Updating payment status:', orderId, 'to', newPaymentStatus);
-      
-      const { data, error } = await supabase
-        .from('orders')
-        .update({ 
-          payment_status: newPaymentStatus,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', orderId)
-        .select()
-        .maybeSingle();
-
-      if (error) {
-        console.error('❌ Error updating payment status:', error);
-        throw new Error(`Database error: ${error.message}`);
-      }
-
-      if (!data) {
-        throw new Error('Order not found or no changes were made');
-      }
-
-      console.log('✅ Payment status updated successfully:', data);
-      
-      // If payment is completed and order is confirmed, reduce stock
-      if (newPaymentStatus === 'completed' && data.status === 'confirmed') {
-        console.log('🔄 Payment completed for confirmed order - reducing stock...');
-        try {
-          await reduceStockAfterOrderConfirmation(orderId);
-        } catch (stockError) {
-          console.error('❌ Error reducing stock:', stockError);
-          toast.error('Payment updated but failed to reduce stock levels');
-        }
-      }
-      
-      toast.success(`Payment status updated to ${newPaymentStatus}`);
-      return true;
-    } catch (error: any) {
-      console.error('❌ Failed to update payment status:', error);
-      toast.error(error.message || 'Failed to update payment status');
-      return false;
-    } finally {
-      setIsUpdating(null);
-    }
-  };
-
-  const toggleBundleFeatured = async (bundleId: number, isFeatured: boolean) => {
+  const toggleBundleActive = async (bundleId: number, currentActiveStatus: boolean) => {
     if (!bundleId) {
-      toast.error('Bundle ID is required');
-      return false;
+      throw new Error('Bundle ID is required');
     }
 
-    setIsUpdating(`bundle-featured-${bundleId}`);
+    setIsToggling(`bundle-${bundleId}`);
     
     try {
-      const newFeaturedStatus = !isFeatured;
-      console.log('🔄 Toggling bundle featured status:', bundleId, 'to', newFeaturedStatus);
+      const newActiveStatus = !currentActiveStatus;
+      console.log('🔄 Toggling bundle active status:', bundleId, 'from', currentActiveStatus, 'to', newActiveStatus);
+      
+      const { data, error } = await supabase.rpc('update_bundle_safe', {
+        bundle_id: bundleId,
+        bundle_data: { 
+          is_active: newActiveStatus
+        }
+      });
+
+      if (error) {
+        console.error('❌ Error toggling bundle status:', error);
+        throw new Error(`Database error: ${error.message}`);
+      }
+
+      if (!data || data.length === 0) {
+        throw new Error('Bundle not found or no changes were made');
+      }
+
+      console.log('✅ Bundle status updated successfully:', data[0]);
+      toast.success(`Bundle ${newActiveStatus ? 'activated' : 'deactivated'} successfully`);
+      
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ['admin-bundles'] });
+      queryClient.invalidateQueries({ queryKey: ['bundles'] });
+      
+      return true;
+    } catch (error: any) {
+      console.error('❌ Failed to toggle bundle status:', error);
+      toast.error(error.message || 'Failed to update bundle status');
+      return false;
+    } finally {
+      setIsToggling(null);
+    }
+  };
+
+  const toggleBundleFeatured = async (bundleId: number, currentFeaturedStatus: boolean) => {
+    if (!bundleId) {
+      throw new Error('Bundle ID is required');
+    }
+
+    setIsToggling(`bundle-featured-${bundleId}`);
+    
+    try {
+      const newFeaturedStatus = !currentFeaturedStatus;
+      console.log('🔄 Toggling bundle featured status:', bundleId, 'from', currentFeaturedStatus, 'to', newFeaturedStatus);
       
       const { data, error } = await supabase.rpc('update_bundle_safe', {
         bundle_id: bundleId,
@@ -146,79 +81,85 @@ export const useAdminOperations = () => {
 
       console.log('✅ Bundle featured status updated successfully:', data[0]);
       toast.success(`Bundle ${newFeaturedStatus ? 'featured' : 'unfeatured'} successfully`);
+      
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ['admin-bundles'] });
+      queryClient.invalidateQueries({ queryKey: ['bundles'] });
+      queryClient.invalidateQueries({ queryKey: ['featured-bundles'] });
+      
       return true;
     } catch (error: any) {
       console.error('❌ Failed to toggle bundle featured status:', error);
       toast.error(error.message || 'Failed to update bundle featured status');
       return false;
     } finally {
-      setIsUpdating(null);
+      setIsToggling(null);
     }
   };
 
-  const toggleBundleActive = async (bundleId: number, isActive: boolean) => {
-    if (!bundleId) {
-      toast.error('Bundle ID is required');
-      return false;
+  const toggleGroupActive = async (groupId: string, currentActiveStatus: string) => {
+    if (!groupId) {
+      throw new Error('Group ID is required');
     }
 
-    setIsUpdating(`bundle-active-${bundleId}`);
+    setIsToggling(`group-${groupId}`);
     
     try {
-      const newActiveStatus = !isActive;
-      console.log('🔄 Toggling bundle active status:', bundleId, 'from', isActive, 'to', newActiveStatus);
+      const newStatus = currentActiveStatus === 'active' ? 'inactive' : 'active';
+      console.log('🔄 Toggling group status:', groupId, 'from', currentActiveStatus, 'to', newStatus);
       
-      const { data, error } = await supabase.rpc('update_bundle_safe', {
-        bundle_id: bundleId,
-        bundle_data: { 
-          is_active: newActiveStatus
-        }
-      });
+      const { data, error } = await supabase
+        .from('group_sessions')
+        .update({ 
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', groupId)
+        .select()
+        .maybeSingle();
 
       if (error) {
-        console.error('❌ Error toggling bundle active status:', error);
+        console.error('❌ Error toggling group status:', error);
         throw new Error(`Database error: ${error.message}`);
       }
 
-      if (!data || data.length === 0) {
-        throw new Error('Bundle not found or no changes were made');
+      if (!data) {
+        throw new Error('Group not found or no changes were made');
       }
 
-      console.log('✅ Bundle active status updated successfully:', data[0]);
+      console.log('✅ Group status updated successfully:', data);
+      toast.success(`Group ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
       
-      // Show different messages for activation vs deactivation
-      if (newActiveStatus) {
-        toast.success('Bundle activated - now visible to users');
-      } else {
-        toast.success('Bundle deactivated - hidden from users but still visible in admin panel');
-      }
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ['admin-groups'] });
+      queryClient.invalidateQueries({ queryKey: ['featured-groups'] });
       
       return true;
     } catch (error: any) {
-      console.error('❌ Failed to toggle bundle active status:', error);
-      toast.error(error.message || 'Failed to update bundle active status');
+      console.error('❌ Failed to toggle group status:', error);
+      toast.error(error.message || 'Failed to update group status');
       return false;
     } finally {
-      setIsUpdating(null);
+      setIsToggling(null);
     }
   };
 
-  const toggleGroupFeatured = async (groupId: string, isFeatured: boolean) => {
+  const toggleGroupFeatured = async (groupId: string, currentFeaturedStatus: boolean) => {
     if (!groupId) {
-      toast.error('Group ID is required');
-      return false;
+      throw new Error('Group ID is required');
     }
 
-    setIsUpdating(`group-featured-${groupId}`);
+    setIsToggling(`group-featured-${groupId}`);
     
     try {
-      const newFeaturedStatus = !isFeatured;
-      console.log('🔄 Toggling group featured status:', groupId, 'to', newFeaturedStatus);
+      const newFeaturedStatus = !currentFeaturedStatus;
+      console.log('🔄 Toggling group featured status:', groupId, 'from', currentFeaturedStatus, 'to', newFeaturedStatus);
       
       const { data, error } = await supabase
         .from('group_sessions')
         .update({ 
           is_featured: newFeaturedStatus,
+          featured_at: newFeaturedStatus ? new Date().toISOString() : null,
           updated_at: new Date().toISOString()
         })
         .eq('id', groupId)
@@ -236,70 +177,26 @@ export const useAdminOperations = () => {
 
       console.log('✅ Group featured status updated successfully:', data);
       toast.success(`Group ${newFeaturedStatus ? 'featured' : 'unfeatured'} successfully`);
+      
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ['admin-groups'] });
+      queryClient.invalidateQueries({ queryKey: ['featured-groups'] });
+      
       return true;
     } catch (error: any) {
       console.error('❌ Failed to toggle group featured status:', error);
       toast.error(error.message || 'Failed to update group featured status');
       return false;
     } finally {
-      setIsUpdating(null);
-    }
-  };
-
-  const toggleCustomItemActive = async (itemId: number, isActive: boolean) => {
-    if (!itemId) {
-      toast.error('Item ID is required');
-      return false;
-    }
-
-    setIsUpdating(`item-active-${itemId}`);
-    
-    try {
-      const newActiveStatus = !isActive;
-      console.log('🔄 Toggling custom item active status:', itemId, 'from', isActive, 'to', newActiveStatus);
-      
-      const { data, error } = await supabase.rpc('update_custom_item_safe', {
-        item_id: itemId,
-        item_data: { 
-          is_active: newActiveStatus
-        }
-      });
-
-      if (error) {
-        console.error('❌ Error toggling custom item status:', error);
-        throw new Error(`Database error: ${error.message}`);
-      }
-
-      if (!data || data.length === 0) {
-        throw new Error('Item not found or no changes were made');
-      }
-
-      console.log('✅ Custom item status updated successfully:', data[0]);
-      
-      // Show different messages for activation vs deactivation
-      if (newActiveStatus) {
-        toast.success('Item activated - now visible to users');
-      } else {
-        toast.success('Item deactivated - hidden from users but still visible in admin panel');
-      }
-      
-      return true;
-    } catch (error: any) {
-      console.error('❌ Failed to toggle custom item status:', error);
-      toast.error(error.message || 'Failed to update item status');
-      return false;
-    } finally {
-      setIsUpdating(null);
+      setIsToggling(null);
     }
   };
 
   return {
-    updateOrderStatus,
-    updatePaymentStatus,
-    toggleBundleFeatured,
     toggleBundleActive,
+    toggleBundleFeatured,
+    toggleGroupActive,
     toggleGroupFeatured,
-    toggleCustomItemActive,
-    isUpdating: !!isUpdating
+    isToggling
   };
 };
