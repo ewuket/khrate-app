@@ -8,6 +8,116 @@ export const useAdminOperations = () => {
   const [isToggling, setIsToggling] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
+  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    try {
+      console.log('🔄 Updating order status:', orderId, 'to', newStatus);
+      
+      const { data, error } = await supabase
+        .from('orders')
+        .update({ 
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Error updating order status:', error);
+        throw new Error(`Database error: ${error.message}`);
+      }
+
+      console.log('✅ Order status updated successfully:', data);
+      toast.success(`Order status updated to ${newStatus}`);
+      
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      
+      return true;
+    } catch (error: any) {
+      console.error('❌ Failed to update order status:', error);
+      toast.error(error.message || 'Failed to update order status');
+      return false;
+    }
+  };
+
+  const updatePaymentStatus = async (orderId: string, newPaymentStatus: string) => {
+    try {
+      console.log('🔄 Updating payment status:', orderId, 'to', newPaymentStatus);
+      
+      const { data, error } = await supabase
+        .from('orders')
+        .update({ 
+          payment_status: newPaymentStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Error updating payment status:', error);
+        throw new Error(`Database error: ${error.message}`);
+      }
+
+      console.log('✅ Payment status updated successfully:', data);
+      toast.success(`Payment status updated to ${newPaymentStatus}`);
+      
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      
+      return true;
+    } catch (error: any) {
+      console.error('❌ Failed to update payment status:', error);
+      toast.error(error.message || 'Failed to update payment status');
+      return false;
+    }
+  };
+
+  const toggleCustomItemActive = async (itemId: number, currentActiveStatus: boolean) => {
+    if (!itemId) {
+      throw new Error('Item ID is required');
+    }
+
+    setIsToggling(`custom-item-${itemId}`);
+    
+    try {
+      const newActiveStatus = !currentActiveStatus;
+      console.log('🔄 Toggling custom item active status:', itemId, 'from', currentActiveStatus, 'to', newActiveStatus);
+      
+      const { data, error } = await supabase.rpc('update_custom_item_safe', {
+        item_id: itemId,
+        item_data: { 
+          is_active: newActiveStatus
+        }
+      });
+
+      if (error) {
+        console.error('❌ Error toggling custom item status:', error);
+        throw new Error(`Database error: ${error.message}`);
+      }
+
+      if (!data || data.length === 0) {
+        throw new Error('Item not found or no changes were made');
+      }
+
+      console.log('✅ Custom item status updated successfully:', data[0]);
+      toast.success(`Item ${newActiveStatus ? 'activated' : 'deactivated'} successfully`);
+      
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ['admin-custom-items'] });
+      queryClient.invalidateQueries({ queryKey: ['custom-buy-items'] });
+      
+      return true;
+    } catch (error: any) {
+      console.error('❌ Failed to toggle custom item status:', error);
+      toast.error(error.message || 'Failed to update item status');
+      return false;
+    } finally {
+      setIsToggling(null);
+    }
+  };
+
   const toggleBundleActive = async (bundleId: number, currentActiveStatus: boolean) => {
     if (!bundleId) {
       throw new Error('Bundle ID is required');
@@ -193,10 +303,13 @@ export const useAdminOperations = () => {
   };
 
   return {
+    updateOrderStatus,
+    updatePaymentStatus,
     toggleBundleActive,
     toggleBundleFeatured,
     toggleGroupActive,
     toggleGroupFeatured,
+    toggleCustomItemActive,
     isToggling
   };
 };
