@@ -38,8 +38,10 @@ export const useStockManagement = () => {
         return;
       }
 
-      // Type guard to ensure items is an array
-      const orderItems = Array.isArray(order.items) ? order.items as OrderItem[] : [];
+      // Type guard and safe conversion from Json[] to OrderItem[]
+      const orderItems = Array.isArray(order.items) 
+        ? (order.items as unknown as OrderItem[])
+        : [];
       
       if (orderItems.length === 0) {
         console.warn('⚠️ Order items is not a valid array');
