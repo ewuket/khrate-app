@@ -28,8 +28,12 @@ export const useAdminOrderOperations = () => {
       console.log('✅ Order status updated successfully:', data);
       toast.success(`Order status updated to ${newStatus}`);
       
-      // Invalidate relevant queries
+      // Invalidate relevant queries to refresh stats
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+      
+      // Trigger a refresh of admin data
+      window.dispatchEvent(new CustomEvent('refresh-admin-stats'));
       
       return true;
     } catch (error: any) {
@@ -61,8 +65,12 @@ export const useAdminOrderOperations = () => {
       console.log('✅ Payment status updated successfully:', data);
       toast.success(`Payment status updated to ${newPaymentStatus}`);
       
-      // Invalidate relevant queries
+      // Invalidate relevant queries to refresh stats and revenue
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+      
+      // Trigger a refresh of admin data to update revenue calculations
+      window.dispatchEvent(new CustomEvent('refresh-admin-stats'));
       
       return true;
     } catch (error: any) {

@@ -18,19 +18,18 @@ export const useAdminData = () => {
 
   const fetchStats = async () => {
     try {
-      console.log('📊 Fetching admin statistics...');
+      console.log('📊 Fetching admin statistics using new function...');
       
-      // Get orders stats
-      const { data: ordersData, error: ordersError } = await supabase
-        .from('orders')
-        .select('total_amount, status');
+      // Use the new admin stats function for accurate calculations
+      const { data: orderStats, error: orderStatsError } = await supabase
+        .rpc('get_admin_order_stats');
         
-      if (ordersError) {
-        console.error('❌ Orders fetch failed:', ordersError);
-        throw new Error(`Orders fetch failed: ${ordersError.message}`);
+      if (orderStatsError) {
+        console.error('❌ Order stats fetch failed:', orderStatsError);
+        throw new Error(`Order stats fetch failed: ${orderStatsError.message}`);
       }
 
-      // Get users count from user_profiles instead of auth.users
+      // Get users count from user_profiles
       const { count: usersCount, error: usersError } = await supabase
         .from('user_profiles')
         .select('*', { count: 'exact', head: true });
@@ -51,15 +50,13 @@ export const useAdminData = () => {
         throw new Error(`Groups fetch failed: ${groupsError.message}`);
       }
 
-      // Calculate stats
-      const totalOrders = ordersData?.length || 0;
-      const pendingOrders = ordersData?.filter(order => order.status === 'pending').length || 0;
-      const totalRevenue = ordersData?.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0) || 0;
-
+      // Use the stats from the database function
+      const statsFromFunction = orderStats?.[0];
+      
       const calculatedStats = {
-        total_orders: totalOrders,
-        pending_orders: pendingOrders,
-        total_revenue: totalRevenue,
+        total_orders: Number(statsFromFunction?.total_orders || 0),
+        pending_orders: Number(statsFromFunction?.pending_orders || 0),
+        total_revenue: Number(statsFromFunction?.total_revenue || 0),
         active_groups: groupsCount || 0,
         total_users: usersCount || 0
       };

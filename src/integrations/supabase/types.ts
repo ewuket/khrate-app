@@ -618,6 +618,14 @@ export type Database = {
           avg_group_size: number
         }[]
       }
+      get_admin_order_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          total_orders: number
+          pending_orders: number
+          total_revenue: number
+        }[]
+      }
       get_current_user_id: {
         Args: Record<PropertyKey, never>
         Returns: string
