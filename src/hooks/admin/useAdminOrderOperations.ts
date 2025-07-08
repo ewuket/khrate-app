@@ -31,6 +31,7 @@ export const useAdminOrderOperations = () => {
       // Invalidate relevant queries to refresh stats
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-order-source-stats'] });
       
       // Trigger a refresh of admin data
       window.dispatchEvent(new CustomEvent('refresh-admin-stats'));
@@ -68,6 +69,7 @@ export const useAdminOrderOperations = () => {
       // Invalidate relevant queries to refresh stats and revenue
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-order-source-stats'] });
       
       // Trigger a refresh of admin data to update revenue calculations
       window.dispatchEvent(new CustomEvent('refresh-admin-stats'));

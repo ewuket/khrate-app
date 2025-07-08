@@ -626,6 +626,17 @@ export type Database = {
           total_revenue: number
         }[]
       }
+      get_admin_order_stats_by_source: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          bundle_orders: number
+          custom_orders: number
+          group_orders: number
+          bundle_revenue: number
+          custom_revenue: number
+          group_revenue: number
+        }[]
+      }
       get_current_user_id: {
         Args: Record<PropertyKey, never>
         Returns: string

@@ -1,3 +1,4 @@
+
 import { Json } from "@/integrations/supabase/types";
 
 export interface AdminUser {
@@ -29,6 +30,7 @@ export interface AdminOrder {
   delivery_date: string | null;
   created_at: string | null;
   phone_number: string | null;
+  guest_email?: string | null;
   user_profile: {
     full_name: string;
     email: string;
@@ -96,4 +98,13 @@ export interface GroupStats {
   completed_groups: number;
   total_members: number;
   avg_group_size: number;
+}
+
+export interface OrderSourceStats {
+  bundle_orders: number;
+  custom_orders: number;
+  group_orders: number;
+  bundle_revenue: number;
+  custom_revenue: number;
+  group_revenue: number;
 }
