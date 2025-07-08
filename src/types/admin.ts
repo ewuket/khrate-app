@@ -1,4 +1,3 @@
-
 import { Json } from "@/integrations/supabase/types";
 
 export interface AdminUser {
@@ -29,6 +28,7 @@ export interface AdminOrder {
   delivery_address: string;
   delivery_date: string | null;
   created_at: string | null;
+  phone_number: string | null;
   user_profile: {
     full_name: string;
     email: string;

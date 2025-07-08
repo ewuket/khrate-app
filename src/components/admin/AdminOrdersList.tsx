@@ -49,6 +49,11 @@ const AdminOrdersList = ({ orders, onUpdateOrderStatus, onUpdatePaymentStatus }:
     }
   };
 
+  const getPhoneNumber = (order: AdminOrder) => {
+    // Priority: user_profile.phone > order.phone_number
+    return order.user_profile?.phone || order.phone_number || null;
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -57,68 +62,66 @@ const AdminOrdersList = ({ orders, onUpdateOrderStatus, onUpdatePaymentStatus }:
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {orders.slice(0, 10).map((order) => (
-            <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex-1 space-y-1">
-                <div className="flex items-center gap-2">
-                  <p className="font-medium">
-                    {order.user_profile?.full_name || order.user_profile?.email || 'Guest'}
+          {orders.slice(0, 10).map((order) => {
+            const phoneNumber = getPhoneNumber(order);
+            
+            return (
+              <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex-1 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium">
+                      {order.user_profile?.full_name || order.user_profile?.email || 'Guest'}
+                    </p>
+                    {phoneNumber && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handlePhoneCall(phoneNumber)}
+                        className="h-6 w-6 p-0 hover:bg-green-100"
+                        title={`Call ${phoneNumber}`}
+                      >
+                        <Phone className="h-3 w-3 text-green-600" />
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {formatCurrency(order.total_amount)} • {new Date(order.created_at || '').toLocaleDateString()}
                   </p>
-                  {order.user_profile?.phone && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handlePhoneCall(order.user_profile.phone!)}
-                      className="h-6 w-6 p-0 hover:bg-green-100"
-                      title={`Call ${order.user_profile.phone}`}
-                    >
-                      <Phone className="h-3 w-3 text-green-600" />
-                    </Button>
+                  {phoneNumber && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Phone className="h-3 w-3" />
+                      {phoneNumber}
+                    </p>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  {formatCurrency(order.total_amount)} • {new Date(order.created_at || '').toLocaleDateString()}
-                </p>
-                {order.user_profile?.phone && (
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Phone className="h-3 w-3" />
-                    {order.user_profile.phone}
-                  </p>
-                )}
-                {order.phone_number && !order.user_profile?.phone && (
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Phone className="h-3 w-3" />
-                    {order.phone_number}
-                  </p>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant={getStatusBadgeVariant(order.status)}>
-                  {getStatusIcon(order.status)}
-                  <span className="ml-1">{order.status}</span>
-                </Badge>
-                <Badge variant={getStatusBadgeVariant(order.payment_status)}>
-                  {order.payment_status}
-                </Badge>
-                <div className="flex gap-1">
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => onUpdateOrderStatus(order.id, order.status)}
-                  >
-                    <Edit className="h-3 w-3" />
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => onUpdatePaymentStatus(order.id, order.payment_status)}
-                  >
-                    <DollarSign className="h-3 w-3" />
-                  </Button>
+                <div className="flex items-center gap-2">
+                  <Badge variant={getStatusBadgeVariant(order.status)}>
+                    {getStatusIcon(order.status)}
+                    <span className="ml-1">{order.status}</span>
+                  </Badge>
+                  <Badge variant={getStatusBadgeVariant(order.payment_status)}>
+                    {order.payment_status}
+                  </Badge>
+                  <div className="flex gap-1">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => onUpdateOrderStatus(order.id, order.status)}
+                    >
+                      <Edit className="h-3 w-3" />
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => onUpdatePaymentStatus(order.id, order.payment_status)}
+                    >
+                      <DollarSign className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           {orders.length === 0 && (
             <p className="text-center text-muted-foreground py-4">No orders found</p>
           )}
