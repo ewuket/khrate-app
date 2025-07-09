@@ -95,8 +95,8 @@ export const useAdminData = () => {
         ...order,
         items: Array.isArray(order.items) ? order.items : [],
         user_profile: order.user_profiles || {
-          full_name: order.guest_email || 'Guest User',
-          email: order.guest_email || 'guest@example.com',
+          full_name: 'Guest User',
+          email: 'guest@example.com',
           phone: null
         }
       }));
