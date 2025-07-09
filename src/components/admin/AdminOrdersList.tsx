@@ -1,133 +1,115 @@
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, DollarSign, CheckCircle, Clock, AlertTriangle, Phone } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
 import { AdminOrder } from "@/types/admin";
+import { statusColors } from "@/types/order";
+import { DollarSign, Edit, Eye } from "lucide-react";
+import AdminOrderStatusDialog from "./AdminOrderStatusDialog";
 
 interface AdminOrdersListProps {
   orders: AdminOrder[];
-  onUpdateOrderStatus: (orderId: string, currentStatus: string) => void;
-  onUpdatePaymentStatus: (orderId: string, currentStatus: string) => void;
+  onUpdateOrderStatus: (orderId: string, newStatus: string) => Promise<boolean>;
+  onUpdatePaymentStatus: (orderId: string, newStatus: string) => Promise<boolean>;
 }
 
-const AdminOrdersList = ({ orders, onUpdateOrderStatus, onUpdatePaymentStatus }: AdminOrdersListProps) => {
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'completed':
-      case 'delivered':
-        return 'default';
-      case 'pending':
-        return 'secondary';
-      case 'confirmed':
-        return 'outline';
-      case 'cancelled':
-        return 'destructive';
-      default:
-        return 'secondary';
-    }
+const AdminOrdersList = ({ 
+  orders, 
+  onUpdateOrderStatus, 
+  onUpdatePaymentStatus 
+}: AdminOrdersListProps) => {
+  const [statusDialog, setStatusDialog] = useState<{
+    open: boolean;
+    orderId: string;
+    currentStatus: string;
+    type: 'order' | 'payment';
+  }>({
+    open: false,
+    orderId: '',
+    currentStatus: '',
+    type: 'order'
+  });
+
+  const handleOpenStatusDialog = (orderId: string, currentStatus: string, type: 'order' | 'payment') => {
+    setStatusDialog({
+      open: true,
+      orderId,
+      currentStatus,
+      type
+    });
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed':
-      case 'delivered':
-        return <CheckCircle className="h-3 w-3" />;
-      case 'pending':
-        return <Clock className="h-3 w-3" />;
-      case 'cancelled':
-        return <AlertTriangle className="h-3 w-3" />;
-      default:
-        return <Clock className="h-3 w-3" />;
+  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
+    if (statusDialog.type === 'order') {
+      return await onUpdateOrderStatus(orderId, newStatus);
+    } else {
+      return await onUpdatePaymentStatus(orderId, newStatus);
     }
-  };
-
-  const handlePhoneCall = (phoneNumber: string) => {
-    if (phoneNumber) {
-      window.open(`tel:${phoneNumber}`, '_self');
-    }
-  };
-
-  const getPhoneNumber = (order: AdminOrder) => {
-    // Priority: user_profile.phone > order.phone_number
-    return order.user_profile?.phone || order.phone_number || null;
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Recent Orders</CardTitle>
-        <CardDescription>Latest customer orders with contact information</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {orders.slice(0, 10).map((order) => {
-            const phoneNumber = getPhoneNumber(order);
-            
-            return (
-              <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium">
-                      {order.user_profile?.full_name || order.user_profile?.email || 'Guest'}
-                    </p>
-                    {phoneNumber && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handlePhoneCall(phoneNumber)}
-                        className="h-6 w-6 p-0 hover:bg-green-100"
-                        title={`Call ${phoneNumber}`}
-                      >
-                        <Phone className="h-3 w-3 text-green-600" />
-                      </Button>
-                    )}
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Orders</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {orders.length === 0 ? (
+            <p className="text-gray-500 text-center py-8">No orders found</p>
+          ) : (
+            orders.slice(0, 10).map((order) => (
+              <div
+                key={order.id}
+                className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+              >
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2 mb-1">
+                    <span className="font-medium">
+                      {order.user_profile?.full_name || 'Guest User'}
+                    </span>
+                    <Badge className={statusColors[order.status as keyof typeof statusColors]}>
+                      {order.status}
+                    </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    {formatCurrency(order.total_amount)} • {new Date(order.created_at || '').toLocaleDateString()}
+                  <p className="text-sm text-gray-600">
+                    {order.total_amount.toLocaleString()} RWF • {order.items.length} items
                   </p>
-                  {phoneNumber && (
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Phone className="h-3 w-3" />
-                      {phoneNumber}
-                    </p>
-                  )}
+                  <p className="text-xs text-gray-500">
+                    {new Date(order.created_at || '').toLocaleDateString()}
+                  </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant={getStatusBadgeVariant(order.status)}>
-                    {getStatusIcon(order.status)}
-                    <span className="ml-1">{order.status}</span>
-                  </Badge>
-                  <Badge variant={getStatusBadgeVariant(order.payment_status)}>
-                    {order.payment_status}
-                  </Badge>
-                  <div className="flex gap-1">
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => onUpdateOrderStatus(order.id, order.status)}
-                    >
-                      <Edit className="h-3 w-3" />
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => onUpdatePaymentStatus(order.id, order.payment_status)}
-                    >
-                      <DollarSign className="h-3 w-3" />
-                    </Button>
-                  </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleOpenStatusDialog(order.id, order.payment_status, 'payment')}
+                  >
+                    <DollarSign className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleOpenStatusDialog(order.id, order.status, 'order')}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
-            );
-          })}
-          {orders.length === 0 && (
-            <p className="text-center text-muted-foreground py-4">No orders found</p>
+            ))
           )}
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      <AdminOrderStatusDialog
+        open={statusDialog.open}
+        onOpenChange={(open) => setStatusDialog(prev => ({ ...prev, open }))}
+        currentStatus={statusDialog.currentStatus}
+        orderId={statusDialog.orderId}
+        onStatusUpdate={handleStatusUpdate}
+        type={statusDialog.type}
+      />
+    </>
   );
 };
 

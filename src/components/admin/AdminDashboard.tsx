@@ -2,8 +2,9 @@
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAdminData } from "@/hooks/useAdminData";
-import { useAdminOperations } from "@/hooks/useAdminOperations";
 import { useAdminOrderSourceStats } from "@/hooks/useAdminOrderSourceStats";
+import { useAdminDailyStats } from "@/hooks/useAdminDailyStats";
+import { useStockManagement } from "@/hooks/useStockManagement";
 import AdminStatsCards from "./AdminStatsCards";
 import AdminOrdersList from "./AdminOrdersList";
 import AdminOrderManagementStats from "./AdminOrderManagementStats";
@@ -13,11 +14,12 @@ import AdminCustomItemsManagement from "./custom-items/AdminCustomItemsManagemen
 import AdminGroupManagement from "./AdminGroupManagement";
 import { OrderStatus } from "@/types/order";
 import { AdminBundle } from "@/types/admin";
+import { toast } from "sonner";
 
 const AdminDashboard = () => {
   const { stats, orders, bundles, loading, refreshAllData, fetchStats } = useAdminData();
   const { data: orderSourceStats, isLoading: loadingOrderStats } = useAdminOrderSourceStats();
-  const { updateOrderStatus, updatePaymentStatus } = useAdminOperations();
+  const { data: dailyStats } = useAdminDailyStats();
   const [activeTab, setActiveTab] = useState("overview");
   const [showBundleForm, setShowBundleForm] = useState(false);
   const [editingBundle, setEditingBundle] = useState<AdminBundle | null>(null);
@@ -35,31 +37,71 @@ const AdminDashboard = () => {
     };
   }, [fetchStats]);
 
-  const handleUpdateOrderStatus = async (orderId: string, currentStatus: string) => {
-    const statusOptions: OrderStatus[] = ['pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'];
-    const newStatus = prompt(`Current status: ${currentStatus}\nEnter new status (${statusOptions.join(', ')}):`, currentStatus);
-    
-    if (newStatus && statusOptions.includes(newStatus as OrderStatus) && newStatus !== currentStatus) {
-      const success = await updateOrderStatus(orderId, newStatus);
-      if (success) {
-        setTimeout(() => {
-          refreshAllData();
-        }, 1000);
+  const handleUpdateOrderStatus = async (orderId: string, newStatus: string): Promise<boolean> => {
+    try {
+      console.log('🔄 Updating order status:', orderId, 'to', newStatus);
+      
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId);
+
+      if (error) {
+        console.error('❌ Error updating order status:', error);
+        toast.error('Failed to update order status');
+        return false;
       }
+
+      console.log('✅ Order status updated successfully');
+      toast.success(`Order status updated to ${newStatus}`);
+      
+      // Refresh data
+      setTimeout(() => {
+        refreshAllData();
+      }, 1000);
+      
+      return true;
+    } catch (error: any) {
+      console.error('❌ Failed to update order status:', error);
+      toast.error('Failed to update order status');
+      return false;
     }
   };
 
-  const handleUpdatePaymentStatus = async (orderId: string, currentStatus: string) => {
-    const paymentOptions = ['pending', 'completed', 'failed'];
-    const newStatus = prompt(`Current payment status: ${currentStatus}\nEnter new status (${paymentOptions.join(', ')}):`, currentStatus);
-    
-    if (newStatus && paymentOptions.includes(newStatus) && newStatus !== currentStatus) {
-      const success = await updatePaymentStatus(orderId, newStatus);
-      if (success) {
-        setTimeout(() => {
-          refreshAllData();
-        }, 1000);
+  const handleUpdatePaymentStatus = async (orderId: string, newPaymentStatus: string): Promise<boolean> => {
+    try {
+      console.log('🔄 Updating payment status:', orderId, 'to', newPaymentStatus);
+      
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          payment_status: newPaymentStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId);
+
+      if (error) {
+        console.error('❌ Error updating payment status:', error);
+        toast.error('Failed to update payment status');
+        return false;
       }
+
+      console.log('✅ Payment status updated successfully');
+      toast.success(`Payment status updated to ${newPaymentStatus}`);
+      
+      // Refresh data
+      setTimeout(() => {
+        refreshAllData();
+      }, 1000);
+      
+      return true;
+    } catch (error: any) {
+      console.error('❌ Failed to update payment status:', error);
+      toast.error('Failed to update payment status');
+      return false;
     }
   };
 
@@ -75,9 +117,16 @@ const AdminDashboard = () => {
 
   const handleDeleteBundle = async (bundleId: number) => {
     if (confirm('Are you sure you want to delete this bundle?')) {
-      // Implementation would go here
       console.log('Delete bundle:', bundleId);
     }
+  };
+
+  const handleStatsClick = (type: 'bundle' | 'custom' | 'group' | 'daily') => {
+    console.log('Stats clicked:', type);
+    if (type === 'daily') {
+      console.log('Daily stats:', dailyStats);
+    }
+    // Could open a detailed view modal here
   };
 
   return (
@@ -143,6 +192,7 @@ const AdminDashboard = () => {
                 group_revenue: 0
               }}
               loading={loadingOrderStats}
+              onStatsClick={handleStatsClick}
             />
             <AdminOrdersList 
               orders={orders} 

@@ -369,6 +369,7 @@ export type Database = {
       group_sessions: {
         Row: {
           admin_notes: string | null
+          bundle_items: Json | null
           created_at: string
           discount_percentage: number
           featured_at: string | null
@@ -390,6 +391,7 @@ export type Database = {
         }
         Insert: {
           admin_notes?: string | null
+          bundle_items?: Json | null
           created_at?: string
           discount_percentage?: number
           featured_at?: string | null
@@ -411,6 +413,7 @@ export type Database = {
         }
         Update: {
           admin_notes?: string | null
+          bundle_items?: Json | null
           created_at?: string
           discount_percentage?: number
           featured_at?: string | null
@@ -645,6 +648,17 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      get_daily_order_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          date_created: string
+          bundle_orders: number
+          custom_orders: number
+          group_orders: number
+          total_orders: number
+          total_revenue: number
+        }[]
+      }
       get_featured_groups: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -694,6 +708,16 @@ export type Database = {
           status: string
           join_code: string
           created_at: string
+        }[]
+      }
+      get_low_stock_items: {
+        Args: { threshold?: number }
+        Returns: {
+          id: number
+          name: string
+          stock_quantity: number
+          category: string
+          price: number
         }[]
       }
       is_admin_user: {
