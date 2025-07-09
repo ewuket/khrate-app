@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
 import { useAdminData } from "@/hooks/useAdminData";
 import { useAdminOrderSourceStats } from "@/hooks/useAdminOrderSourceStats";
 import { useAdminDailyStats } from "@/hooks/useAdminDailyStats";
