@@ -18,11 +18,23 @@ import { toast } from "sonner";
 const AdminDashboard = () => {
   const { stats, orders, bundles, loading, refreshAllData, fetchStats } = useAdminData();
   const { data: orderSourceStats, isLoading: loadingOrderStats, refetch: refetchOrderStats } = useAdminOrderSourceStats();
-  const { data: dailyStats } = useAdminDailyStats();
+  const { data: dailyStats, refetch: refetchDailyStats } = useAdminDailyStats();
   const { updateOrderStatus, updatePaymentStatus } = useAdminOrderOperations();
   const [activeTab, setActiveTab] = useState("overview");
   const [showBundleForm, setShowBundleForm] = useState(false);
   const [editingBundle, setEditingBundle] = useState<AdminBundle | null>(null);
+
+  // Auto-refresh data every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log('🔄 Auto-refreshing admin dashboard data...');
+      fetchStats();
+      refetchOrderStats();
+      refetchDailyStats();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [fetchStats, refetchOrderStats, refetchDailyStats]);
 
   // Listen for stats refresh events
   useEffect(() => {
@@ -30,13 +42,14 @@ const AdminDashboard = () => {
       console.log('🔄 Refreshing admin stats due to order update...');
       fetchStats();
       refetchOrderStats();
+      refetchDailyStats();
     };
 
     window.addEventListener('refresh-admin-stats', handleRefreshStats);
     return () => {
       window.removeEventListener('refresh-admin-stats', handleRefreshStats);
     };
-  }, [fetchStats, refetchOrderStats]);
+  }, [fetchStats, refetchOrderStats, refetchDailyStats]);
 
   const handleUpdateOrderStatus = async (orderId: string, newStatus: string): Promise<boolean> => {
     console.log('🔄 Admin dashboard updating order status:', orderId, 'to', newStatus);
@@ -44,11 +57,12 @@ const AdminDashboard = () => {
     const success = await updateOrderStatus(orderId, newStatus);
     
     if (success) {
-      // Force refresh all data after successful update
+      // Immediate refresh of all data
       setTimeout(() => {
         refreshAllData();
         refetchOrderStats();
-      }, 500);
+        refetchDailyStats();
+      }, 100);
     }
     
     return success;
@@ -60,11 +74,12 @@ const AdminDashboard = () => {
     const success = await updatePaymentStatus(orderId, newPaymentStatus);
     
     if (success) {
-      // Force refresh all data after successful update
+      // Immediate refresh of all data
       setTimeout(() => {
         refreshAllData();
         refetchOrderStats();
-      }, 500);
+        refetchDailyStats();
+      }, 100);
     }
     
     return success;

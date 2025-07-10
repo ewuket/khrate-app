@@ -1,6 +1,8 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
-import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { useAuthOperations } from '@/hooks/useAuthOperations';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface AdminUser {
   id: string;
@@ -25,31 +27,119 @@ interface AdminProviderProps {
 }
 
 export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
-  const { isAdmin, isLoading, currentUser } = useAdminAuth();
+  const [adminUser, setAdminUser] = React.useState<AdminUser | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const { signIn, signOut } = useAuthOperations();
 
-  // Convert currentUser to adminUser format when user is admin
-  const adminUser = isAdmin && currentUser ? {
-    id: currentUser.id,
-    email: currentUser.email,
-    role: 'admin',
-    is_active: true,
-    created_at: currentUser.created_at || new Date().toISOString(),
-    updated_at: currentUser.updated_at || new Date().toISOString()
-  } : null;
+  React.useEffect(() => {
+    checkAdminStatus();
 
-  // Placeholder functions for login/logout - these would need proper implementation
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        await checkAdminStatus();
+      } else if (event === 'SIGNED_OUT') {
+        setAdminUser(null);
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const checkAdminStatus = async () => {
+    try {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        setAdminUser(null);
+        setLoading(false);
+        return;
+      }
+
+      console.log('🔍 Checking admin status for user:', user.email);
+      
+      const { data: adminCheck, error } = await supabase.rpc('is_admin_user');
+      
+      if (error) {
+        console.error('❌ Error checking admin status:', error);
+        setAdminUser(null);
+      } else if (adminCheck) {
+        console.log('✅ User is admin:', user.email);
+        setAdminUser({
+          id: user.id,
+          email: user.email || '',
+          role: 'admin',
+          is_active: true,
+          created_at: user.created_at || new Date().toISOString(),
+          updated_at: user.updated_at || new Date().toISOString()
+        });
+      } else {
+        console.log('❌ User is not admin:', user.email);
+        setAdminUser(null);
+      }
+    } catch (error) {
+      console.error('❌ Admin check failed:', error);
+      setAdminUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const loginAsAdmin = async (email: string, password: string): Promise<boolean> => {
-    // This would need to be implemented based on your auth system
-    return false;
+    try {
+      setLoading(true);
+      console.log('🔄 Attempting admin login for:', email);
+      
+      const { data, error } = await signIn(email, password);
+      
+      if (error) {
+        console.error('❌ Login error:', error);
+        toast.error(error.message || 'Login failed');
+        return false;
+      }
+
+      if (data?.user) {
+        console.log('✅ Login successful, checking admin status...');
+        await checkAdminStatus();
+        
+        if (adminUser) {
+          toast.success('Welcome to Admin Dashboard!');
+          return true;
+        } else {
+          toast.error('Access denied. Admin privileges required.');
+          await signOut();
+          return false;
+        }
+      }
+
+      return false;
+    } catch (error: any) {
+      console.error('❌ Login failed:', error);
+      toast.error(error.message || 'Login failed');
+      return false;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const logoutAdmin = async (): Promise<void> => {
-    // This would need to be implemented based on your auth system
+    try {
+      setLoading(true);
+      await signOut();
+      setAdminUser(null);
+      toast.success('Logged out successfully');
+    } catch (error: any) {
+      console.error('❌ Logout failed:', error);
+      toast.error(error.message || 'Logout failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const value: AdminContextType = {
     adminUser,
-    loading: isLoading,
+    loading,
     loginAsAdmin,
     logoutAdmin,
   };
