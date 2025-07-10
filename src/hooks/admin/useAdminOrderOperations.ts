@@ -28,12 +28,13 @@ export const useAdminOrderOperations = () => {
       console.log('✅ Order status updated successfully:', data);
       toast.success(`Order status updated to ${newStatus}`);
       
-      // Invalidate relevant queries to refresh stats
+      // Invalidate ALL relevant queries to refresh stats immediately
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
       queryClient.invalidateQueries({ queryKey: ['admin-order-source-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-daily-stats'] });
       
-      // Trigger a refresh of admin data
+      // Force refresh of admin data
       window.dispatchEvent(new CustomEvent('refresh-admin-stats'));
       
       return true;
@@ -66,12 +67,13 @@ export const useAdminOrderOperations = () => {
       console.log('✅ Payment status updated successfully:', data);
       toast.success(`Payment status updated to ${newPaymentStatus}`);
       
-      // Invalidate relevant queries to refresh stats and revenue
+      // Invalidate ALL relevant queries to refresh stats and revenue calculations
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
       queryClient.invalidateQueries({ queryKey: ['admin-order-source-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-daily-stats'] });
       
-      // Trigger a refresh of admin data to update revenue calculations
+      // Force refresh of admin data to update revenue calculations
       window.dispatchEvent(new CustomEvent('refresh-admin-stats'));
       
       return true;
