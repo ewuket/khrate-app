@@ -1,18 +1,65 @@
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { AdminProvider } from "@/contexts/AdminContext";
+import { CartProvider } from "@/contexts/CartContext";
+import { GroupBuyingProvider } from "@/contexts/GroupBuyingContext";
+import Layout from "@/components/layout/Layout";
+import Index from "@/pages/Index";
+import About from "@/pages/About";
+import Contact from "@/pages/Contact";
+import Bundles from "@/pages/Bundles";
+import CustomBuy from "@/pages/CustomBuy";
+import GroupBuy from "@/pages/GroupBuy";
+import Orders from "@/pages/Orders";
+import Profile from "@/pages/Profile";
+import Terms from "@/pages/Terms";
+import ResetPassword from "@/pages/ResetPassword";
+import AuthCallback from "@/pages/AuthCallback";
+import AdminLogin from "@/pages/AdminLogin";
+import AdminDashboard from "@/pages/AdminDashboard";
+import NotFound from "@/pages/NotFound";
+import "./App.css";
+
+const queryClient = new QueryClient();
+
 function App() {
   return (
-    <div style={{
-      fontFamily: 'Arial, sans-serif',
-      textAlign: 'center',
-      paddingTop: '100px'
-    }}>
-      <h1 style={{ color: '#F25C05', fontSize: '2.5rem' }}>
-        This Website is Temporarily Unavailable
-      </h1>
-      <p style={{ fontSize: '1.2rem' }}>
-        Due to an unpaid invoice, this service has been suspended.
-      </p>
-      <p>Please contact the developer to restore access.</p>
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <AuthProvider>
+          <AdminProvider>
+            <CartProvider>
+              <GroupBuyingProvider>
+                <Toaster />
+                <BrowserRouter>
+                  <Routes>
+                    <Route path="/admin/login" element={<AdminLogin />} />
+                    <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                    <Route path="/auth/callback" element={<AuthCallback />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/*" element={<Layout><Outlet /></Layout>}>
+                      <Route index element={<Index />} />
+                      <Route path="about" element={<About />} />
+                      <Route path="contact" element={<Contact />} />
+                      <Route path="bundles" element={<Bundles />} />
+                      <Route path="custom-buy" element={<CustomBuy />} />
+                      <Route path="group-buy" element={<GroupBuy />} />
+                      <Route path="orders" element={<Orders />} />
+                      <Route path="profile" element={<Profile />} />
+                      <Route path="terms" element={<Terms />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Route>
+                  </Routes>
+                </BrowserRouter>
+              </GroupBuyingProvider>
+            </CartProvider>
+          </AdminProvider>
+        </AuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 }
 
