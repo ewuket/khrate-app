@@ -7,6 +7,7 @@ import { AdminOrder } from "@/types/admin";
 import { statusColors } from "@/types/order";
 import { DollarSign, Edit, Eye } from "lucide-react";
 import AdminOrderStatusDialog from "./AdminOrderStatusDialog";
+import AdminOrderDetailsModal from "./AdminOrderDetailsModal";
 
 interface AdminOrdersListProps {
   orders: AdminOrder[];
@@ -31,6 +32,14 @@ const AdminOrdersList = ({
     type: 'order'
   });
 
+  const [orderDetailsModal, setOrderDetailsModal] = useState<{
+    open: boolean;
+    order: AdminOrder | null;
+  }>({
+    open: false,
+    order: null
+  });
+
   const handleOpenStatusDialog = (orderId: string, currentStatus: string, type: 'order' | 'payment') => {
     setStatusDialog({
       open: true,
@@ -48,6 +57,13 @@ const AdminOrdersList = ({
     }
   };
 
+  const handleViewOrderDetails = (order: AdminOrder) => {
+    setOrderDetailsModal({
+      open: true,
+      order
+    });
+  };
+
   return (
     <>
       <Card>
@@ -61,7 +77,8 @@ const AdminOrdersList = ({
             orders.slice(0, 10).map((order) => (
               <div
                 key={order.id}
-                className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
+                onClick={() => handleViewOrderDetails(order)}
               >
                 <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-1">
@@ -75,24 +92,43 @@ const AdminOrdersList = ({
                   <p className="text-sm text-gray-600">
                     {order.total_amount.toLocaleString()} RWF • {order.items.length} items
                   </p>
-                  <p className="text-xs text-gray-500">
-                    {new Date(order.created_at || '').toLocaleDateString()}
-                  </p>
+                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <span>{new Date(order.created_at || '').toLocaleDateString()}</span>
+                    {order.phone_number && (
+                      <span>Phone: {order.phone_number}</span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleOpenStatusDialog(order.id, order.payment_status, 'payment')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenStatusDialog(order.id, order.payment_status, 'payment');
+                    }}
                   >
                     <DollarSign className="h-4 w-4" />
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleOpenStatusDialog(order.id, order.status, 'order')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenStatusDialog(order.id, order.status, 'order');
+                    }}
                   >
                     <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleViewOrderDetails(order);
+                    }}
+                  >
+                    <Eye className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
@@ -108,6 +144,12 @@ const AdminOrdersList = ({
         orderId={statusDialog.orderId}
         onStatusUpdate={handleStatusUpdate}
         type={statusDialog.type}
+      />
+
+      <AdminOrderDetailsModal
+        open={orderDetailsModal.open}
+        onOpenChange={(open) => setOrderDetailsModal(prev => ({ ...prev, open }))}
+        order={orderDetailsModal.order}
       />
     </>
   );
