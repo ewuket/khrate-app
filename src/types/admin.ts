@@ -28,6 +28,8 @@ export interface AdminOrder {
   payment_status: string;
   delivery_address: string;
   delivery_date: string | null;
+  delivery_time_slot: string | null;
+  payment_method: string;
   created_at: string | null;
   phone_number: string | null;
   guest_email?: string | null;

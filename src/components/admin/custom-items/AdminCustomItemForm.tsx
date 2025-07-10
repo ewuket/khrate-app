@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -123,14 +122,18 @@ const AdminCustomItemForm: React.FC<AdminCustomItemFormProps> = ({
       formData
     });
 
-    const submitData = {
-      ...formData,
+    const submitData: any = {
+      name: formData.name,
+      description: formData.description,
       price: Number(formData.price),
+      unit: formData.unit,
+      category: formData.category,
       stock_quantity: Number(formData.stock_quantity) || 0,
-      image_url: formData.image_url || '/placeholder.svg'
+      image_url: formData.image_url || '/placeholder.svg',
+      is_active: formData.is_active
     };
 
-    if (item) {
+    if (item?.id) {
       submitData.id = item.id;
     }
 
