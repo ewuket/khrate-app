@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { AdminBundle } from '@/types/admin';
@@ -19,7 +18,7 @@ export interface BundleFormData {
   }>;
 }
 
-export { AdminBundle };
+export type { AdminBundle };
 
 export const useAdminBundles = () => {
   const [bundles, setBundles] = useState<AdminBundle[]>([]);

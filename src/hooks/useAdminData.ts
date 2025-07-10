@@ -65,11 +65,12 @@ export const useAdminData = () => {
 
       if (error) throw error;
 
-      const formattedOrders = data?.map(order => ({
+      const formattedOrders: AdminOrder[] = data?.map(order => ({
         ...order,
+        items: Array.isArray(order.items) ? order.items : [],
         user_profile: order.user_profile || {
           full_name: 'Guest User',
-          email: order.guest_email || 'N/A',
+          email: 'N/A',
           phone: order.phone_number || null
         }
       })) || [];
@@ -99,7 +100,8 @@ export const useAdminData = () => {
       const formattedBundles = data?.map(bundle => ({
         ...bundle,
         items: bundle.bundle_items || [],
-        items_count: bundle.bundle_items?.length || 0
+        items_count: bundle.bundle_items?.length || 0,
+        bundle_items: bundle.bundle_items || []
       })) || [];
 
       console.log('✅ Admin bundles loaded:', formattedBundles.length);
