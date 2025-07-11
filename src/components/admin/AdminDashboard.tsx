@@ -1,12 +1,11 @@
 
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
 import { useAdminData } from "@/hooks/useAdminData";
 import { useAdminOrderSourceStats } from "@/hooks/useAdminOrderSourceStats";
 import { useAdminDailyStats } from "@/hooks/useAdminDailyStats";
-import { useAdminOrderOperations } from "@/hooks/admin/useAdminOrderOperations";
-import { useAdminBundleOperations } from "@/hooks/admin/useAdminBundleOperations";
-import { useAdminCustomItemOperations } from "@/hooks/admin/useAdminCustomItemOperations";
+import { useStockManagement } from "@/hooks/useStockManagement";
 import AdminStatsCards from "./AdminStatsCards";
 import AdminOrdersList from "./AdminOrdersList";
 import AdminOrderManagementStats from "./AdminOrderManagementStats";
@@ -14,80 +13,97 @@ import AdminBundlesSidebar from "./AdminBundlesSidebar";
 import AdminBundleManagement from "./AdminBundleManagement";
 import AdminCustomItemsManagement from "./custom-items/AdminCustomItemsManagement";
 import AdminGroupManagement from "./AdminGroupManagement";
-import AdminHeader from "./AdminHeader";
+import { OrderStatus } from "@/types/order";
 import { AdminBundle } from "@/types/admin";
 import { toast } from "sonner";
 
 const AdminDashboard = () => {
   const { stats, orders, bundles, loading, refreshAllData, fetchStats } = useAdminData();
-  const { data: orderSourceStats, isLoading: loadingOrderStats, refetch: refetchOrderStats } = useAdminOrderSourceStats();
-  const { data: dailyStats, refetch: refetchDailyStats } = useAdminDailyStats();
-  const { updateOrderStatus, updatePaymentStatus } = useAdminOrderOperations();
-  const { deleteBundle } = useAdminBundleOperations();
+  const { data: orderSourceStats, isLoading: loadingOrderStats } = useAdminOrderSourceStats();
+  const { data: dailyStats } = useAdminDailyStats();
   const [activeTab, setActiveTab] = useState("overview");
   const [showBundleForm, setShowBundleForm] = useState(false);
   const [editingBundle, setEditingBundle] = useState<AdminBundle | null>(null);
 
-  // Auto-refresh data every 30 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      console.log('🔄 Auto-refreshing admin dashboard data...');
-      fetchStats();
-      refetchOrderStats();
-      refetchDailyStats();
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [fetchStats, refetchOrderStats, refetchDailyStats]);
-
   // Listen for stats refresh events
   useEffect(() => {
     const handleRefreshStats = () => {
-      console.log('🔄 Refreshing admin stats due to data change...');
+      console.log('🔄 Refreshing admin stats due to order update...');
       fetchStats();
-      refetchOrderStats();
-      refetchDailyStats();
-      refreshAllData();
     };
 
     window.addEventListener('refresh-admin-stats', handleRefreshStats);
     return () => {
       window.removeEventListener('refresh-admin-stats', handleRefreshStats);
     };
-  }, [fetchStats, refetchOrderStats, refetchDailyStats, refreshAllData]);
+  }, [fetchStats]);
 
   const handleUpdateOrderStatus = async (orderId: string, newStatus: string): Promise<boolean> => {
-    console.log('🔄 Admin dashboard updating order status:', orderId, 'to', newStatus);
-    
-    const success = await updateOrderStatus(orderId, newStatus);
-    
-    if (success) {
-      // Immediate refresh of all data
+    try {
+      console.log('🔄 Updating order status:', orderId, 'to', newStatus);
+      
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId);
+
+      if (error) {
+        console.error('❌ Error updating order status:', error);
+        toast.error('Failed to update order status');
+        return false;
+      }
+
+      console.log('✅ Order status updated successfully');
+      toast.success(`Order status updated to ${newStatus}`);
+      
+      // Refresh data
       setTimeout(() => {
         refreshAllData();
-        refetchOrderStats();
-        refetchDailyStats();
-      }, 100);
+      }, 1000);
+      
+      return true;
+    } catch (error: any) {
+      console.error('❌ Failed to update order status:', error);
+      toast.error('Failed to update order status');
+      return false;
     }
-    
-    return success;
   };
 
   const handleUpdatePaymentStatus = async (orderId: string, newPaymentStatus: string): Promise<boolean> => {
-    console.log('🔄 Admin dashboard updating payment status:', orderId, 'to', newPaymentStatus);
-    
-    const success = await updatePaymentStatus(orderId, newPaymentStatus);
-    
-    if (success) {
-      // Immediate refresh of all data
+    try {
+      console.log('🔄 Updating payment status:', orderId, 'to', newPaymentStatus);
+      
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          payment_status: newPaymentStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId);
+
+      if (error) {
+        console.error('❌ Error updating payment status:', error);
+        toast.error('Failed to update payment status');
+        return false;
+      }
+
+      console.log('✅ Payment status updated successfully');
+      toast.success(`Payment status updated to ${newPaymentStatus}`);
+      
+      // Refresh data
       setTimeout(() => {
         refreshAllData();
-        refetchOrderStats();
-        refetchDailyStats();
-      }, 100);
+      }, 1000);
+      
+      return true;
+    } catch (error: any) {
+      console.error('❌ Failed to update payment status:', error);
+      toast.error('Failed to update payment status');
+      return false;
     }
-    
-    return success;
   };
 
   const handleCreateBundle = () => {
@@ -101,47 +117,25 @@ const AdminDashboard = () => {
   };
 
   const handleDeleteBundle = async (bundleId: number) => {
-    if (confirm('Are you sure you want to delete this bundle? This action cannot be undone.')) {
-      console.log('🔄 Deleting bundle:', bundleId);
-      const success = await deleteBundle(bundleId);
-      
-      if (success) {
-        // Refresh data after successful deletion
-        setTimeout(() => {
-          refreshAllData();
-        }, 100);
-      }
+    if (confirm('Are you sure you want to delete this bundle?')) {
+      console.log('Delete bundle:', bundleId);
     }
   };
 
   const handleStatsClick = (type: 'bundle' | 'custom' | 'group' | 'daily') => {
-    console.log('📊 Stats clicked:', type);
-    
-    // Switch to appropriate tab when stats are clicked
-    switch (type) {
-      case 'bundle':
-        setActiveTab('bundles');
-        break;
-      case 'custom':
-        setActiveTab('custom-items');
-        break;
-      case 'group':
-        setActiveTab('groups');
-        break;
-      case 'daily':
-        console.log('📅 Daily stats:', dailyStats);
-        break;
+    console.log('Stats clicked:', type);
+    if (type === 'daily') {
+      console.log('Daily stats:', dailyStats);
     }
+    // Could open a detailed view modal here
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <AdminHeader />
-      
-      <div className="container mx-auto p-6">
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard Overview</h1>
-          <p className="text-gray-600">Monitor and manage your store operations</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
+          <p className="text-gray-600">Manage your store operations and monitor performance</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -150,7 +144,7 @@ const AdminDashboard = () => {
             <TabsTrigger value="bundles">Bundles</TabsTrigger>
             <TabsTrigger value="custom-items">Custom Items</TabsTrigger>
             <TabsTrigger value="groups">Group Buying</TabsTrigger>
-            <TabsTrigger value="orders">Order Management</TabsTrigger>
+            <TabsTrigger value="orders">Orders</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -159,14 +153,14 @@ const AdminDashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
                 <AdminOrdersList 
-                  orders={orders.slice(0, 10)} 
+                  orders={orders} 
                   onUpdateOrderStatus={handleUpdateOrderStatus}
                   onUpdatePaymentStatus={handleUpdatePaymentStatus}
                 />
               </div>
               <div className="lg:col-span-1">
                 <AdminBundlesSidebar
-                  bundles={bundles.slice(0, 5)}
+                  bundles={bundles}
                   loading={loading}
                   onCreateBundle={handleCreateBundle}
                   onEditBundle={handleEditBundle}

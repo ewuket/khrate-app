@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AdminOrder } from "@/types/admin";
 import { statusColors } from "@/types/order";
-import { DollarSign, Edit, Eye, Phone } from "lucide-react";
+import { DollarSign, Edit, Eye } from "lucide-react";
 import AdminOrderStatusDialog from "./AdminOrderStatusDialog";
 import AdminOrderDetailsModal from "./AdminOrderDetailsModal";
 
@@ -74,10 +74,10 @@ const AdminOrdersList = ({
           {orders.length === 0 ? (
             <p className="text-gray-500 text-center py-8">No orders found</p>
           ) : (
-            orders.slice(0, 15).map((order) => (
+            orders.slice(0, 10).map((order) => (
               <div
                 key={order.id}
-                className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
                 onClick={() => handleViewOrderDetails(order)}
               >
                 <div className="flex-1">
@@ -86,27 +86,17 @@ const AdminOrdersList = ({
                       {order.user_profile?.full_name || 'Guest User'}
                     </span>
                     <Badge className={statusColors[order.status as keyof typeof statusColors]}>
-                      {order.status.replace('_', ' ').toUpperCase()}
-                    </Badge>
-                    <Badge 
-                      variant={order.payment_status === 'completed' ? 'default' : 'secondary'}
-                      className="text-xs"
-                    >
-                      {order.payment_status.toUpperCase()}
+                      {order.status}
                     </Badge>
                   </div>
-                  <p className="text-sm text-gray-600 mb-1">
+                  <p className="text-sm text-gray-600">
                     {order.total_amount.toLocaleString()} RWF • {order.items.length} items
                   </p>
                   <div className="flex items-center gap-4 text-xs text-gray-500">
                     <span>{new Date(order.created_at || '').toLocaleDateString()}</span>
                     {order.phone_number && (
-                      <div className="flex items-center gap-1">
-                        <Phone className="h-3 w-3" />
-                        <span>{order.phone_number}</span>
-                      </div>
+                      <span>Phone: {order.phone_number}</span>
                     )}
-                    <span className="text-blue-600 hover:text-blue-800">Click to view details</span>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -117,7 +107,6 @@ const AdminOrdersList = ({
                       e.stopPropagation();
                       handleOpenStatusDialog(order.id, order.payment_status, 'payment');
                     }}
-                    title="Update Payment Status"
                   >
                     <DollarSign className="h-4 w-4" />
                   </Button>
@@ -128,7 +117,6 @@ const AdminOrdersList = ({
                       e.stopPropagation();
                       handleOpenStatusDialog(order.id, order.status, 'order');
                     }}
-                    title="Update Order Status"
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -139,7 +127,6 @@ const AdminOrdersList = ({
                       e.stopPropagation();
                       handleViewOrderDetails(order);
                     }}
-                    title="View Order Details"
                   >
                     <Eye className="h-4 w-4" />
                   </Button>

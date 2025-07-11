@@ -1,117 +1,89 @@
 
-import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const useAdminOrderOperations = () => {
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
 
-  const updateOrderStatus = async (orderId: string, newStatus: string): Promise<boolean> => {
+  const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
-      setLoading(true);
       console.log('🔄 Updating order status:', orderId, 'to', newStatus);
-
-      const { error } = await supabase
+      
+      const { data, error } = await supabase
         .from('orders')
         .update({ 
           status: newStatus,
           updated_at: new Date().toISOString()
         })
-        .eq('id', orderId);
+        .eq('id', orderId)
+        .select()
+        .single();
 
       if (error) {
-        console.error('❌ Order status update error:', error);
-        throw error;
+        console.error('❌ Error updating order status:', error);
+        throw new Error(`Database error: ${error.message}`);
       }
 
-      console.log('✅ Order status updated successfully');
+      console.log('✅ Order status updated successfully:', data);
       toast.success(`Order status updated to ${newStatus}`);
       
-      // Dispatch custom event to refresh admin stats
+      // Invalidate relevant queries to refresh stats
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-order-source-stats'] });
+      
+      // Trigger a refresh of admin data
       window.dispatchEvent(new CustomEvent('refresh-admin-stats'));
       
       return true;
-
     } catch (error: any) {
-      console.error('❌ Order status update failed:', error);
+      console.error('❌ Failed to update order status:', error);
       toast.error(error.message || 'Failed to update order status');
       return false;
-    } finally {
-      setLoading(false);
     }
   };
 
-  const updatePaymentStatus = async (orderId: string, newPaymentStatus: string): Promise<boolean> => {
+  const updatePaymentStatus = async (orderId: string, newPaymentStatus: string) => {
     try {
-      setLoading(true);
       console.log('🔄 Updating payment status:', orderId, 'to', newPaymentStatus);
-
-      const { error } = await supabase
+      
+      const { data, error } = await supabase
         .from('orders')
         .update({ 
           payment_status: newPaymentStatus,
           updated_at: new Date().toISOString()
         })
-        .eq('id', orderId);
+        .eq('id', orderId)
+        .select()
+        .single();
 
       if (error) {
-        console.error('❌ Payment status update error:', error);
-        throw error;
+        console.error('❌ Error updating payment status:', error);
+        throw new Error(`Database error: ${error.message}`);
       }
 
-      console.log('✅ Payment status updated successfully');
+      console.log('✅ Payment status updated successfully:', data);
       toast.success(`Payment status updated to ${newPaymentStatus}`);
       
-      // Dispatch custom event to refresh admin stats
+      // Invalidate relevant queries to refresh stats and revenue
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-order-source-stats'] });
+      
+      // Trigger a refresh of admin data to update revenue calculations
       window.dispatchEvent(new CustomEvent('refresh-admin-stats'));
       
       return true;
-
     } catch (error: any) {
-      console.error('❌ Payment status update failed:', error);
+      console.error('❌ Failed to update payment status:', error);
       toast.error(error.message || 'Failed to update payment status');
       return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deleteOrder = async (orderId: string): Promise<boolean> => {
-    try {
-      setLoading(true);
-      console.log('🔄 Deleting order:', orderId);
-
-      const { error } = await supabase
-        .from('orders')
-        .delete()
-        .eq('id', orderId);
-
-      if (error) {
-        console.error('❌ Order deletion error:', error);
-        throw error;
-      }
-
-      console.log('✅ Order deleted successfully');
-      toast.success('Order deleted successfully');
-      
-      // Dispatch custom event to refresh admin stats
-      window.dispatchEvent(new CustomEvent('refresh-admin-stats'));
-      
-      return true;
-
-    } catch (error: any) {
-      console.error('❌ Order deletion failed:', error);
-      toast.error(error.message || 'Failed to delete order');
-      return false;
-    } finally {
-      setLoading(false);
     }
   };
 
   return {
     updateOrderStatus,
-    updatePaymentStatus,
-    deleteOrder,
-    loading
+    updatePaymentStatus
   };
 };

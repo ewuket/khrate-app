@@ -28,8 +28,6 @@ export interface AdminOrder {
   payment_status: string;
   delivery_address: string;
   delivery_date: string | null;
-  delivery_time_slot: string | null;
-  payment_method: string;
   created_at: string | null;
   phone_number: string | null;
   guest_email?: string | null;
@@ -53,11 +51,6 @@ export interface AdminBundle {
   updated_at: string | null;
   items?: any[];
   items_count?: number;
-  bundle_items?: Array<{
-    item_name: string;
-    quantity: number;
-    unit: string;
-  }>;
 }
 
 export interface AdminCustomItem {
