@@ -35,6 +35,8 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
     checkAdminStatus();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔄 Admin auth state changed:', event, session?.user?.email);
+      
       if (event === 'SIGNED_IN' && session?.user) {
         await checkAdminStatus();
       } else if (event === 'SIGNED_OUT') {
@@ -52,6 +54,7 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
+        console.log('❌ No authenticated user found');
         setAdminUser(null);
         setLoading(false);
         return;
@@ -65,7 +68,7 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
         console.error('❌ Error checking admin status:', error);
         setAdminUser(null);
       } else if (adminCheck) {
-        console.log('✅ User is admin:', user.email);
+        console.log('✅ User is admin, setting admin user state');
         setAdminUser({
           id: user.id,
           email: user.email || '',
@@ -96,30 +99,53 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
       if (error) {
         console.error('❌ Login error:', error);
         toast.error(error.message || 'Login failed');
+        setLoading(false);
         return false;
       }
 
       if (data?.user) {
         console.log('✅ Login successful, checking admin status...');
-        await checkAdminStatus();
         
-        if (adminUser) {
+        // Check admin status immediately after successful login
+        const { data: adminCheck, error: adminError } = await supabase.rpc('is_admin_user');
+        
+        if (adminError) {
+          console.error('❌ Error checking admin status:', adminError);
+          toast.error('Failed to verify admin privileges');
+          await signOut();
+          setLoading(false);
+          return false;
+        }
+        
+        if (adminCheck) {
+          console.log('✅ Admin privileges confirmed');
+          setAdminUser({
+            id: data.user.id,
+            email: data.user.email || '',
+            role: 'admin',
+            is_active: true,
+            created_at: data.user.created_at || new Date().toISOString(),
+            updated_at: data.user.updated_at || new Date().toISOString()
+          });
           toast.success('Welcome to Admin Dashboard!');
+          setLoading(false);
           return true;
         } else {
+          console.log('❌ User does not have admin privileges');
           toast.error('Access denied. Admin privileges required.');
           await signOut();
+          setLoading(false);
           return false;
         }
       }
 
+      setLoading(false);
       return false;
     } catch (error: any) {
       console.error('❌ Login failed:', error);
       toast.error(error.message || 'Login failed');
-      return false;
-    } finally {
       setLoading(false);
+      return false;
     }
   };
 
