@@ -48,9 +48,13 @@ export const useAdminOperations = () => {
     return await toggleGroupActiveOriginal(groupId, currentStatus);
   };
 
-  // Normalize isToggling to always be a string or null
-  const normalizedIsToggling = typeof groupToggling === 'string' ? groupToggling : null;
-  const isCurrentlyToggling = bundleLoading || customItemLoading || normalizedIsToggling;
+  // Normalize all loading states to be consistent (string | null)
+  const bundleToggling = bundleLoading ? 'bundle-loading' : null;
+  const customItemToggling = customItemLoading ? 'custom-item-loading' : null;
+  const normalizedGroupToggling = typeof groupToggling === 'string' ? groupToggling : null;
+  
+  // Return the first non-null loading state, or null if none are loading
+  const currentToggling = bundleToggling || customItemToggling || normalizedGroupToggling;
 
   return {
     // Bundle operations
@@ -74,7 +78,7 @@ export const useAdminOperations = () => {
     updateOrderStatus,
     updatePaymentStatus,
     
-    // Loading states - ensure consistent type
-    isToggling: isCurrentlyToggling
+    // Loading states - ensure consistent type (string | null)
+    isToggling: currentToggling
   };
 };
