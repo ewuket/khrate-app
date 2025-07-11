@@ -23,12 +23,9 @@ export const useAdminOperations = () => {
   
   const { updateOrderStatus, updatePaymentStatus } = useAdminOrderOperations();
   const { 
-    createGroup, 
-    updateGroup, 
-    deleteGroup, 
-    toggleGroupStatus, 
+    toggleGroupActive: toggleGroupActiveOriginal, 
     toggleGroupFeatured,
-    loading: groupLoading 
+    isToggling: groupToggling 
   } = useAdminGroupOperations();
 
   // Bundle operations with proper naming
@@ -46,9 +43,9 @@ export const useAdminOperations = () => {
     return await toggleCustomItemStatus(itemId, !isActive);
   };
 
-  // Group operations
-  const toggleGroupActive = async (groupId: string, isActive: boolean) => {
-    return await toggleGroupStatus(groupId, !isActive);
+  // Group operations - fix the signature to match what AdminGroupManagement expects
+  const toggleGroupActive = async (groupId: string, currentStatus: string) => {
+    return await toggleGroupActiveOriginal(groupId, currentStatus);
   };
 
   return {
@@ -66,9 +63,6 @@ export const useAdminOperations = () => {
     toggleCustomItemActive,
     
     // Group operations
-    createGroup,
-    updateGroup,
-    deleteGroup,
     toggleGroupActive,
     toggleGroupFeatured,
     
@@ -77,6 +71,6 @@ export const useAdminOperations = () => {
     updatePaymentStatus,
     
     // Loading states
-    isToggling: bundleLoading || customItemLoading || groupLoading
+    isToggling: bundleLoading || customItemLoading || (typeof groupToggling === 'string' ? groupToggling : false)
   };
 };
