@@ -15,32 +15,59 @@ export const useAdminData = () => {
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [bundles, setBundles] = useState<AdminBundle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchStats = useCallback(async () => {
     try {
       console.log('📊 Fetching admin statistics...');
+      setError(null);
       
-      // Get basic order stats
-      const { data: orderStats, error: orderError } = await supabase.rpc('get_admin_order_stats');
-      if (orderError) {
-        console.error('Error fetching order stats:', orderError);
-        throw orderError;
+      // Get basic order stats with fallback
+      let orderStats, groupStats, userCount;
+      
+      try {
+        const { data: orderStatsData, error: orderError } = await supabase.rpc('get_admin_order_stats');
+        if (orderError) {
+          console.warn('Order stats RPC failed, using fallback:', orderError);
+          // Fallback: count orders directly
+          const { count } = await supabase.from('orders').select('*', { count: 'exact', head: true });
+          orderStats = [{ total_orders: count || 0, pending_orders: 0, total_revenue: 0 }];
+        } else {
+          orderStats = orderStatsData;
+        }
+      } catch (error) {
+        console.warn('Order stats fallback:', error);
+        orderStats = [{ total_orders: 0, pending_orders: 0, total_revenue: 0 }];
       }
 
-      // Get group stats
-      const { data: groupStats, error: groupError } = await supabase.rpc('get_admin_group_stats');
-      if (groupError) {
-        console.error('Error fetching group stats:', groupError);
-        throw groupError;
+      try {
+        const { data: groupStatsData, error: groupError } = await supabase.rpc('get_admin_group_stats');
+        if (groupError) {
+          console.warn('Group stats RPC failed, using fallback:', groupError);
+          // Fallback: count groups directly
+          const { count } = await supabase.from('group_sessions').select('*', { count: 'exact', head: true });
+          groupStats = [{ active_groups: count || 0 }];
+        } else {
+          groupStats = groupStatsData;
+        }
+      } catch (error) {
+        console.warn('Group stats fallback:', error);
+        groupStats = [{ active_groups: 0 }];
       }
 
-      // Get user count
-      const { count: userCount, error: userError } = await supabase
-        .from('user_profiles')
-        .select('*', { count: 'exact', head: true });
-      if (userError) {
-        console.error('Error fetching user count:', userError);
-        throw userError;
+      try {
+        const { count: userCountData, error: userError } = await supabase
+          .from('user_profiles')
+          .select('*', { count: 'exact', head: true });
+        if (userError) {
+          console.warn('User count failed:', userError);
+          userCount = 0;
+        } else {
+          userCount = userCountData;
+        }
+      } catch (error) {
+        console.warn('User count fallback:', error);
+        userCount = 0;
       }
 
       const updatedStats = {
@@ -55,13 +82,14 @@ export const useAdminData = () => {
       setStats(updatedStats);
     } catch (error: any) {
       console.error('❌ Error fetching admin stats:', error);
-      // Don't show toast for stats loading errors to avoid spam
+      setError(error.message || 'Failed to load statistics');
     }
   }, []);
 
   const fetchOrders = useCallback(async () => {
     try {
       console.log('📋 Fetching admin orders...');
+      setError(null);
       
       const { data, error } = await supabase
         .from('orders')
@@ -91,12 +119,15 @@ export const useAdminData = () => {
       setOrders(formattedOrders);
     } catch (error: any) {
       console.error('❌ Error fetching admin orders:', error);
+      setError(error.message || 'Failed to load orders');
+      setOrders([]);
     }
   }, []);
 
   const fetchBundles = useCallback(async () => {
     try {
       console.log('📦 Fetching admin bundles...');
+      setError(null);
       
       const { data, error } = await supabase
         .from('bundles')
@@ -122,18 +153,25 @@ export const useAdminData = () => {
       setBundles(formattedBundles);
     } catch (error: any) {
       console.error('❌ Error fetching admin bundles:', error);
+      setError(error.message || 'Failed to load bundles');
+      setBundles([]);
     }
   }, []);
 
   const refreshAllData = useCallback(async () => {
     console.log('🔄 Refreshing all admin data...');
     setLoading(true);
+    setError(null);
+    
     try {
-      await Promise.all([
+      await Promise.allSettled([
         fetchStats(),
         fetchOrders(),
         fetchBundles()
       ]);
+    } catch (error: any) {
+      console.error('Error refreshing data:', error);
+      setError(error.message || 'Failed to refresh data');
     } finally {
       setLoading(false);
     }
@@ -142,29 +180,33 @@ export const useAdminData = () => {
   useEffect(() => {
     refreshAllData();
 
-    // Listen for real-time updates
+    // Set up real-time listeners with error handling
     const ordersChannel = supabase
       .channel('admin-orders-changes')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'orders' },
-        () => {
-          console.log('🔄 Order changed, refreshing data...');
+        (payload) => {
+          console.log('🔄 Order changed:', payload);
           fetchStats();
           fetchOrders();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Orders channel status:', status);
+      });
 
     const bundlesChannel = supabase
       .channel('admin-bundles-changes')
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'bundles' },
-        () => {
-          console.log('🔄 Bundle changed, refreshing data...');
+        (payload) => {
+          console.log('🔄 Bundle changed:', payload);
           fetchBundles();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Bundles channel status:', status);
+      });
 
     return () => {
       supabase.removeChannel(ordersChannel);
@@ -177,6 +219,7 @@ export const useAdminData = () => {
     orders,
     bundles,
     loading,
+    error,
     refreshAllData,
     fetchStats,
     fetchOrders,

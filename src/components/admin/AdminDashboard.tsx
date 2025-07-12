@@ -1,6 +1,9 @@
 
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { RefreshCw, AlertCircle } from "lucide-react";
 import { useAdminData } from "@/hooks/useAdminData";
 import { useAdminOrderSourceStats } from "@/hooks/useAdminOrderSourceStats";
 import { useAdminDailyStats } from "@/hooks/useAdminDailyStats";
@@ -18,26 +21,51 @@ import { AdminBundle } from "@/types/admin";
 import { toast } from "sonner";
 
 const AdminDashboard = () => {
-  const { stats, orders, bundles, loading, refreshAllData, fetchStats } = useAdminData();
-  const { data: orderSourceStats, isLoading: loadingOrderStats, refetch: refetchOrderStats } = useAdminOrderSourceStats();
-  const { data: dailyStats, refetch: refetchDailyStats } = useAdminDailyStats();
+  const { 
+    stats, 
+    orders, 
+    bundles, 
+    loading, 
+    error: dataError,
+    refreshAllData, 
+    fetchStats 
+  } = useAdminData();
+  
+  const { 
+    data: orderSourceStats, 
+    isLoading: loadingOrderStats, 
+    refetch: refetchOrderStats,
+    error: orderStatsError 
+  } = useAdminOrderSourceStats();
+  
+  const { 
+    data: dailyStats, 
+    refetch: refetchDailyStats,
+    error: dailyStatsError 
+  } = useAdminDailyStats();
+  
   const { updateOrderStatus, updatePaymentStatus } = useAdminOrderOperations();
   const { deleteBundle } = useAdminBundleOperations();
   const [activeTab, setActiveTab] = useState("overview");
   const [showBundleForm, setShowBundleForm] = useState(false);
   const [editingBundle, setEditingBundle] = useState<AdminBundle | null>(null);
 
+  // Show error state if there are critical errors
+  const hasErrors = dataError || orderStatsError || dailyStatsError;
+
   // Auto-refresh data every 30 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       console.log('🔄 Auto-refreshing admin dashboard data...');
-      fetchStats();
-      refetchOrderStats();
-      refetchDailyStats();
+      if (!loading) {
+        fetchStats();
+        refetchOrderStats();
+        refetchDailyStats();
+      }
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [fetchStats, refetchOrderStats, refetchDailyStats]);
+  }, [fetchStats, refetchOrderStats, refetchDailyStats, loading]);
 
   // Listen for stats refresh events
   useEffect(() => {
@@ -61,7 +89,6 @@ const AdminDashboard = () => {
     const success = await updateOrderStatus(orderId, newStatus);
     
     if (success) {
-      // Immediate refresh of all data
       setTimeout(() => {
         refreshAllData();
         refetchOrderStats();
@@ -78,7 +105,6 @@ const AdminDashboard = () => {
     const success = await updatePaymentStatus(orderId, newPaymentStatus);
     
     if (success) {
-      // Immediate refresh of all data
       setTimeout(() => {
         refreshAllData();
         refetchOrderStats();
@@ -105,7 +131,6 @@ const AdminDashboard = () => {
       const success = await deleteBundle(bundleId);
       
       if (success) {
-        // Refresh data after successful deletion
         setTimeout(() => {
           refreshAllData();
         }, 100);
@@ -116,7 +141,6 @@ const AdminDashboard = () => {
   const handleStatsClick = (type: 'bundle' | 'custom' | 'group' | 'daily') => {
     console.log('📊 Stats clicked:', type);
     
-    // Switch to appropriate tab when stats are clicked
     switch (type) {
       case 'bundle':
         setActiveTab('bundles');
@@ -133,23 +157,67 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleRefreshAll = () => {
+    console.log('🔄 Manual refresh requested');
+    refreshAllData();
+    refetchOrderStats();
+    refetchDailyStats();
+    toast.success('Dashboard refreshed');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <AdminHeader />
       
       <div className="container mx-auto p-6">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard Overview</h1>
-          <p className="text-gray-600">Monitor and manage your store operations</p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard Overview</h1>
+              <p className="text-gray-600">Monitor and manage your store operations</p>
+            </div>
+            <Button 
+              onClick={handleRefreshAll}
+              variant="outline"
+              disabled={loading}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
         </div>
+
+        {/* Show error alert if there are issues */}
+        {hasErrors && (
+          <Alert className="mb-6 border-red-200 bg-red-50">
+            <AlertCircle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-800">
+              <div className="font-medium mb-2">Dashboard Loading Issues:</div>
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                {dataError && <li>Data loading: {dataError}</li>}
+                {orderStatsError && <li>Order statistics: {orderStatsError.message}</li>}
+                {dailyStatsError && <li>Daily statistics: {dailyStatsError.message}</li>}
+              </ul>
+              <Button 
+                onClick={handleRefreshAll}
+                variant="outline"
+                size="sm"
+                className="mt-3"
+              >
+                Try Again
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="bundles">Bundles</TabsTrigger>
+            <TabsTrigger value="bundles">Bundles ({bundles.length})</TabsTrigger>
             <TabsTrigger value="custom-items">Custom Items</TabsTrigger>
             <TabsTrigger value="groups">Group Buying</TabsTrigger>
-            <TabsTrigger value="orders">Order Management</TabsTrigger>
+            <TabsTrigger value="orders">Orders ({orders.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
