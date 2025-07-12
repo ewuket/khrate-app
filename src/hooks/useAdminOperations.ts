@@ -1,37 +1,84 @@
 
-import { useAdminOrderOperations } from './admin/useAdminOrderOperations';
-import { useAdminBundleOperations } from './admin/useAdminBundleOperations';
-import { useAdminGroupOperations } from './admin/useAdminGroupOperations';
-import { useAdminCustomItemOperations } from './admin/useAdminCustomItemOperations';
+import { useAdminBundleOperations } from "./admin/useAdminBundleOperations";
+import { useAdminCustomItemOperations } from "./admin/useAdminCustomItemOperations";
+import { useAdminOrderOperations } from "./admin/useAdminOrderOperations";
+import { useAdminGroupOperations } from "./admin/useAdminGroupOperations";
 
 export const useAdminOperations = () => {
-  const orderOperations = useAdminOrderOperations();
-  const bundleOperations = useAdminBundleOperations();
-  const groupOperations = useAdminGroupOperations();
-  const customItemOperations = useAdminCustomItemOperations();
+  const { 
+    createBundle, 
+    updateBundle, 
+    deleteBundle, 
+    toggleBundleStatus,
+    loading: bundleLoading 
+  } = useAdminBundleOperations();
+  
+  const { 
+    createCustomItem, 
+    updateCustomItem, 
+    deleteCustomItem, 
+    toggleCustomItemStatus,
+    loading: customItemLoading 
+  } = useAdminCustomItemOperations();
+  
+  const { updateOrderStatus, updatePaymentStatus } = useAdminOrderOperations();
+  const { 
+    toggleGroupActive: toggleGroupActiveOriginal, 
+    toggleGroupFeatured,
+    isToggling: groupToggling 
+  } = useAdminGroupOperations();
 
-  // Combine isToggling states from all operations
-  const isToggling = bundleOperations.isToggling || 
-                    groupOperations.isToggling || 
-                    customItemOperations.isToggling;
+  // Bundle operations with proper naming
+  const toggleBundleActive = async (bundleId: number, isActive: boolean) => {
+    return await toggleBundleStatus(bundleId, !isActive);
+  };
+
+  const toggleBundleFeatured = async (bundleId: number, isFeatured: boolean) => {
+    // For bundle featured toggle, we need to use the update method
+    return await updateBundle(bundleId, { is_featured: !isFeatured });
+  };
+
+  // Custom item operations with proper naming
+  const toggleCustomItemActive = async (itemId: number, isActive: boolean) => {
+    return await toggleCustomItemStatus(itemId, !isActive);
+  };
+
+  // Group operations - fix the signature to match what AdminGroupManagement expects
+  const toggleGroupActive = async (groupId: string, currentStatus: string) => {
+    return await toggleGroupActiveOriginal(groupId, currentStatus);
+  };
+
+  // Normalize all loading states to be consistent (string | null)
+  const bundleToggling = bundleLoading ? 'bundle-loading' : null;
+  const customItemToggling = customItemLoading ? 'custom-item-loading' : null;
+  const normalizedGroupToggling = typeof groupToggling === 'string' ? groupToggling : null;
+  
+  // Return the first non-null loading state, or null if none are loading
+  const currentToggling = bundleToggling || customItemToggling || normalizedGroupToggling;
 
   return {
-    // Order operations
-    updateOrderStatus: orderOperations.updateOrderStatus,
-    updatePaymentStatus: orderOperations.updatePaymentStatus,
-    
     // Bundle operations
-    toggleBundleActive: bundleOperations.toggleBundleActive,
-    toggleBundleFeatured: bundleOperations.toggleBundleFeatured,
-    
-    // Group operations
-    toggleGroupActive: groupOperations.toggleGroupActive,
-    toggleGroupFeatured: groupOperations.toggleGroupFeatured,
+    createBundle,
+    updateBundle,
+    deleteBundle,
+    toggleBundleActive,
+    toggleBundleFeatured,
     
     // Custom item operations
-    toggleCustomItemActive: customItemOperations.toggleCustomItemActive,
+    createCustomItem,
+    updateCustomItem,
+    deleteCustomItem,
+    toggleCustomItemActive,
     
-    // Combined state
-    isToggling
+    // Group operations
+    toggleGroupActive,
+    toggleGroupFeatured,
+    
+    // Order operations
+    updateOrderStatus,
+    updatePaymentStatus,
+    
+    // Loading states - ensure consistent type (string | null)
+    isToggling: currentToggling
   };
 };

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAdminCustomItems } from "@/hooks/useAdminCustomItems";
 import AdminCustomItemsHeader from "./AdminCustomItemsHeader";
@@ -126,6 +125,7 @@ const AdminCustomItemsManagement = () => {
       {showForm && (
         <AdminCustomItemForm
           item={editingItem}
+          isOpen={showForm}
           onSubmit={handleFormSubmit}
           onClose={handleFormClose}
         />

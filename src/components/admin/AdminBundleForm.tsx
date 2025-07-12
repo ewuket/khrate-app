@@ -2,11 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { AdminBundle } from "@/hooks/useAdminBundles";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import AdminBundleFormHeader from "./bundle-form/AdminBundleFormHeader";
 import AdminBundleBasicFields from "./bundle-form/AdminBundleBasicFields";
 import AdminBundleItemsSection from "./bundle-form/AdminBundleItemsSection";
 import AdminBundleFormSettings from "./bundle-form/AdminBundleFormSettings";
 import AdminBundleFormActions from "./bundle-form/AdminBundleFormActions";
+import { toast } from "sonner";
 
 interface AdminBundleFormProps {
   bundle?: AdminBundle | null;
@@ -27,6 +29,7 @@ const AdminBundleForm: React.FC<AdminBundleFormProps> = ({
   onClose,
   onSubmit
 }) => {
+  const { isAdmin, isLoading, currentUser } = useAdminAuth();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -76,6 +79,22 @@ const AdminBundleForm: React.FC<AdminBundleFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!isAdmin) {
+      toast.error('Admin access required to create bundles');
+      return;
+    }
+
+    if (!currentUser) {
+      toast.error('Please log in as admin to create bundles');
+      return;
+    }
+
+    console.log('🔄 Admin user creating bundle:', {
+      user: currentUser.email,
+      isAdmin,
+      formData
+    });
+    
     const submitData: any = {
       ...formData,
       bundle_items: items.filter(item => item.item_name.trim() !== '')
@@ -88,6 +107,33 @@ const AdminBundleForm: React.FC<AdminBundleFormProps> = ({
     console.log('Submitting bundle data:', submitData);
     onSubmit(submitData);
   };
+
+  if (isLoading) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-2xl">
+          <div className="flex items-center justify-center p-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            <span className="ml-2">Checking admin access...</span>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-2xl">
+          <div className="text-center p-8">
+            <h3 className="text-lg font-semibold text-red-600 mb-2">Access Denied</h3>
+            <p className="text-gray-600">Admin access required to manage bundles.</p>
+            <p className="text-sm text-gray-500 mt-2">Current user: {currentUser?.email || 'Not logged in'}</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
