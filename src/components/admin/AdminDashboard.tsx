@@ -6,14 +6,13 @@ import { useAdminOrderSourceStats } from "@/hooks/useAdminOrderSourceStats";
 import { useAdminDailyStats } from "@/hooks/useAdminDailyStats";
 import { useAdminOrderOperations } from "@/hooks/admin/useAdminOrderOperations";
 import { useAdminBundleOperations } from "@/hooks/admin/useAdminBundleOperations";
-import { useAdminCustomItemOperations } from "@/hooks/admin/useAdminCustomItemOperations";
 import AdminStatsCards from "./AdminStatsCards";
 import AdminOrdersList from "./AdminOrdersList";
 import AdminOrderManagementStats from "./AdminOrderManagementStats";
 import AdminBundlesSidebar from "./AdminBundlesSidebar";
 import AdminBundleManagement from "./AdminBundleManagement";
 import AdminCustomItemsManagement from "./custom-items/AdminCustomItemsManagement";
-import AdminGroupManagement from "./AdminGroupManagement";
+import AdminGroupBuyingManagement from "./AdminGroupBuyingManagement";
 import AdminHeader from "./AdminHeader";
 import { AdminBundle } from "@/types/admin";
 import { toast } from "sonner";
@@ -185,7 +184,7 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="groups">
-            <AdminGroupManagement />
+            <AdminGroupBuyingManagement />
           </TabsContent>
 
           <TabsContent value="orders" className="space-y-6">

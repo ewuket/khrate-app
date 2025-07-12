@@ -10,6 +10,11 @@ const AdminGroupBuyingManagement = () => {
 
   return (
     <div className="space-y-6">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold">Group Buying Management</h2>
+        <p className="text-gray-600">Manage group buying sessions and monitor activity</p>
+      </div>
+      
       <Tabs defaultValue="management" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="management">Group Management</TabsTrigger>
