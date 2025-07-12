@@ -49,8 +49,8 @@ export const useAdminOperations = () => {
   };
 
   // Normalize all loading states to be consistent (string | null)
-  const bundleToggling = bundleLoading ? `bundle-${Math.random()}` : null;
-  const customItemToggling = customItemLoading ? `custom-item-${Math.random()}` : null;
+  const bundleToggling = bundleLoading ? 'bundle-loading' : null;
+  const customItemToggling = customItemLoading ? 'custom-item-loading' : null;
   const normalizedGroupToggling = typeof groupToggling === 'string' ? groupToggling : null;
   
   // Return the first non-null loading state, or null if none are loading
