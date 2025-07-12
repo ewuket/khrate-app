@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useAdminCustomItems } from "@/hooks/useAdminCustomItems";
 import AdminCustomItemsHeader from "./AdminCustomItemsHeader";
 import AdminCustomItemsGrid from "./AdminCustomItemsGrid";
@@ -6,6 +7,7 @@ import AdminCustomItemsLoadingState from "./AdminCustomItemsLoadingState";
 import AdminCustomItemsEmptyState from "./AdminCustomItemsEmptyState";
 import AdminCustomItemsDebugInfo from "./AdminCustomItemsDebugInfo";
 import AdminCustomItemForm from "./AdminCustomItemForm";
+import { toast } from "sonner";
 
 const AdminCustomItemsManagement = () => {
   const { 
@@ -23,6 +25,12 @@ const AdminCustomItemsManagement = () => {
   const [editingItem, setEditingItem] = useState(null);
   const [error, setError] = useState(null);
 
+  // Force refresh custom items on component mount
+  useEffect(() => {
+    console.log('🔄 AdminCustomItemsManagement mounted, fetching custom items...');
+    refetch();
+  }, [refetch]);
+
   const handleCreateItem = () => {
     setEditingItem(null);
     setShowForm(true);
@@ -38,12 +46,14 @@ const AdminCustomItemsManagement = () => {
       try {
         setError(null);
         await deleteCustomItem(itemId);
+        toast.success('Item deleted successfully');
         setTimeout(() => {
           refetch(); // Force refresh after deletion
         }, 1000);
       } catch (error) {
         console.error('Error deleting item:', error);
         setError(error);
+        toast.error('Failed to delete item');
       }
     }
   };
@@ -53,12 +63,14 @@ const AdminCustomItemsManagement = () => {
     try {
       setError(null);
       await toggleActiveCustomItem({ id: itemId, is_active: isActive });
+      toast.success(`Item ${!isActive ? 'activated' : 'deactivated'} successfully`);
       setTimeout(() => {
         refetch(); // Force refresh after toggle
       }, 1000);
     } catch (error) {
       console.error('Error toggling item status:', error);
       setError(error);
+      toast.error('Failed to update item status');
     }
   };
 
@@ -72,8 +84,10 @@ const AdminCustomItemsManagement = () => {
       setError(null);
       if (editingItem) {
         await updateCustomItem({ id: editingItem.id, ...itemData });
+        toast.success('Item updated successfully');
       } else {
         await createCustomItem(itemData);
+        toast.success('Item created successfully');
       }
       handleFormClose();
       setTimeout(() => {
@@ -82,12 +96,14 @@ const AdminCustomItemsManagement = () => {
     } catch (error) {
       console.error('Form submission error:', error);
       setError(error);
+      toast.error(`Failed to ${editingItem ? 'update' : 'create'} item`);
     }
   };
 
   const handleRefresh = () => {
     setError(null);
     refetch();
+    toast.success('Custom items refreshed');
   };
 
   if (isLoading) {

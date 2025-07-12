@@ -162,8 +162,19 @@ const AdminDashboard = () => {
     refreshAllData();
     refetchOrderStats();
     refetchDailyStats();
-    toast.success('Dashboard refreshed');
+    toast.success('Dashboard refreshed successfully');
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading admin dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -214,10 +225,14 @@ const AdminDashboard = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="bundles">Bundles ({bundles.length})</TabsTrigger>
+            <TabsTrigger value="bundles">
+              Bundles ({bundles.length})
+            </TabsTrigger>
             <TabsTrigger value="custom-items">Custom Items</TabsTrigger>
             <TabsTrigger value="groups">Group Buying</TabsTrigger>
-            <TabsTrigger value="orders">Orders ({orders.length})</TabsTrigger>
+            <TabsTrigger value="orders">
+              Orders ({orders.length})
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">

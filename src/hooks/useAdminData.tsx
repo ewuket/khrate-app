@@ -22,80 +22,42 @@ export const useAdminData = () => {
       console.log('📊 Fetching admin statistics...');
       setError(null);
       
-      // Get basic order stats with fallback
-      let orderStats, groupStats, userCount;
+      // Use the optimized admin dashboard stats function
+      const { data: dashboardStats, error: statsError } = await supabase.rpc('get_admin_dashboard_stats');
       
-      try {
-        const { data: orderStatsData, error: orderError } = await supabase.rpc('get_admin_order_stats');
-        if (orderError) {
-          console.warn('Order stats RPC failed, using fallback:', orderError);
-          // Fallback: count orders directly
-          const { count } = await supabase.from('orders').select('*', { count: 'exact', head: true });
-          orderStats = [{ total_orders: count || 0, pending_orders: 0, total_revenue: 0 }];
-        } else {
-          orderStats = orderStatsData;
-        }
-      } catch (error) {
-        console.warn('Order stats fallback:', error);
-        orderStats = [{ total_orders: 0, pending_orders: 0, total_revenue: 0 }];
+      if (statsError) {
+        console.error('Stats RPC error:', statsError);
+        throw statsError;
       }
 
-      try {
-        const { data: groupStatsData, error: groupError } = await supabase.rpc('get_admin_group_stats');
-        if (groupError) {
-          console.warn('Group stats RPC failed, using fallback:', groupError);
-          // Fallback: count groups directly
-          const { count } = await supabase.from('group_sessions').select('*', { count: 'exact', head: true });
-          groupStats = [{ active_groups: count || 0 }];
-        } else {
-          groupStats = groupStatsData;
-        }
-      } catch (error) {
-        console.warn('Group stats fallback:', error);
-        groupStats = [{ active_groups: 0 }];
+      if (dashboardStats && dashboardStats.length > 0) {
+        const stats = dashboardStats[0];
+        console.log('✅ Dashboard stats loaded:', stats);
+        
+        setStats({
+          total_orders: Number(stats.total_orders || 0),
+          pending_orders: Number(stats.pending_orders || 0),
+          total_revenue: Number(stats.total_revenue || 0),
+          active_groups: Number(stats.active_groups || 0),
+          total_users: Number(stats.total_users || 0)
+        });
       }
-
-      try {
-        const { count: userCountData, error: userError } = await supabase
-          .from('user_profiles')
-          .select('*', { count: 'exact', head: true });
-        if (userError) {
-          console.warn('User count failed:', userError);
-          userCount = 0;
-        } else {
-          userCount = userCountData;
-        }
-      } catch (error) {
-        console.warn('User count fallback:', error);
-        userCount = 0;
-      }
-
-      const updatedStats = {
-        total_orders: Number(orderStats?.[0]?.total_orders || 0),
-        pending_orders: Number(orderStats?.[0]?.pending_orders || 0),
-        total_revenue: Number(orderStats?.[0]?.total_revenue || 0),
-        active_groups: Number(groupStats?.[0]?.active_groups || 0),
-        total_users: Number(userCount || 0)
-      };
-
-      console.log('✅ Admin statistics loaded:', updatedStats);
-      setStats(updatedStats);
     } catch (error: any) {
       console.error('❌ Error fetching admin stats:', error);
       setError(error.message || 'Failed to load statistics');
+      toast.error('Failed to load admin statistics');
     }
   }, []);
 
   const fetchOrders = useCallback(async () => {
     try {
       console.log('📋 Fetching admin orders...');
-      setError(null);
       
       const { data, error } = await supabase
         .from('orders')
         .select(`
           *,
-          user_profile:user_profiles(full_name, email, phone)
+          user_profiles(full_name, email, phone)
         `)
         .order('created_at', { ascending: false })
         .limit(50);
@@ -108,8 +70,8 @@ export const useAdminData = () => {
       const formattedOrders: AdminOrder[] = data?.map(order => ({
         ...order,
         items: Array.isArray(order.items) ? order.items : [],
-        user_profile: order.user_profile || {
-          full_name: 'Guest User',
+        user_profile: order.user_profiles || {
+          full_name: order.phone_number ? 'Guest User' : 'Unknown User',
           email: 'N/A',
           phone: order.phone_number || null
         }
@@ -127,7 +89,6 @@ export const useAdminData = () => {
   const fetchBundles = useCallback(async () => {
     try {
       console.log('📦 Fetching admin bundles...');
-      setError(null);
       
       const { data, error } = await supabase
         .from('bundles')
@@ -180,7 +141,7 @@ export const useAdminData = () => {
   useEffect(() => {
     refreshAllData();
 
-    // Set up real-time listeners with error handling
+    // Set up real-time listeners
     const ordersChannel = supabase
       .channel('admin-orders-changes')
       .on('postgres_changes', 
@@ -191,9 +152,7 @@ export const useAdminData = () => {
           fetchOrders();
         }
       )
-      .subscribe((status) => {
-        console.log('Orders channel status:', status);
-      });
+      .subscribe();
 
     const bundlesChannel = supabase
       .channel('admin-bundles-changes')
@@ -201,16 +160,27 @@ export const useAdminData = () => {
         { event: '*', schema: 'public', table: 'bundles' },
         (payload) => {
           console.log('🔄 Bundle changed:', payload);
+          fetchStats();
           fetchBundles();
         }
       )
-      .subscribe((status) => {
-        console.log('Bundles channel status:', status);
-      });
+      .subscribe();
+
+    const customItemsChannel = supabase
+      .channel('admin-custom-items-changes')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'custom_buy_items' },
+        (payload) => {
+          console.log('🔄 Custom item changed:', payload);
+          fetchStats();
+        }
+      )
+      .subscribe();
 
     return () => {
       supabase.removeChannel(ordersChannel);
       supabase.removeChannel(bundlesChannel);
+      supabase.removeChannel(customItemsChannel);
     };
   }, [refreshAllData, fetchStats, fetchOrders, fetchBundles]);
 

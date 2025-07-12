@@ -1,12 +1,19 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AdminGroupManagement from './AdminGroupManagement';
 import AdminGroupsList from './AdminGroupsList';
 import { useAdminGroups } from '@/hooks/useAdminGroups';
+import { toast } from 'sonner';
 
 const AdminGroupBuyingManagement = () => {
-  const { groups, isLoading } = useAdminGroups();
+  const { groups, isLoading, fetchGroups } = useAdminGroups();
+
+  // Force refresh groups on component mount
+  useEffect(() => {
+    console.log('🔄 AdminGroupBuyingManagement mounted, fetching groups...');
+    fetchGroups();
+  }, [fetchGroups]);
 
   return (
     <div className="space-y-6">
@@ -17,8 +24,12 @@ const AdminGroupBuyingManagement = () => {
       
       <Tabs defaultValue="management" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="management">Group Management</TabsTrigger>
-          <TabsTrigger value="overview">Groups Overview</TabsTrigger>
+          <TabsTrigger value="management">
+            Group Management ({groups?.length || 0})
+          </TabsTrigger>
+          <TabsTrigger value="overview">
+            Groups Overview
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="management" className="space-y-6">
