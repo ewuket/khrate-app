@@ -15,38 +15,37 @@ export const useAdminData = () => {
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [bundles, setBundles] = useState<AdminBundle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchStats = useCallback(async () => {
     try {
       console.log('📊 Fetching admin statistics...');
+      setError(null);
       
-      // Get basic order stats
-      const { data: orderStats, error: orderError } = await supabase.rpc('get_admin_order_stats');
-      if (orderError) throw orderError;
+      // Use the optimized admin dashboard stats function
+      const { data: dashboardStats, error: statsError } = await supabase.rpc('get_admin_dashboard_stats');
+      
+      if (statsError) {
+        console.error('Stats RPC error:', statsError);
+        throw statsError;
+      }
 
-      // Get group stats
-      const { data: groupStats, error: groupError } = await supabase.rpc('get_admin_group_stats');
-      if (groupError) throw groupError;
-
-      // Get user count
-      const { count: userCount, error: userError } = await supabase
-        .from('user_profiles')
-        .select('*', { count: 'exact', head: true });
-      if (userError) throw userError;
-
-      const updatedStats = {
-        total_orders: Number(orderStats?.[0]?.total_orders || 0),
-        pending_orders: Number(orderStats?.[0]?.pending_orders || 0),
-        total_revenue: Number(orderStats?.[0]?.total_revenue || 0),
-        active_groups: Number(groupStats?.[0]?.active_groups || 0),
-        total_users: Number(userCount || 0)
-      };
-
-      console.log('✅ Admin statistics loaded:', updatedStats);
-      setStats(updatedStats);
+      if (dashboardStats && dashboardStats.length > 0) {
+        const stats = dashboardStats[0];
+        console.log('✅ Dashboard stats loaded:', stats);
+        
+        setStats({
+          total_orders: Number(stats.total_orders || 0),
+          pending_orders: Number(stats.pending_orders || 0),
+          total_revenue: Number(stats.total_revenue || 0),
+          active_groups: Number(stats.active_groups || 0),
+          total_users: Number(stats.total_users || 0)
+        });
+      }
     } catch (error: any) {
       console.error('❌ Error fetching admin stats:', error);
-      toast.error('Failed to load statistics');
+      setError(error.message || 'Failed to load statistics');
+      toast.error('Failed to load admin statistics');
     }
   }, []);
 
@@ -58,18 +57,21 @@ export const useAdminData = () => {
         .from('orders')
         .select(`
           *,
-          user_profile:user_profiles(full_name, email, phone)
+          user_profiles(full_name, email, phone)
         `)
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching orders:', error);
+        throw error;
+      }
 
       const formattedOrders: AdminOrder[] = data?.map(order => ({
         ...order,
         items: Array.isArray(order.items) ? order.items : [],
-        user_profile: order.user_profile || {
-          full_name: 'Guest User',
+        user_profile: order.user_profiles || {
+          full_name: order.phone_number ? 'Guest User' : 'Unknown User',
           email: 'N/A',
           phone: order.phone_number || null
         }
@@ -79,7 +81,8 @@ export const useAdminData = () => {
       setOrders(formattedOrders);
     } catch (error: any) {
       console.error('❌ Error fetching admin orders:', error);
-      toast.error('Failed to load orders');
+      setError(error.message || 'Failed to load orders');
+      setOrders([]);
     }
   }, []);
 
@@ -95,7 +98,10 @@ export const useAdminData = () => {
         `)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching bundles:', error);
+        throw error;
+      }
 
       const formattedBundles = data?.map(bundle => ({
         ...bundle,
@@ -108,19 +114,25 @@ export const useAdminData = () => {
       setBundles(formattedBundles);
     } catch (error: any) {
       console.error('❌ Error fetching admin bundles:', error);
-      toast.error('Failed to load bundles');
+      setError(error.message || 'Failed to load bundles');
+      setBundles([]);
     }
   }, []);
 
   const refreshAllData = useCallback(async () => {
     console.log('🔄 Refreshing all admin data...');
     setLoading(true);
+    setError(null);
+    
     try {
-      await Promise.all([
+      await Promise.allSettled([
         fetchStats(),
         fetchOrders(),
         fetchBundles()
       ]);
+    } catch (error: any) {
+      console.error('Error refreshing data:', error);
+      setError(error.message || 'Failed to refresh data');
     } finally {
       setLoading(false);
     }
@@ -129,13 +141,13 @@ export const useAdminData = () => {
   useEffect(() => {
     refreshAllData();
 
-    // Listen for real-time updates
+    // Set up real-time listeners
     const ordersChannel = supabase
       .channel('admin-orders-changes')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'orders' },
-        () => {
-          console.log('🔄 Order changed, refreshing data...');
+        (payload) => {
+          console.log('🔄 Order changed:', payload);
           fetchStats();
           fetchOrders();
         }
@@ -146,9 +158,21 @@ export const useAdminData = () => {
       .channel('admin-bundles-changes')
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'bundles' },
-        () => {
-          console.log('🔄 Bundle changed, refreshing data...');
+        (payload) => {
+          console.log('🔄 Bundle changed:', payload);
+          fetchStats();
           fetchBundles();
+        }
+      )
+      .subscribe();
+
+    const customItemsChannel = supabase
+      .channel('admin-custom-items-changes')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'custom_buy_items' },
+        (payload) => {
+          console.log('🔄 Custom item changed:', payload);
+          fetchStats();
         }
       )
       .subscribe();
@@ -156,6 +180,7 @@ export const useAdminData = () => {
     return () => {
       supabase.removeChannel(ordersChannel);
       supabase.removeChannel(bundlesChannel);
+      supabase.removeChannel(customItemsChannel);
     };
   }, [refreshAllData, fetchStats, fetchOrders, fetchBundles]);
 
@@ -164,6 +189,7 @@ export const useAdminData = () => {
     orders,
     bundles,
     loading,
+    error,
     refreshAllData,
     fetchStats,
     fetchOrders,
