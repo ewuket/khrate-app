@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAdminBundles, AdminBundle, BundleFormData } from "@/hooks/useAdminBundles";
 import { useAdminOperations } from "@/hooks/useAdminOperations";
 import AdminBundleForm from "./AdminBundleForm";
@@ -8,7 +8,6 @@ import AdminBundleGrid from "./bundle-management/AdminBundleGrid";
 import AdminBundleEmptyState from "./bundle-management/AdminBundleEmptyState";
 import AdminBundleLoadingState from "./bundle-management/AdminBundleLoadingState";
 import AdminBundleDebugInfo from "./bundle-management/AdminBundleDebugInfo";
-import { toast } from "sonner";
 
 const AdminBundleManagement: React.FC = () => {
   const { 
@@ -29,25 +28,17 @@ const AdminBundleManagement: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingBundle, setEditingBundle] = useState<AdminBundle | null>(null);
 
-  // Force refresh bundles on component mount
-  useEffect(() => {
-    console.log('🔄 AdminBundleManagement mounted, fetching bundles...');
-    fetchBundles();
-  }, [fetchBundles]);
-
   const handleCreateBundle = async (bundleData: BundleFormData) => {
     try {
       console.log('Creating bundle with data:', bundleData);
       await createBundle(bundleData);
       setShowForm(false);
-      toast.success('Bundle created successfully');
       // Force refresh after creation
       setTimeout(() => {
         fetchBundles();
       }, 1000);
     } catch (error) {
       console.error('Error creating bundle:', error);
-      toast.error('Failed to create bundle');
     }
   };
 
@@ -57,14 +48,12 @@ const AdminBundleManagement: React.FC = () => {
       await updateBundle(bundleData);
       setShowForm(false);
       setEditingBundle(null);
-      toast.success('Bundle updated successfully');
       // Force refresh after update
       setTimeout(() => {
         fetchBundles();
       }, 1000);
     } catch (error) {
       console.error('Error updating bundle:', error);
-      toast.error('Failed to update bundle');
     }
   };
 
@@ -78,14 +67,12 @@ const AdminBundleManagement: React.FC = () => {
     if (confirm('Are you sure you want to delete this bundle?')) {
       try {
         await deleteBundle(bundleId);
-        toast.success('Bundle deleted successfully');
         // Force refresh after deletion
         setTimeout(() => {
           fetchBundles();
         }, 1000);
       } catch (error) {
         console.error('Error deleting bundle:', error);
-        toast.error('Failed to delete bundle');
       }
     }
   };
@@ -94,14 +81,12 @@ const AdminBundleManagement: React.FC = () => {
     try {
       console.log('Toggling bundle active status:', bundleId, 'from', isActive, 'to', !isActive);
       await toggleBundleActive(bundleId, isActive);
-      toast.success(`Bundle ${!isActive ? 'activated' : 'deactivated'} successfully`);
       // Force refresh after toggle
       setTimeout(() => {
         fetchBundles();
       }, 1000);
     } catch (error) {
       console.error('Error toggling bundle status:', error);
-      toast.error('Failed to update bundle status');
     }
   };
 
@@ -109,14 +94,12 @@ const AdminBundleManagement: React.FC = () => {
     try {
       console.log('Toggling bundle featured status:', bundleId, 'from', isFeatured, 'to', !isFeatured);
       await toggleBundleFeatured(bundleId, isFeatured);
-      toast.success(`Bundle ${!isFeatured ? 'featured' : 'unfeatured'} successfully`);
       // Force refresh after toggle
       setTimeout(() => {
         fetchBundles();
       }, 1000);
     } catch (error) {
       console.error('Error toggling featured status:', error);
-      toast.error('Failed to update featured status');
     }
   };
 
@@ -128,7 +111,6 @@ const AdminBundleManagement: React.FC = () => {
   const handleRefresh = () => {
     console.log('Refreshing bundles...');
     fetchBundles();
-    toast.success('Bundles refreshed');
   };
 
   const handleCreateBundleClick = () => {
