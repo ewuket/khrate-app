@@ -1,116 +1,216 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+export interface StockItem {
+  id: number;
+  quantity: number;
+  type: 'custom_item' | 'bundle_item';
+  name: string;
+}
+
+interface OrderItem {
+  product_id: number;
+  product_name: string;
+  quantity: number;
+  type: 'custom_item' | 'bundle';
+}
 
 export const useStockManagement = () => {
-  
-  const updateStockAfterOrder = async (orderItems: any[]) => {
-    console.log('🔄 Updating stock after order:', orderItems);
-    
+  const reduceStockAfterOrderConfirmation = async (orderId: string) => {
     try {
-      for (const item of orderItems) {
-        if (item.type === 'bundle') {
-          // Get bundle items and reduce stock for each
-          const { data: bundleData, error: bundleError } = await supabase
-            .from('bundles')
-            .select(`
-              id,
-              bundle_items (
-                item_name,
-                quantity,
-                unit
-              )
-            `)
-            .eq('id', item.id)
-            .single();
+      console.log('🔄 Processing stock reduction for order:', orderId);
 
-          if (bundleError) {
-            console.error('❌ Error fetching bundle items:', bundleError);
-            continue;
-          }
+      // Get order details
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', orderId)
+        .single();
 
-          if (bundleData?.bundle_items) {
-            for (const bundleItem of bundleData.bundle_items) {
-              await reduceCustomItemStock(bundleItem.item_name, bundleItem.quantity * item.quantity);
-            }
-          }
-        } else if (item.type === 'custom') {
-          // Directly reduce stock for custom items
-          await reduceCustomItemStock(item.name, item.quantity);
-        } else if (item.type === 'group') {
-          // Handle group items - these should have their own item list
-          if (item.items && Array.isArray(item.items)) {
-            for (const groupItem of item.items) {
-              await reduceCustomItemStock(groupItem.name, groupItem.quantity);
-            }
-          }
-        }
+      if (orderError) {
+        console.error('❌ Error fetching order:', orderError);
+        throw orderError;
       }
-      
-      console.log('✅ Stock updated successfully');
-      return true;
-    } catch (error) {
-      console.error('❌ Error updating stock:', error);
-      toast.error('Failed to update stock levels');
-      return false;
-    }
-  };
 
-  const reduceCustomItemStock = async (itemName: string, quantity: number) => {
-    console.log(`🔄 Reducing stock for ${itemName} by ${quantity}`);
-    
-    try {
-      // Find the custom item by name
-      const { data: items, error: findError } = await supabase
-        .from('custom_buy_items')
-        .select('id, stock_quantity, name')
-        .ilike('name', itemName)
-        .limit(1);
-
-      if (findError || !items || items.length === 0) {
-        console.warn(`⚠️ Item not found in custom_buy_items: ${itemName}`);
+      if (!order || !order.items) {
+        console.warn('⚠️ No order items found');
         return;
       }
 
-      const item = items[0];
-      const newStock = Math.max(0, (item.stock_quantity || 0) - quantity);
-
-      const { error: updateError } = await supabase
-        .from('custom_buy_items')
-        .update({ 
-          stock_quantity: newStock,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', item.id);
-
-      if (updateError) {
-        console.error(`❌ Error updating stock for ${itemName}:`, updateError);
-      } else {
-        console.log(`✅ Stock updated for ${itemName}: ${item.stock_quantity} -> ${newStock}`);
+      // Type guard and safe conversion from Json[] to OrderItem[]
+      const orderItems = Array.isArray(order.items) 
+        ? (order.items as unknown as OrderItem[])
+        : [];
+      
+      if (orderItems.length === 0) {
+        console.warn('⚠️ Order items is not a valid array');
+        return;
       }
+
+      console.log('📦 Processing items for stock reduction:', orderItems);
+
+      // Process each item in the order
+      for (const item of orderItems) {
+        if (item.type === 'custom_item') {
+          // Reduce stock for custom items
+          await reduceCustomItemStock(item.product_id, item.quantity);
+        } else if (item.type === 'bundle') {
+          // For bundles, reduce stock of individual bundle items
+          await reduceBundleItemsStock(item.product_id, item.quantity);
+        }
+      }
+
+      console.log('✅ Stock reduction completed for order:', orderId);
+      toast.success('Stock levels updated successfully');
     } catch (error) {
-      console.error(`❌ Error reducing stock for ${itemName}:`, error);
+      console.error('❌ Error reducing stock:', error);
+      toast.error('Failed to update stock levels');
+      throw error;
     }
   };
 
-  const getLowStockItems = async (threshold: number = 10) => {
+  const reduceCustomItemStock = async (itemId: number, quantityOrdered: number) => {
     try {
-      const { data, error } = await supabase.rpc('get_low_stock_items', { threshold });
-      
-      if (error) {
-        console.error('❌ Error fetching low stock items:', error);
-        throw error;
+      console.log(`🔄 Reducing stock for custom item ${itemId} by ${quantityOrdered}`);
+
+      // Get current stock
+      const { data: currentItem, error: fetchError } = await supabase
+        .from('custom_buy_items')
+        .select('stock_quantity, name')
+        .eq('id', itemId)
+        .single();
+
+      if (fetchError) {
+        console.error('❌ Error fetching current stock:', fetchError);
+        throw fetchError;
       }
 
-      return data || [];
+      if (!currentItem) {
+        console.warn(`⚠️ Custom item ${itemId} not found`);
+        return;
+      }
+
+      const newStock = Math.max(0, currentItem.stock_quantity - quantityOrdered);
+      
+      console.log(`📊 Stock update for ${currentItem.name}: ${currentItem.stock_quantity} → ${newStock}`);
+
+      // Update stock
+      const { error: updateError } = await supabase.rpc('update_custom_item_safe', {
+        item_id: itemId,
+        item_data: { stock_quantity: newStock }
+      });
+
+      if (updateError) {
+        console.error('❌ Error updating custom item stock:', updateError);
+        throw updateError;
+      }
+
+      console.log(`✅ Stock updated for custom item: ${currentItem.name}`);
     } catch (error) {
-      console.error('❌ Error in getLowStockItems:', error);
-      return [];
+      console.error(`❌ Failed to reduce stock for custom item ${itemId}:`, error);
+      throw error;
+    }
+  };
+
+  const reduceBundleItemsStock = async (bundleId: number, bundleQuantity: number) => {
+    try {
+      console.log(`🔄 Reducing stock for bundle ${bundleId} items (quantity: ${bundleQuantity})`);
+
+      // Get bundle items
+      const { data: bundleItems, error: bundleError } = await supabase
+        .from('bundle_items')
+        .select('*')
+        .eq('bundle_id', bundleId);
+
+      if (bundleError) {
+        console.error('❌ Error fetching bundle items:', bundleError);
+        throw bundleError;
+      }
+
+      if (!bundleItems || bundleItems.length === 0) {
+        console.warn(`⚠️ No items found for bundle ${bundleId}`);
+        return;
+      }
+
+      console.log(`📦 Processing ${bundleItems.length} items in bundle:`, bundleItems);
+
+      // For each bundle item, find corresponding custom item and reduce stock
+      for (const bundleItem of bundleItems) {
+        // Find custom item by name (assuming bundle item names match custom item names)
+        const { data: customItems, error: searchError } = await supabase
+          .from('custom_buy_items')
+          .select('id, stock_quantity, name')
+          .ilike('name', bundleItem.item_name);
+
+        if (searchError) {
+          console.error(`❌ Error searching for custom item ${bundleItem.item_name}:`, searchError);
+          continue;
+        }
+
+        if (!customItems || customItems.length === 0) {
+          console.warn(`⚠️ No matching custom item found for bundle item: ${bundleItem.item_name}`);
+          continue;
+        }
+
+        // Use the first match (exact name match preferred)
+        const customItem = customItems.find(item => item.name.toLowerCase() === bundleItem.item_name.toLowerCase()) || customItems[0];
+        
+        // Calculate total quantity needed (bundle quantity × item quantity per bundle)
+        const totalQuantityNeeded = bundleQuantity * (bundleItem.quantity || 1);
+        
+        await reduceCustomItemStock(customItem.id, totalQuantityNeeded);
+      }
+
+      console.log(`✅ Stock reduction completed for bundle ${bundleId}`);
+    } catch (error) {
+      console.error(`❌ Failed to reduce stock for bundle ${bundleId}:`, error);
+      throw error;
+    }
+  };
+
+  const checkStockAvailability = async (items: OrderItem[]) => {
+    try {
+      console.log('🔍 Checking stock availability for items:', items);
+
+      const stockIssues = [];
+
+      for (const item of items) {
+        if (item.type === 'custom_item') {
+          const { data: customItem, error } = await supabase
+            .from('custom_buy_items')
+            .select('stock_quantity, name')
+            .eq('id', item.product_id)
+            .single();
+
+          if (error || !customItem) {
+            stockIssues.push(`Item "${item.product_name}" not found`);
+            continue;
+          }
+
+          if (customItem.stock_quantity < item.quantity) {
+            stockIssues.push(`Insufficient stock for "${customItem.name}". Available: ${customItem.stock_quantity}, Requested: ${item.quantity}`);
+          }
+        }
+      }
+
+      return {
+        available: stockIssues.length === 0,
+        issues: stockIssues
+      };
+    } catch (error) {
+      console.error('❌ Error checking stock availability:', error);
+      return {
+        available: false,
+        issues: ['Error checking stock availability']
+      };
     }
   };
 
   return {
-    updateStockAfterOrder,
-    getLowStockItems
+    reduceStockAfterOrderConfirmation,
+    reduceCustomItemStock,
+    reduceBundleItemsStock,
+    checkStockAvailability
   };
 };

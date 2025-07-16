@@ -18,8 +18,9 @@ export const useAdminData = () => {
 
   const fetchStats = async () => {
     try {
-      console.log('📊 Fetching admin statistics...');
+      console.log('📊 Fetching admin statistics using new function...');
       
+      // Use the new admin stats function for accurate calculations
       const { data: orderStats, error: orderStatsError } = await supabase
         .rpc('get_admin_order_stats');
         
@@ -28,6 +29,7 @@ export const useAdminData = () => {
         throw new Error(`Order stats fetch failed: ${orderStatsError.message}`);
       }
 
+      // Get users count from user_profiles
       const { count: usersCount, error: usersError } = await supabase
         .from('user_profiles')
         .select('*', { count: 'exact', head: true });
@@ -37,6 +39,7 @@ export const useAdminData = () => {
         throw new Error(`Users fetch failed: ${usersError.message}`);
       }
 
+      // Get active groups count
       const { count: groupsCount, error: groupsError } = await supabase
         .from('group_sessions')
         .select('*', { count: 'exact', head: true })
@@ -47,6 +50,7 @@ export const useAdminData = () => {
         throw new Error(`Groups fetch failed: ${groupsError.message}`);
       }
 
+      // Use the stats from the database function
       const statsFromFunction = orderStats?.[0];
       
       const calculatedStats = {
@@ -80,7 +84,7 @@ export const useAdminData = () => {
           )
         `)
         .order('created_at', { ascending: false })
-        .limit(100);
+        .limit(50);
 
       if (error) {
         console.error('❌ Orders fetch failed:', error);

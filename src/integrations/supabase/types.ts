@@ -369,7 +369,6 @@ export type Database = {
       group_sessions: {
         Row: {
           admin_notes: string | null
-          bundle_items: Json | null
           created_at: string
           discount_percentage: number
           featured_at: string | null
@@ -391,7 +390,6 @@ export type Database = {
         }
         Insert: {
           admin_notes?: string | null
-          bundle_items?: Json | null
           created_at?: string
           discount_percentage?: number
           featured_at?: string | null
@@ -413,7 +411,6 @@ export type Database = {
         }
         Update: {
           admin_notes?: string | null
-          bundle_items?: Json | null
           created_at?: string
           discount_percentage?: number
           featured_at?: string | null
@@ -629,17 +626,6 @@ export type Database = {
           total_revenue: number
         }[]
       }
-      get_admin_order_stats_by_source: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          bundle_orders: number
-          custom_orders: number
-          group_orders: number
-          bundle_revenue: number
-          custom_revenue: number
-          group_revenue: number
-        }[]
-      }
       get_current_user_id: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -647,17 +633,6 @@ export type Database = {
       get_custom_items_count: {
         Args: Record<PropertyKey, never>
         Returns: number
-      }
-      get_daily_order_stats: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          date_created: string
-          bundle_orders: number
-          custom_orders: number
-          group_orders: number
-          total_orders: number
-          total_revenue: number
-        }[]
       }
       get_featured_groups: {
         Args: Record<PropertyKey, never>
@@ -708,16 +683,6 @@ export type Database = {
           status: string
           join_code: string
           created_at: string
-        }[]
-      }
-      get_low_stock_items: {
-        Args: { threshold?: number }
-        Returns: {
-          id: number
-          name: string
-          stock_quantity: number
-          category: string
-          price: number
         }[]
       }
       is_admin_user: {
