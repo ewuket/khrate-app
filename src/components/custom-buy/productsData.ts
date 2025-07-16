@@ -1,15 +1,6 @@
-// Sample product data
-export interface Product {
-  id: number;
-  name: string;
-  price: number;
-  unit: string;
-  category: string;
-  image: string;
-  description?: string;
-}
 
-export const products: Product[] = [
+// Sample product data
+const products = [
   // Perishable Items
   {
     id: 1,

@@ -4,29 +4,40 @@ import { Button } from "@/components/ui/button";
 
 interface CartItemProps {
   item: {
-    id: string;
-    product_name: string;
-    product_price: number;
+    id: number;
+    name: string;
+    price: number;
     quantity: number;
-    product_unit?: string;
+    image?: string;
+    unit?: string;
   };
   formatPrice: (price: number) => string;
-  onUpdateQuantity: (id: string, quantity: number) => void;
-  onRemove: (id: string) => void;
+  onUpdateQuantity: (id: number, quantity: number) => void;
+  onRemoveFromCart: (id: number) => void;
 }
 
 const CartItem = ({ 
   item, 
   formatPrice, 
   onUpdateQuantity, 
-  onRemove 
+  onRemoveFromCart 
 }: CartItemProps) => {
   return (
     <div key={item.id} className="flex items-center gap-4 border-b pb-4">
+      {item.image && (
+        <div className="h-16 w-16 rounded overflow-hidden">
+          <img 
+            src={item.image} 
+            alt={item.name}
+            className="h-full w-full object-cover"
+          />
+        </div>
+      )}
+      
       <div className="flex-1 min-w-0">
-        <h3 className="font-medium truncate">{item.product_name}</h3>
+        <h3 className="font-medium truncate">{item.name}</h3>
         <div className="text-sm text-muted-foreground">
-          {formatPrice(item.product_price)} per {item.product_unit || 'item'}
+          {formatPrice(item.price)}
         </div>
         
         <div className="flex items-center gap-2 mt-2">
@@ -34,7 +45,7 @@ const CartItem = ({
             variant="outline" 
             size="icon" 
             className="h-7 w-7"
-            onClick={() => onUpdateQuantity(item.id, Math.max(1, item.quantity - 1))}
+            onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
           >
             <Minus className="h-3 w-3" />
           </Button>
@@ -51,13 +62,13 @@ const CartItem = ({
       </div>
       
       <div className="font-medium whitespace-nowrap">
-        {formatPrice(item.product_price * item.quantity)}
+        {formatPrice(item.price * item.quantity)}
       </div>
       
       <Button 
         variant="ghost" 
         size="icon" 
-        onClick={() => onRemove(item.id)}
+        onClick={() => onRemoveFromCart(item.id)}
       >
         <Trash2 className="h-4 w-4 text-red-500" />
       </Button>

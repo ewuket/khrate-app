@@ -1,143 +1,144 @@
 
-import React, { useState } from 'react';
-import { Card } from "@/components/ui/card";
-import BundleCardHeader from './BundleCardHeader';
-import BundleCardContent from './BundleCardContent';
-import BundleCardFooter from './BundleCardFooter';
-import BundlePreviewModal from './BundlePreviewModal';
-import { useCartContext } from '@/contexts/CartContext';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ShoppingBasket, Eye } from "lucide-react";
+import { toast } from "sonner";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface BundleCardProps {
-  id: number;
-  title: string;
-  description: string;
-  price: number;
-  originalPrice: number;
-  discount?: number;
-  items?: string[];
-  image: string;
-  features?: string[];
-  onAuthRequired?: () => void;
-  isAuthenticated?: boolean;
-  onClick?: () => void;
+  bundle: {
+    id: number;
+    name: string;
+    description: string;
+    price: number;
+    image: string;
+    items: string[];
+    category?: string;
+  };
+  onAddToCart: (bundle: any) => void;
 }
 
-const BundleCard: React.FC<BundleCardProps> = ({
-  id,
-  title,
-  description,
-  price,
-  originalPrice,
-  discount = 0,
-  items = [],
-  image,
-  features = [],
-  onAuthRequired,
-  isAuthenticated = false,
-  onClick
-}) => {
-  const { addToCart } = useCartContext();
-  const [showPreview, setShowPreview] = useState(false);
-  const [isAdding, setIsAdding] = useState(false);
-
-  const handleAddToCart = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Check if user needs to authenticate
-    if (!isAuthenticated && onAuthRequired) {
-      onAuthRequired();
-      return;
-    }
-    
-    if (isAdding) return;
-    
-    setIsAdding(true);
-    
-    const bundleItem = {
-      id,
-      name: title,
-      price,
-      unit: 'bundle',
-      type: 'bundle' as const,
-      items
-    };
-
-    console.log('Adding bundle to cart:', bundleItem);
-    
-    try {
-      await addToCart(bundleItem);
-    } catch (error) {
-      console.error('Error adding to cart:', error);
-    } finally {
-      setTimeout(() => {
-        setIsAdding(false);
-      }, 500);
-    }
+const BundleCard = ({ bundle, onAddToCart }: BundleCardProps) => {
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  
+  const handleAddToCart = () => {
+    onAddToCart(bundle);
+    toast.success(`${bundle.name} added to cart!`);
   };
-
-  const handlePreview = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setShowPreview(true);
-  };
-
-  const bundleForPreview = {
-    id,
-    title,
-    price,
-    originalPrice,
-    image,
-    items: items.map(item => {
-      const parts = item.split(' (');
-      const name = parts[0];
-      const quantityPart = parts[1]?.replace(')', '') || '';
-      const [quantity, unit] = quantityPart.split(' ');
-      return {
-        name,
-        quantity: quantity || '1',
-        unit: unit || 'piece'
-      };
-    }),
-    description
-  };
-
+  
+  const fallbackImage = "/placeholder.svg";
+  
   return (
     <>
-      <Card 
-        className="cursor-pointer hover:shadow-xl transition-all duration-300 h-full flex flex-col group overflow-hidden border-gray-200 hover:border-khrate-300"
-        onClick={onClick}
-      >
-        <BundleCardHeader 
-          title={title}
-          description={description}
-          discount={discount}
-        />
-
-        <BundleCardContent
-          image={image}
-          title={title}
-          features={features}
-          itemsCount={items.length}
-          onPreview={handlePreview}
-        />
-
-        <BundleCardFooter
-          price={price}
-          originalPrice={originalPrice}
-          isAdding={isAdding}
-          onPreview={handlePreview}
-          onAddToCart={handleAddToCart}
-        />
+      <Card className="overflow-hidden transition-all duration-300 hover:shadow-md">
+        <div className="relative h-48 overflow-hidden">
+          <img 
+            src={imageError ? fallbackImage : bundle.image} 
+            alt={bundle.name} 
+            className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+            onError={() => setImageError(true)}
+          />
+        </div>
+        <CardContent className="p-6">
+          <h3 className="text-xl font-bold mb-2">{bundle.name}</h3>
+          <p className="text-muted-foreground mb-4">{bundle.description}</p>
+          
+          <div className="mb-4">
+            <div className="text-xs text-muted-foreground mb-2">Includes:</div>
+            <div className="flex flex-wrap gap-1">
+              {bundle.items.slice(0, 5).map((item, index) => (
+                <span 
+                  key={index} 
+                  className="bg-gray-100 text-xs px-2 py-1 rounded-full"
+                >
+                  {item}
+                </span>
+              ))}
+              {bundle.items.length > 5 && (
+                <span className="bg-gray-100 text-xs px-2 py-1 rounded-full">
+                  +{bundle.items.length - 5} more
+                </span>
+              )}
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-between mt-6">
+            <div className="text-xl font-bold text-orange-500 ml-auto">{bundle.price.toLocaleString()} RWF</div>
+          </div>
+          
+          <div className="flex gap-2 mt-4">
+            <Button 
+              size="sm" 
+              variant="outline"
+              className="flex-1"
+              onClick={() => setPreviewOpen(true)}
+            >
+              <Eye className="mr-2 h-4 w-4" />
+              Preview
+            </Button>
+            <Button 
+              size="sm"
+              className="flex-1 bg-orange-500 hover:bg-orange-600"
+              onClick={handleAddToCart}
+            >
+              <ShoppingBasket className="mr-2 h-4 w-4" />
+              Add to Cart
+            </Button>
+          </div>
+        </CardContent>
       </Card>
 
-      <BundlePreviewModal
-        bundle={bundleForPreview}
-        isOpen={showPreview}
-        onClose={() => setShowPreview(false)}
-        onAddToCart={handleAddToCart}
-        isAdding={isAdding}
-      />
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{bundle.name} Contents</DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <div className="grid grid-cols-2 gap-4">
+              {bundle.items.map((item, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-khrate-500"></div>
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+            
+            <div className="mt-6 pt-4 border-t">
+              <div className="flex justify-between">
+                <span className="font-medium">Price:</span>
+                <span className="font-bold text-khrate-500">{bundle.price.toLocaleString()} RWF</span>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setPreviewOpen(false)}
+            >
+              Close
+            </Button>
+            <Button
+              className="bg-khrate-500 hover:bg-khrate-600"
+              onClick={() => {
+                handleAddToCart();
+                setPreviewOpen(false);
+              }}
+            >
+              Add to Cart
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

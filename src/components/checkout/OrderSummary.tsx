@@ -1,50 +1,51 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Receipt } from "lucide-react";
+import { CalendarCheck } from "lucide-react";
+import { format } from "date-fns";
 
 interface OrderSummaryProps {
   total: number;
   formatPrice: (price: number) => string;
   deliverySchedule: {
-    date: string;
+    date: Date | undefined;
     timeSlot: string;
   };
 }
 
-const OrderSummary = ({ total, formatPrice, deliverySchedule }: OrderSummaryProps) => {
+const OrderSummary = ({ 
+  total, 
+  formatPrice, 
+  deliverySchedule 
+}: OrderSummaryProps) => {
+  const getTimeSlotText = (slot: string) => {
+    switch(slot) {
+      case "morning": return "8AM–11AM";
+      case "midday": return "11AM–2PM";
+      case "afternoon": return "2PM–5PM";
+      case "evening": return "5PM–8PM";
+      default: return "2PM–5PM";
+    }
+  };
+  
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Receipt className="h-5 w-5 text-khrate-500" />
-          Order Summary
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex justify-between items-center text-lg font-semibold">
-          <span>Total Amount:</span>
-          <span className="text-khrate-600">{formatPrice(total)}</span>
-        </div>
-        
-        {deliverySchedule.date && (
-          <div className="pt-4 border-t">
-            <h4 className="font-medium mb-2">Delivery Details</h4>
-            <div className="space-y-1 text-sm text-gray-600">
-              <p>Date: {new Date(deliverySchedule.date).toLocaleDateString()}</p>
-              {deliverySchedule.timeSlot && (
-                <p>Time: {deliverySchedule.timeSlot}</p>
-              )}
-            </div>
+    <div className="space-y-2">
+      <div className="flex justify-between font-semibold">
+        <span>Total Amount:</span>
+        <span>{formatPrice(total)}</span>
+      </div>
+      
+      {/* Delivery Schedule Summary */}
+      {deliverySchedule.date && (
+        <div className="bg-blue-50 p-3 rounded-md mt-2">
+          <div className="flex items-center gap-2">
+            <CalendarCheck className="h-4 w-4 text-khrate-500" />
+            <span className="text-sm font-medium">Delivery scheduled for:</span>
           </div>
-        )}
-        
-        <div className="bg-green-50 border border-green-200 p-3 rounded-md">
-          <p className="text-sm text-green-700">
-            <strong>Free delivery</strong> for orders within Kigali
+          <p className="text-sm mt-1 pl-6">
+            {format(deliverySchedule.date, "PPP")} between {getTimeSlotText(deliverySchedule.timeSlot)}
           </p>
         </div>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 };
 

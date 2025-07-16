@@ -1,11 +1,8 @@
-
 # Welcome to your Lovable project
 
 ## Project info
 
 **URL**: https://lovable.dev/projects/0dc4d47c-3e40-4f52-82e5-d53e219efec9
-
-**Live Site**: https://www.khrate.com
 
 ## How can I edit this code?
 

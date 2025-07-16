@@ -31,8 +31,11 @@ interface ProfileTabsProps {
 const ProfileTabs = ({
   activeTab,
   setActiveTab,
+  profileData,
   savedAddresses,
-  savedBundles
+  savedBundles,
+  handleInputChange,
+  handleSaveChanges
 }: ProfileTabsProps) => {
   return (
     <Tabs 
@@ -48,7 +51,11 @@ const ProfileTabs = ({
       </TabsList>
       
       <TabsContent value="personal" className="space-y-6">
-        <PersonalInfoTab />
+        <PersonalInfoTab 
+          profileData={profileData}
+          handleInputChange={handleInputChange}
+          handleSaveChanges={handleSaveChanges}
+        />
       </TabsContent>
       
       <TabsContent value="addresses" className="space-y-6">

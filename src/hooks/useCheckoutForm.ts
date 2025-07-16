@@ -1,163 +1,107 @@
 
-import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useOrderOperations } from '@/hooks/useOrderOperations';
-import { toast } from 'sonner';
-
-interface CheckoutFormData {
-  phoneNumber: string;
-  paymentMethod: 'momo' | 'mtn' | 'card' | 'bank_transfer';
-  deliveryDate: string;
-  timeSlot: string;
-  deliveryAddress: string;
-}
-
-interface OrderDetails {
-  id: string;
-  total_amount: number;
-  items: any[];
-  delivery_address: string;
-  delivery_date: string;
-  delivery_time_slot: string;
-  payment_method: string;
-}
+import { useState } from "react";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface UseCheckoutFormProps {
-  onSuccess: () => void;
   onOpenChange: (open: boolean) => void;
+  saveOrder: () => void;
+  clearCart: () => void;
 }
 
-export const useCheckoutForm = ({ onSuccess, onOpenChange }: UseCheckoutFormProps) => {
-  const { user, isAuthenticated, openAuthModal } = useAuth();
-  const { submitOrder, isSubmitting } = useOrderOperations();
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
+export const useCheckoutForm = ({
+  onOpenChange,
+  saveOrder,
+  clearCart,
+}: UseCheckoutFormProps) => {
+  const { isAuthenticated, user } = useAuth();
+  const [paymentMethod, setPaymentMethod] = useState("mtn");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [processingPayment, setProcessingPayment] = useState(false);
+  const [deliverySchedule, setDeliverySchedule] = useState<{
+    date: Date | undefined;
+    timeSlot: string;
+  }>({ date: undefined, timeSlot: "afternoon" });
   
-  const [formData, setFormData] = useState<CheckoutFormData>({
-    phoneNumber: '',
-    paymentMethod: 'momo',
-    deliveryDate: '',
-    timeSlot: 'afternoon',
-    deliveryAddress: ''
-  });
-
-  const handleInputChange = (field: keyof CheckoutFormData, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  const getTimeSlotText = (slot: string) => {
+    switch(slot) {
+      case "morning": return "8AM–11AM";
+      case "midday": return "11AM–2PM";
+      case "afternoon": return "2PM–5PM";
+      case "evening": return "5PM–8PM";
+      default: return "2PM–5PM";
+    }
   };
-
-  const validateForm = (): boolean => {
-    if (!formData.phoneNumber.trim()) {
-      toast.error('Phone number is required');
-      return false;
-    }
-    if (!formData.deliveryDate) {
-      toast.error('Delivery date is required');
-      return false;
-    }
-    if (!formData.timeSlot) {
-      toast.error('Time slot is required');
-      return false;
-    }
-    if (!formData.deliveryAddress.trim()) {
-      toast.error('Delivery address is required');
-      return false;
-    }
-    return true;
-  };
-
-  const handlePayment = async (cartItems: any[], getCartTotal: () => number) => {
-    console.log('Checkout form - checking auth state:', { isAuthenticated, userId: user?.id });
+  
+  const handlePayment = (e: React.FormEvent) => {
+    e.preventDefault();
     
-    // Check authentication first
-    if (!isAuthenticated || !user) {
-      console.log('User not authenticated, opening auth modal');
-      toast.error('Please log in to place your order');
-      openAuthModal();
-      return;
-    }
-
-    if (!validateForm()) {
+    // Validate delivery date
+    if (!deliverySchedule.date) {
+      toast.error("Please select a delivery date");
       return;
     }
     
-    try {
-      const total = getCartTotal();
+    setProcessingPayment(true);
+    
+    // Simulate payment processing
+    setTimeout(() => {
+      setProcessingPayment(false);
+      onOpenChange(false);
       
-      // Validate total amount
-      if (!total || total <= 0) {
-        throw new Error('Invalid cart total. Please check your items.');
-      }
-
-      // Validate cart items
-      if (!cartItems || cartItems.length === 0) {
-        throw new Error('No items in cart');
-      }
-
-      console.log('Processing checkout with:', {
-        user: user.id,
-        total,
-        itemCount: cartItems.length,
-        formData
+      // Show the MoMo payment toast notification
+      toast("Payment Instructions", {
+        description: "To complete your order, please pay using the following number: 0795754391.",
+        duration: 10000,
+        action: {
+          label: "Got it",
+          onClick: () => console.log("Payment notice acknowledged"),
+        },
       });
       
-      const orderData = {
-        user_id: user.id,
-        items: cartItems,
-        total_amount: total,
-        original_amount: total,
-        delivery_date: formData.deliveryDate,
-        delivery_time_slot: formData.timeSlot,
-        delivery_address: formData.deliveryAddress,
-        payment_method: formData.paymentMethod,
-        phone_number: formData.phoneNumber
-      };
-
-      console.log('Submitting order:', orderData);
-
-      const result = await submitOrder(orderData);
+      // Save the order before clearing the cart
+      saveOrder();
+      clearCart();
       
-      if (result.success && result.order) {
-        console.log('Order placed successfully:', result.order);
+      // Send confirmation with delivery details
+      const deliveryTimeText = getTimeSlotText(deliverySchedule.timeSlot);
+      const deliveryDateText = deliverySchedule.date ? format(deliverySchedule.date, "PPP") : "";
+      
+      toast.success("Your order has been placed!", {
+        description: `Scheduled for delivery on ${deliveryDateText} between ${deliveryTimeText}.`,
+        duration: 5000,
+      });
 
-        setOrderDetails({
-          id: result.order.id,
-          total_amount: result.order.total_amount,
-          items: result.order.items,
-          delivery_address: result.order.delivery_address,
-          delivery_date: result.order.delivery_date,
-          delivery_time_slot: result.order.delivery_time_slot,
-          payment_method: result.order.payment_method
-        });
-
-        onSuccess();
-        onOpenChange(false);
-        setShowSuccessModal(true);
-      } else {
-        throw new Error(result.error || 'Failed to place order');
+      // Provide account creation prompt for guest users
+      if (!isAuthenticated) {
+        setTimeout(() => {
+          toast("Create an Account", {
+            description: "Create an account to track your orders and get exclusive discounts.",
+            duration: 8000,
+            action: {
+              label: "Sign Up",
+              onClick: () => {
+                // This would trigger the auth modal in a real app
+                console.log("User clicked sign up from toast");
+                // This is handled by the onClick of the action
+              }
+            }
+          });
+        }, 1000);
       }
-      
-    } catch (error: any) {
-      console.error('Error processing payment:', error);
-      toast.error(error.message || 'Failed to place order. Please try again.');
-    }
-  };
-
-  const handleFormSubmit = (e: React.FormEvent, cartItems: any[], getCartTotal: () => number) => {
-    e.preventDefault();
-    handlePayment(cartItems, getCartTotal);
+    }, 2000);
   };
 
   return {
-    formData,
-    isProcessing: isSubmitting,
-    showSuccessModal,
-    orderDetails,
-    setShowSuccessModal,
-    handleInputChange,
+    paymentMethod,
+    setPaymentMethod,
+    phoneNumber,
+    setPhoneNumber,
+    processingPayment,
+    deliverySchedule,
+    setDeliverySchedule,
     handlePayment,
-    handleFormSubmit
+    getTimeSlotText,
   };
 };

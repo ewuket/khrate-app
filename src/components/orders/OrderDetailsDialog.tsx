@@ -48,39 +48,37 @@ const OrderDetailsDialog = ({ open, onOpenChange, order }: OrderDetailsDialogPro
           
           <div>
             <p className="text-sm text-muted-foreground">
-              Ordered on {order.created_at ? new Date(order.created_at).toLocaleDateString() : 'N/A'}
+              Ordered on {new Date(order.date).toLocaleDateString()}
             </p>
           </div>
           
           <div className="border-t border-b py-3">
             <h4 className="font-medium mb-2">Items</h4>
             <ul className="space-y-1">
-              {Array.isArray(order.items) ? order.items.map((item, index) => (
+              {order.items.map((item, index) => (
                 <li key={index} className="text-sm flex justify-between">
-                  <span>{typeof item === 'string' ? item : item.name || 'Item'}</span>
+                  <span>{item}</span>
                 </li>
-              )) : (
-                <li className="text-sm">No items</li>
-              )}
+              ))}
             </ul>
           </div>
           
           <div>
-            <p className="text-sm"><span className="font-medium">Delivery Address:</span> {order.delivery_address}</p>
+            <p className="text-sm"><span className="font-medium">Delivery Address:</span> {order.deliveryAddress}</p>
           </div>
           
-          {order.delivery_date && order.delivery_time_slot && (
+          {order.deliverySchedule && (
             <div>
               <p className="text-sm">
-                <span className="font-medium">Delivery Schedule:</span> {new Date(order.delivery_date).toLocaleDateString()}{' '}
-                {timeSlots[order.delivery_time_slot] || order.delivery_time_slot}
+                <span className="font-medium">Delivery Schedule:</span> {new Date(order.deliverySchedule.date).toLocaleDateString()}{' '}
+                {timeSlots[order.deliverySchedule.timeSlot] || order.deliverySchedule.timeSlot}
               </p>
             </div>
           )}
           
           <div className="flex justify-between items-center font-bold">
             <span>Total Amount:</span>
-            <span>{order.total_amount.toLocaleString()} RWF</span>
+            <span>{order.total.toLocaleString()} RWF</span>
           </div>
         </div>
         

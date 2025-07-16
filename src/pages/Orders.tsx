@@ -1,158 +1,210 @@
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
+import { Order } from "@/types/order";
+import OrdersFilter from "@/components/orders/OrdersFilter";
 import OrderCard from "@/components/orders/OrderCard";
 import OrdersEmptyState from "@/components/orders/OrdersEmptyState";
-import OrdersFilter from "@/components/orders/OrdersFilter";
 import OrderDetailsDialog from "@/components/orders/OrderDetailsDialog";
-import { Order, OrderStatus } from "@/types/order";
-import { toast } from "sonner";
+import OrderRatingDialog from "@/components/orders/OrderRatingDialog";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+
+type FilterType = "all" | "pending" | "processing" | "delivered";
 
 const Orders = () => {
-  const { user, isAuthenticated } = useAuth();
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
+  const { isAuthenticated, user, openAuthModal } = useAuth();
+  const navigate = useNavigate();
+  
+  const [filter, setFilter] = useState<FilterType>("all");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
-
-  const fetchOrders = async () => {
-    if (!user?.id) {
-      console.log('No user ID, checking localStorage for guest orders');
-      const guestOrders = JSON.parse(localStorage.getItem(`khrate_orders_guest`) || '[]');
-      setOrders(guestOrders);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      console.log('Fetching orders for user:', user.id);
-
-      const { data: supabaseOrders, error } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Supabase query error:', error);
-        throw error;
-      }
-
-      console.log('Supabase orders:', supabaseOrders);
-
-      const localOrders = JSON.parse(localStorage.getItem(`khrate_orders_${user.id}`) || '[]');
-      console.log('Local storage orders:', localOrders);
-
-      const allOrders = [...(supabaseOrders || []), ...localOrders];
-      const uniqueOrders = allOrders.reduce((acc, current) => {
-        const existingOrder = acc.find(order => order.id === current.id);
-        if (!existingOrder) {
-          acc.push(current);
-        }
-        return acc;
-      }, [] as Order[]);
-
-      console.log('Combined unique orders:', uniqueOrders);
-
-      uniqueOrders.sort((a, b) => 
-        new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime()
-      );
-
-      setOrders(uniqueOrders);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      
-      const localOrders = JSON.parse(localStorage.getItem(`khrate_orders_${user.id}`) || '[]');
-      console.log('Fallback to localStorage orders:', localOrders);
-      setOrders(localOrders);
-      
-      if (localOrders.length === 0) {
-        toast.error('Failed to load orders');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [ratingOpen, setRatingOpen] = useState(false);
+  const [orders, setOrders] = useState<Order[]>([]);
+  
+  // Load user-specific orders from localStorage
   useEffect(() => {
-    fetchOrders();
-  }, [user?.id]);
-
-  const filteredOrders = orders.filter(order => 
-    statusFilter === "all" || order.status === statusFilter
-  );
+    if (isAuthenticated && user) {
+      // Use the user's unique ID to fetch their orders
+      const storageKey = `khrate_orders_${user.id}`;
+      const storedOrders = localStorage.getItem(storageKey);
+      
+      if (storedOrders) {
+        try {
+          const parsedOrders = JSON.parse(storedOrders);
+          setOrders(parsedOrders);
+        } catch (error) {
+          console.error("Failed to parse orders", error);
+          // Initialize empty orders if parsing fails
+          setOrders([]);
+        }
+      } else {
+        // Initialize with an empty array if no orders found
+        setOrders([]);
+      }
+    } else {
+      // For guest users, try to load guest orders
+      const guestOrders = localStorage.getItem('khrate_guest_orders');
+      
+      if (guestOrders) {
+        try {
+          const parsedOrders = JSON.parse(guestOrders);
+          setOrders(parsedOrders);
+        } catch (error) {
+          console.error("Failed to parse guest orders", error);
+          setOrders([]);
+        }
+      } else {
+        setOrders([]);
+      }
+    }
+  }, [isAuthenticated, user]);
+  
+  const filteredOrders = filter === "all" 
+    ? orders 
+    : orders.filter(order => order.status === filter);
 
   const handleViewDetails = (order: Order) => {
     setSelectedOrder(order);
-    setShowDetailsDialog(true);
+    setDetailsOpen(true);
   };
 
+  const handleRateOrder = (order: Order) => {
+    setSelectedOrder(order);
+    setRatingOpen(true);
+  };
+
+  const handleRatingSubmit = (ratedOrder: Order) => {
+    if (!user && !isAuthenticated) {
+      // Handle guest user order rating
+      const updatedOrders = orders.map(order => 
+        order.id === ratedOrder.id 
+          ? { ...order, rating: { submitted: true, date: new Date().toISOString() } }
+          : order
+      );
+      
+      setOrders(updatedOrders);
+      localStorage.setItem('khrate_guest_orders', JSON.stringify(updatedOrders));
+      return;
+    }
+    
+    // Handle logged-in user order rating
+    const updatedOrders = orders.map(order => 
+      order.id === ratedOrder.id 
+        ? { ...order, rating: { submitted: true, date: new Date().toISOString() } }
+        : order
+    );
+    
+    setOrders(updatedOrders);
+    
+    // Save updated orders to localStorage using the user's unique ID
+    if (isAuthenticated && user) {
+      localStorage.setItem(`khrate_orders_${user.id}`, JSON.stringify(updatedOrders));
+    }
+  };
+
+  // For non-authenticated users who need to log in
   if (!isAuthenticated) {
     return (
       <div className="flex flex-col min-h-screen">
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Please Sign In</h1>
-            <p className="text-gray-600">You need to sign in to view your order history.</p>
-          </div>
-        </div>
+        <Navbar />
+        
+        <main className="flex-1">
+          <section className="bg-gradient-to-r from-khrate-500 to-khrate-600 py-12 text-white">
+            <div className="container mx-auto">
+              <h1 className="text-3xl md:text-4xl font-bold">My Orders</h1>
+              <p className="mt-2 max-w-lg">
+                Track and manage your orders
+              </p>
+            </div>
+          </section>
+          
+          <section className="py-12">
+            <div className="container mx-auto text-center">
+              <div className="max-w-md mx-auto bg-white p-8 rounded-lg shadow-sm border">
+                <h2 className="text-2xl font-semibold mb-4">Sign in to view your orders</h2>
+                <p className="text-gray-600 mb-6">
+                  Please log in or create an account to view and manage your order history.
+                </p>
+                <div className="space-y-3">
+                  <Button 
+                    onClick={openAuthModal}
+                    className="bg-khrate-500 hover:bg-khrate-600 w-full"
+                  >
+                    Sign In / Sign Up
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => navigate("/")}
+                    className="w-full"
+                  >
+                    Continue Shopping
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+        
+        <Footer />
       </div>
     );
   }
-
+  
   return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Order History</h1>
-          <p className="text-gray-600">
-            Track your orders and view your purchase history
-          </p>
-        </div>
-
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-khrate-500"></div>
+    <div className="flex flex-col min-h-screen">
+      <Navbar />
+      
+      <main className="flex-1">
+        <section className="bg-gradient-to-r from-khrate-500 to-khrate-600 py-12 text-white">
+          <div className="container mx-auto">
+            <h1 className="text-3xl md:text-4xl font-bold">My Orders</h1>
+            <p className="mt-2 max-w-lg">
+              Track and manage your orders
+            </p>
           </div>
-        ) : orders.length === 0 ? (
-          <OrdersEmptyState />
-        ) : (
-          <>
-            <div className="mb-6">
-              <OrdersFilter 
-                filter={statusFilter}
-                onFilterChange={setStatusFilter}
-              />
-            </div>
+        </section>
+        
+        <section className="py-12">
+          <div className="container mx-auto">
+            <OrdersFilter filter={filter} onFilterChange={setFilter} />
             
-            <div className="space-y-4">
-              {filteredOrders.map((order) => (
-                <OrderCard
-                  key={order.id}
-                  order={order}
-                  onViewDetails={handleViewDetails}
-                />
-              ))}
-            </div>
-          </>
-        )}
+            {filteredOrders.length === 0 ? (
+              <OrdersEmptyState />
+            ) : (
+              <div className="space-y-6">
+                {filteredOrders.map(order => (
+                  <OrderCard 
+                    key={order.id} 
+                    order={order}
+                    onViewDetails={handleViewDetails}
+                    onRateOrder={handleRateOrder}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
       </main>
+      
+      <OrderDetailsDialog 
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        order={selectedOrder}
+      />
 
       {selectedOrder && (
-        <OrderDetailsDialog
+        <OrderRatingDialog
+          open={ratingOpen}
+          onOpenChange={setRatingOpen}
           order={selectedOrder}
-          open={showDetailsDialog}
-          onOpenChange={(open) => {
-            setShowDetailsDialog(open);
-            if (!open) {
-              setSelectedOrder(null);
-            }
-          }}
+          onRatingSubmit={handleRatingSubmit}
         />
       )}
+      
+      <Footer />
     </div>
   );
 };

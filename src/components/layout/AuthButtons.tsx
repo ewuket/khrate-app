@@ -3,45 +3,24 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
 
 interface AuthButtonsProps {
-  onOpenAuthModal?: () => void;
+  onOpenAuthModal: () => void;
   layout?: "desktop" | "mobile";
 }
 
 const AuthButtons = ({ onOpenAuthModal, layout = "desktop" }: AuthButtonsProps) => {
-  const { isAuthenticated, signOut, openAuthModal } = useAuth();
-
-  const handleOpenAuth = () => {
-    console.log('Auth button clicked, opening modal');
-    if (onOpenAuthModal) {
-      onOpenAuthModal();
-    } else {
-      openAuthModal();
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      console.log('Logging out user...');
-      await signOut();
-      toast.success('Successfully logged out');
-    } catch (error) {
-      console.error('Error logging out:', error);
-      toast.error('Failed to log out. Please try again.');
-    }
-  };
+  const { isAuthenticated, logout } = useAuth();
 
   if (isAuthenticated && layout === "mobile") {
     return (
       <Button
-        onClick={handleLogout}
+        onClick={logout}
         variant="ghost"
         className="flex justify-start text-red-500"
       >
         <LogOut className="h-5 w-5 mr-2" />
-        <span>Log Out</span>
+        <span>Logout</span>
       </Button>
     );
   }
@@ -51,30 +30,17 @@ const AuthButtons = ({ onOpenAuthModal, layout = "desktop" }: AuthButtonsProps) 
       <div className="flex flex-col space-y-2 pt-4 border-t">
         <Button 
           variant="ghost" 
-          onClick={handleOpenAuth}
+          onClick={onOpenAuthModal}
         >
           Login
         </Button>
         <Button 
-          onClick={handleOpenAuth}
+          onClick={onOpenAuthModal}
           className="bg-khrate-500 hover:bg-khrate-600"
         >
-          Sign Up & Save 10%
+          Sign Up
         </Button>
       </div>
-    );
-  }
-
-  if (isAuthenticated) {
-    return (
-      <Button
-        onClick={handleLogout}
-        variant="ghost"
-        className="text-gray-700 hover:text-khrate-500"
-      >
-        <LogOut className="h-4 w-4 mr-2" />
-        Log Out
-      </Button>
     );
   }
   
@@ -82,16 +48,16 @@ const AuthButtons = ({ onOpenAuthModal, layout = "desktop" }: AuthButtonsProps) 
     <>
       <Button 
         variant="ghost" 
-        onClick={handleOpenAuth}
+        onClick={onOpenAuthModal}
         className="text-gray-700 hover:text-khrate-500"
       >
         Login
       </Button>
       <Button 
-        onClick={handleOpenAuth}
+        onClick={onOpenAuthModal}
         className="bg-khrate-500 hover:bg-khrate-600"
       >
-        Sign Up & Save 10%
+        Sign Up
       </Button>
     </>
   );

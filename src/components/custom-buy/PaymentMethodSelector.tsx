@@ -1,12 +1,16 @@
 
-import { CreditCard, Phone } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Copy, Check } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger, 
+  SelectValue
+} from "@/components/ui/select";
+import { InfoIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface PaymentMethodSelectorProps {
   selectedMethod: string;
@@ -14,7 +18,6 @@ interface PaymentMethodSelectorProps {
   phoneNumber: string;
   onPhoneNumberChange: (phoneNumber: string) => void;
   onShowPaymentInstructions: () => void;
-  phoneNumberLabel?: string;
 }
 
 const PaymentMethodSelector = ({
@@ -23,96 +26,68 @@ const PaymentMethodSelector = ({
   phoneNumber,
   onPhoneNumberChange,
   onShowPaymentInstructions,
-  phoneNumberLabel = "Phone Number"
 }: PaymentMethodSelectorProps) => {
-  const [copiedPayment, setCopiedPayment] = useState(false);
-  const paymentNumber = "0795754391";
-
-  const paymentMethods = [
-    { value: "mtn", label: "MTN Mobile Money", icon: Phone },
-    { value: "card", label: "Credit Card", icon: CreditCard },
-    { value: "bank_transfer", label: "Bank Transfer", icon: CreditCard }
-  ];
-
-  const handleCopyPaymentNumber = async () => {
-    try {
-      await navigator.clipboard.writeText(paymentNumber);
-      setCopiedPayment(true);
-      toast.success("Payment number copied!");
-      setTimeout(() => setCopiedPayment(false), 2000);
-    } catch (error) {
-      toast.error("Failed to copy number");
-    }
-  };
-
+  
   return (
     <div className="space-y-4">
       <div>
-        <Label className="text-base font-medium">Payment Method *</Label>
-        <div className="grid grid-cols-1 gap-3 mt-2">
-          {paymentMethods.map(method => {
-            const Icon = method.icon;
-            return (
-              <label
-                key={method.value}
-                className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
-                  selectedMethod === method.value 
-                    ? 'border-khrate-500 bg-khrate-50' 
-                    : 'border-gray-300 hover:border-gray-400'
-                }`}
-              >
-                <input
-                  type="radio"
-                  value={method.value}
-                  checked={selectedMethod === method.value}
-                  onChange={(e) => onMethodChange(e.target.value)}
-                  className="sr-only"
-                />
-                <Icon className="h-4 w-4 mr-3 text-khrate-600" />
-                <span className="font-medium">{method.label}</span>
-              </label>
-            );
-          })}
+        <Label htmlFor="payment-method">Payment Method</Label>
+        <Select value={selectedMethod} onValueChange={onMethodChange}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select a payment method" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="mtn">MTN Mobile Money</SelectItem>
+            <SelectItem value="airtel">Airtel Money</SelectItem>
+            <SelectItem value="card">Credit/Debit Card</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      {(selectedMethod === "mtn" || selectedMethod === "airtel") && (
+        <div className="space-y-2">
+          <div className="flex justify-between">
+            <Label htmlFor="phone-number">Phone Number</Label>
+            <Button 
+              variant="link" 
+              size="sm" 
+              className="h-auto p-0 text-xs"
+              onClick={onShowPaymentInstructions}
+            >
+              <InfoIcon className="h-4 w-4 mr-1" /> Payment Instructions
+            </Button>
+          </div>
+          <Input 
+            id="phone-number"
+            placeholder="0700 000 000"
+            value={phoneNumber}
+            onChange={(e) => onPhoneNumberChange(e.target.value)}
+          />
+          <div className="text-sm text-muted-foreground bg-amber-50 border border-amber-200 rounded p-2 mt-1">
+            For demo purposes, please send payment to: <span className="font-medium">0795754391</span>
+          </div>
         </div>
-      </div>
-
-      {/* MTN Payment Instructions */}
-      {selectedMethod === 'mtn' && (
-        <Card className="border-2 border-khrate-200 bg-khrate-50">
-          <CardContent className="p-4">
-            <h4 className="font-semibold text-khrate-800 mb-2">Pay via MTN Mobile Money</h4>
-            <div className="flex items-center justify-between bg-white p-3 rounded border">
-              <div>
-                <p className="text-sm text-gray-600">Send payment to:</p>
-                <p className="text-lg font-bold text-khrate-800">{paymentNumber}</p>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleCopyPaymentNumber}
-                className="border-khrate-300 hover:bg-khrate-100"
-              >
-                {copiedPayment ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       )}
-
-      <div>
-        <Label htmlFor="phone" className="text-base font-medium">
-          {phoneNumberLabel} *
-        </Label>
-        <Input
-          id="phone"
-          type="tel"
-          value={phoneNumber}
-          onChange={(e) => onPhoneNumberChange(e.target.value)}
-          placeholder="Enter phone number"
-          className="mt-1"
-        />
-      </div>
+      
+      {selectedMethod === "card" && (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="card-number">Card Number</Label>
+            <Input id="card-number" placeholder="1234 5678 9012 3456" />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="expiry">Expiry Date</Label>
+              <Input id="expiry" placeholder="MM/YY" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cvc">CVC</Label>
+              <Input id="cvc" placeholder="123" />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
