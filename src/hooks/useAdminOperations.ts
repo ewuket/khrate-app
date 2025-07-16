@@ -23,9 +23,12 @@ export const useAdminOperations = () => {
   
   const { updateOrderStatus, updatePaymentStatus } = useAdminOrderOperations();
   const { 
-    toggleGroupActive: toggleGroupActiveOriginal, 
+    createGroup, 
+    updateGroup, 
+    deleteGroup, 
+    toggleGroupStatus, 
     toggleGroupFeatured,
-    isToggling: groupToggling 
+    loading: groupLoading 
   } = useAdminGroupOperations();
 
   // Bundle operations with proper naming
@@ -43,18 +46,10 @@ export const useAdminOperations = () => {
     return await toggleCustomItemStatus(itemId, !isActive);
   };
 
-  // Group operations - fix the signature to match what AdminGroupManagement expects
-  const toggleGroupActive = async (groupId: string, currentStatus: string) => {
-    return await toggleGroupActiveOriginal(groupId, currentStatus);
+  // Group operations
+  const toggleGroupActive = async (groupId: string, isActive: boolean) => {
+    return await toggleGroupStatus(groupId, !isActive);
   };
-
-  // Normalize all loading states to be consistent (string | null)
-  const bundleToggling = bundleLoading ? 'bundle-loading' : null;
-  const customItemToggling = customItemLoading ? 'custom-item-loading' : null;
-  const normalizedGroupToggling = typeof groupToggling === 'string' ? groupToggling : null;
-  
-  // Return the first non-null loading state, or null if none are loading
-  const currentToggling = bundleToggling || customItemToggling || normalizedGroupToggling;
 
   return {
     // Bundle operations
@@ -71,6 +66,9 @@ export const useAdminOperations = () => {
     toggleCustomItemActive,
     
     // Group operations
+    createGroup,
+    updateGroup,
+    deleteGroup,
     toggleGroupActive,
     toggleGroupFeatured,
     
@@ -78,7 +76,7 @@ export const useAdminOperations = () => {
     updateOrderStatus,
     updatePaymentStatus,
     
-    // Loading states - ensure consistent type (string | null)
-    isToggling: currentToggling
+    // Loading states
+    isToggling: bundleLoading || customItemLoading || groupLoading
   };
 };

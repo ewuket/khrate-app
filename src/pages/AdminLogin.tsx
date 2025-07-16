@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,11 +15,6 @@ const AdminLogin = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-
-  // Temporarily bypass authentication - redirect directly to dashboard
-  useEffect(() => {
-    navigate('/admin/dashboard', { replace: true });
-  }, [navigate]);
 
   // Redirect if already logged in
   if (adminUser && !loading) {
@@ -64,30 +59,6 @@ const AdminLogin = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Temporary bypass button */}
-          <div className="mb-4">
-            <Button 
-              onClick={() => navigate('/admin/dashboard', { replace: true })}
-              className="w-full bg-green-500 hover:bg-green-600 text-white"
-            >
-              🚀 Quick Access Dashboard (Temporary)
-            </Button>
-            <p className="text-xs text-gray-500 mt-2 text-center">
-              Temporary bypass - authentication will be fixed later
-            </p>
-          </div>
-
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Or use credentials
-              </span>
-            </div>
-          </div>
-
           <form onSubmit={handleLogin} className="space-y-4">
             {error && (
               <div className="flex items-center gap-2 p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded">
