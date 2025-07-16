@@ -1,10 +1,11 @@
 
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
 import { useAdminData } from "@/hooks/useAdminData";
 import { useAdminOrderSourceStats } from "@/hooks/useAdminOrderSourceStats";
 import { useAdminDailyStats } from "@/hooks/useAdminDailyStats";
-import { useAdminOrderOperations } from "@/hooks/admin/useAdminOrderOperations";
+import { useStockManagement } from "@/hooks/useStockManagement";
 import AdminStatsCards from "./AdminStatsCards";
 import AdminOrdersList from "./AdminOrdersList";
 import AdminOrderManagementStats from "./AdminOrderManagementStats";
@@ -12,14 +13,14 @@ import AdminBundlesSidebar from "./AdminBundlesSidebar";
 import AdminBundleManagement from "./AdminBundleManagement";
 import AdminCustomItemsManagement from "./custom-items/AdminCustomItemsManagement";
 import AdminGroupManagement from "./AdminGroupManagement";
+import { OrderStatus } from "@/types/order";
 import { AdminBundle } from "@/types/admin";
 import { toast } from "sonner";
 
 const AdminDashboard = () => {
   const { stats, orders, bundles, loading, refreshAllData, fetchStats } = useAdminData();
-  const { data: orderSourceStats, isLoading: loadingOrderStats, refetch: refetchOrderStats } = useAdminOrderSourceStats();
+  const { data: orderSourceStats, isLoading: loadingOrderStats } = useAdminOrderSourceStats();
   const { data: dailyStats } = useAdminDailyStats();
-  const { updateOrderStatus, updatePaymentStatus } = useAdminOrderOperations();
   const [activeTab, setActiveTab] = useState("overview");
   const [showBundleForm, setShowBundleForm] = useState(false);
   const [editingBundle, setEditingBundle] = useState<AdminBundle | null>(null);
@@ -29,45 +30,80 @@ const AdminDashboard = () => {
     const handleRefreshStats = () => {
       console.log('🔄 Refreshing admin stats due to order update...');
       fetchStats();
-      refetchOrderStats();
     };
 
     window.addEventListener('refresh-admin-stats', handleRefreshStats);
     return () => {
       window.removeEventListener('refresh-admin-stats', handleRefreshStats);
     };
-  }, [fetchStats, refetchOrderStats]);
+  }, [fetchStats]);
 
   const handleUpdateOrderStatus = async (orderId: string, newStatus: string): Promise<boolean> => {
-    console.log('🔄 Admin dashboard updating order status:', orderId, 'to', newStatus);
-    
-    const success = await updateOrderStatus(orderId, newStatus);
-    
-    if (success) {
-      // Force refresh all data after successful update
+    try {
+      console.log('🔄 Updating order status:', orderId, 'to', newStatus);
+      
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId);
+
+      if (error) {
+        console.error('❌ Error updating order status:', error);
+        toast.error('Failed to update order status');
+        return false;
+      }
+
+      console.log('✅ Order status updated successfully');
+      toast.success(`Order status updated to ${newStatus}`);
+      
+      // Refresh data
       setTimeout(() => {
         refreshAllData();
-        refetchOrderStats();
-      }, 500);
+      }, 1000);
+      
+      return true;
+    } catch (error: any) {
+      console.error('❌ Failed to update order status:', error);
+      toast.error('Failed to update order status');
+      return false;
     }
-    
-    return success;
   };
 
   const handleUpdatePaymentStatus = async (orderId: string, newPaymentStatus: string): Promise<boolean> => {
-    console.log('🔄 Admin dashboard updating payment status:', orderId, 'to', newPaymentStatus);
-    
-    const success = await updatePaymentStatus(orderId, newPaymentStatus);
-    
-    if (success) {
-      // Force refresh all data after successful update
+    try {
+      console.log('🔄 Updating payment status:', orderId, 'to', newPaymentStatus);
+      
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          payment_status: newPaymentStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId);
+
+      if (error) {
+        console.error('❌ Error updating payment status:', error);
+        toast.error('Failed to update payment status');
+        return false;
+      }
+
+      console.log('✅ Payment status updated successfully');
+      toast.success(`Payment status updated to ${newPaymentStatus}`);
+      
+      // Refresh data
       setTimeout(() => {
         refreshAllData();
-        refetchOrderStats();
-      }, 500);
+      }, 1000);
+      
+      return true;
+    } catch (error: any) {
+      console.error('❌ Failed to update payment status:', error);
+      toast.error('Failed to update payment status');
+      return false;
     }
-    
-    return success;
   };
 
   const handleCreateBundle = () => {
@@ -91,6 +127,7 @@ const AdminDashboard = () => {
     if (type === 'daily') {
       console.log('Daily stats:', dailyStats);
     }
+    // Could open a detailed view modal here
   };
 
   return (

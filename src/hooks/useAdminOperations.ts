@@ -1,26 +1,37 @@
 
-import { useAdminBundleOperations } from "./admin/useAdminBundleOperations";
-import { useAdminCustomItemOperations } from "./admin/useAdminCustomItemOperations";
-import { useAdminOrderOperations } from "./admin/useAdminOrderOperations";
+import { useAdminOrderOperations } from './admin/useAdminOrderOperations';
+import { useAdminBundleOperations } from './admin/useAdminBundleOperations';
+import { useAdminGroupOperations } from './admin/useAdminGroupOperations';
+import { useAdminCustomItemOperations } from './admin/useAdminCustomItemOperations';
 
 export const useAdminOperations = () => {
-  const { toggleBundleActive, toggleBundleFeatured, isToggling: bundleToggling } = useAdminBundleOperations();
-  const { toggleCustomItemActive, isToggling: customItemToggling } = useAdminCustomItemOperations();
-  const { updateOrderStatus, updatePaymentStatus } = useAdminOrderOperations();
+  const orderOperations = useAdminOrderOperations();
+  const bundleOperations = useAdminBundleOperations();
+  const groupOperations = useAdminGroupOperations();
+  const customItemOperations = useAdminCustomItemOperations();
+
+  // Combine isToggling states from all operations
+  const isToggling = bundleOperations.isToggling || 
+                    groupOperations.isToggling || 
+                    customItemOperations.isToggling;
 
   return {
+    // Order operations
+    updateOrderStatus: orderOperations.updateOrderStatus,
+    updatePaymentStatus: orderOperations.updatePaymentStatus,
+    
     // Bundle operations
-    toggleBundleActive,
-    toggleBundleFeatured,
+    toggleBundleActive: bundleOperations.toggleBundleActive,
+    toggleBundleFeatured: bundleOperations.toggleBundleFeatured,
+    
+    // Group operations
+    toggleGroupActive: groupOperations.toggleGroupActive,
+    toggleGroupFeatured: groupOperations.toggleGroupFeatured,
     
     // Custom item operations
-    toggleCustomItemActive,
+    toggleCustomItemActive: customItemOperations.toggleCustomItemActive,
     
-    // Order operations
-    updateOrderStatus,
-    updatePaymentStatus,
-    
-    // Loading states
-    isToggling: bundleToggling || customItemToggling
+    // Combined state
+    isToggling
   };
 };
