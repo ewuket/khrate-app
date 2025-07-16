@@ -1,13 +1,9 @@
 
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Terms = () => {
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar />
-      
       <main className="flex-1 container mx-auto py-16 px-4">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl md:text-4xl font-bold mb-8">Terms & Conditions</h1>
@@ -114,8 +110,6 @@ const Terms = () => {
           </Tabs>
         </div>
       </main>
-      
-      <Footer />
     </div>
   );
 };

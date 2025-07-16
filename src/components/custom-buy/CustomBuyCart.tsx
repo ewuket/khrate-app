@@ -1,9 +1,9 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Trash2 } from "lucide-react";
 import CartItem from "./CartItem";
-import CustomBuyCheckoutDialog from "./CustomBuyCheckoutDialog";
+import CheckoutDialog from "@/components/checkout/CheckoutDialog";
+import { useCartContext } from "@/contexts/CartContext";
 
 interface CartItem {
   id: number;
@@ -29,6 +29,7 @@ const CustomBuyCart = ({
   calculateTotal,
 }: CustomBuyCartProps) => {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const { clearCart: clearGlobalCart } = useCartContext();
   
   const handleCheckout = () => {
     if (cart.length === 0) {
@@ -39,11 +40,36 @@ const CustomBuyCart = ({
   
   const handleCheckoutSuccess = () => {
     console.log("Checkout successful");
+    // Clear the local cart
+    cart.forEach(item => onRemoveFromCart(item.id));
   };
   
   const saveOrder = () => {
     // Save order functionality would go here in a real implementation
     console.log("Order saved");
+    handleCheckoutSuccess();
+  };
+
+  const getCartTotal = () => {
+    return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+  };
+
+  const formatPrice = (price: number) => {
+    return `RWF ${price.toLocaleString()}`;
+  };
+
+  // Convert local cart to format expected by CheckoutDialog
+  const cartItems = cart.map(item => ({
+    id: item.id,
+    name: item.name,
+    price: item.price,
+    quantity: item.quantity,
+    unit: item.unit,
+    type: 'custom' as const
+  }));
+
+  const clearLocalCart = () => {
+    cart.forEach(item => onRemoveFromCart(item.id));
   };
 
   return (
@@ -86,7 +112,7 @@ const CustomBuyCart = ({
           <div className="mt-6 pt-4 border-t border-gray-100">
             <div className="flex justify-between mb-2">
               <span className="text-muted-foreground">Subtotal</span>
-              <span className="font-medium">UGX {calculateTotal()}</span>
+              <span className="font-medium">RWF {calculateTotal()}</span>
             </div>
             <div className="flex justify-between mb-4">
               <span className="text-muted-foreground">Delivery</span>
@@ -94,7 +120,7 @@ const CustomBuyCart = ({
             </div>
             <div className="flex justify-between text-lg font-bold">
               <span>Total</span>
-              <span>UGX {calculateTotal()}</span>
+              <span>RWF {calculateTotal()}</span>
             </div>
             
             <div className="mt-6 space-y-2">
@@ -108,10 +134,7 @@ const CustomBuyCart = ({
               <Button 
                 variant="outline" 
                 className="w-full flex items-center justify-center"
-                onClick={() => {
-                  // Clear cart functionality
-                  cart.forEach(item => onRemoveFromCart(item.id));
-                }}
+                onClick={clearLocalCart}
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Clear Cart
@@ -121,10 +144,9 @@ const CustomBuyCart = ({
         </div>
       )}
       
-      <CustomBuyCheckoutDialog 
+      <CheckoutDialog
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
-        onSuccess={handleCheckoutSuccess}
       />
     </div>
   );

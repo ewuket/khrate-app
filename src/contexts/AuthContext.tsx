@@ -1,104 +1,66 @@
 
-import React, { createContext, useState, useContext, useEffect } from "react";
-import { User, AuthContextType } from "@/types/auth";
-import { useAuthStorage } from "@/hooks/useAuthStorage";
-import { useAuthOperations } from "@/hooks/useAuthOperations";
-import { toast } from "sonner";
+import React, { createContext, useContext, ReactNode } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import AuthModal from '@/components/auth/AuthModal';
+import { UserProfile } from '@/types/user';
+import { useAuthSystem } from '@/hooks/useAuthSystem';
+import { useState } from 'react';
+
+interface AuthContextType {
+  user: User | null;
+  session: Session | null;
+  profile: UserProfile | null;
+  loading: boolean;
+  isAuthenticated: boolean;
+  isAuthModalOpen: boolean;
+  signIn: (email: string, password: string) => Promise<any>;
+  signUp: (email: string, password: string, fullName: string) => Promise<any>;
+  signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<any>;
+  updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
+  openAuthModal: () => void;
+  closeAuthModal: () => void;
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isOTPModalOpen, setIsOTPModalOpen] = useState(false);
-  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
-  const [pendingUserData, setPendingUserData] = useState<Partial<User> | null>(null);
-  const [otpSent, setOtpSent] = useState(false);
-  const [isVerifyingOTP, setIsVerifyingOTP] = useState(false);
+  const authSystem = useAuthSystem();
+
+  const openAuthModal = () => {
+    console.log('🔓 Opening auth modal');
+    setIsAuthModalOpen(true);
+  };
   
-  const { getStoredUser } = useAuthStorage();
+  const closeAuthModal = () => {
+    console.log('🔒 Closing auth modal');
+    setIsAuthModalOpen(false);
+  };
 
-  // Helper functions for modals
-  const openAuthModal = () => setIsAuthModalOpen(true);
-  const closeAuthModal = () => setIsAuthModalOpen(false);
-  const openOTPModal = () => setIsOTPModalOpen(true);
-  const closeOTPModal = () => setIsOTPModalOpen(false);
-
-  // Load user from localStorage on mount
-  useEffect(() => {
-    const storedUser = getStoredUser();
-    if (storedUser) {
-      setUser(storedUser);
-    }
-  }, []);
-
-  // Get auth operations
-  const {
-    login,
-    signup,
-    logout,
-    sendOTP,
-    verifyOTP,
-    updateUserProfile
-  } = useAuthOperations(
-    setUser,
-    setPendingEmail,
-    setPendingUserData,
-    setOtpSent,
+  const value: AuthContextType = {
+    ...authSystem,
+    isAuthModalOpen,
+    openAuthModal,
     closeAuthModal,
-    openOTPModal,
-    setIsVerifyingOTP
-  );
-
-  // Store pendingEmail and pendingUserData in localStorage when they change
-  useEffect(() => {
-    if (pendingEmail) {
-      localStorage.setItem("pendingEmail", pendingEmail);
-    } else {
-      localStorage.removeItem("pendingEmail");
-    }
-  }, [pendingEmail]);
-
-  useEffect(() => {
-    if (pendingUserData) {
-      localStorage.setItem("pendingUserData", JSON.stringify(pendingUserData));
-    } else {
-      localStorage.removeItem("pendingUserData");
-    }
-  }, [pendingUserData]);
+  };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated: !!user,
-        isVerified: !!user?.verified,
-        isAuthModalOpen,
-        pendingEmail,
-        otpSent,
-        isVerifyingOTP,
-        openAuthModal,
-        closeAuthModal,
-        login,
-        signup,
-        logout,
-        sendOTP,
-        verifyOTP,
-        isOTPModalOpen,
-        openOTPModal,
-        closeOTPModal,
-        updateUserProfile
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
+      <AuthModal />
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };

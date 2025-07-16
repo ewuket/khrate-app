@@ -1,83 +1,62 @@
-
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { CartProvider } from "@/contexts/CartContext";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import OTPVerificationModal from "@/components/auth/OTPVerificationModal";
+import { AdminProvider } from "@/contexts/AdminContext";
+import { CartProvider } from "@/contexts/CartContext";
+import { GroupBuyingProvider } from "@/contexts/GroupBuyingContext";
+import Layout from "@/components/layout/Layout";
+import Index from "@/pages/Index";
+import About from "@/pages/About";
+import Contact from "@/pages/Contact";
+import Bundles from "@/pages/Bundles";
+import CustomBuy from "@/pages/CustomBuy";
+import GroupBuy from "@/pages/GroupBuy";
+import Orders from "@/pages/Orders";
+import Profile from "@/pages/Profile";
+import Terms from "@/pages/Terms";
+import ResetPassword from "@/pages/ResetPassword";
+import AuthCallback from "@/pages/AuthCallback";
+import AdminLogin from "@/pages/AdminLogin";
+import AdminDashboard from "@/pages/AdminDashboard";
+import NotFound from "@/pages/NotFound";
+import "./App.css";
 
-// Pages
-import Index from "./pages/Index";
-import Bundles from "./pages/Bundles";
-import CustomBuy from "./pages/CustomBuy";
-import GroupBuy from "./pages/GroupBuy";
-import Orders from "./pages/Orders";
-import Profile from "./pages/Profile";
-import NotFound from "./pages/NotFound";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Terms from "./pages/Terms";
-import CartSidebar from "./components/cart/CartSidebar";
-import ChatAssistant from "./components/chat/ChatAssistant";
+const queryClient = new QueryClient();
 
 function App() {
-  const queryClient = new QueryClient();
-  // Simulating a splash screen
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1500); // 1.5 second splash screen
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="flex flex-col items-center animate-fade-in">
-          <img 
-            src="/lovable-uploads/206fd2ee-0377-47a0-8083-70118088988f.png" 
-            alt="KHRATE Logo" 
-            className="h-32 w-auto"
-          />
-          <h2 className="mt-4 text-2xl font-bold text-khrate-500">
-            Big Savings in Every Crate
-          </h2>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
         <AuthProvider>
-          <CartProvider>
-            <BrowserRouter>
-              <CartSidebar />
-              <ChatAssistant />
-              <OTPVerificationModal />
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/bundles" element={<Bundles />} />
-                <Route path="/custom-buy" element={<CustomBuy />} />
-                <Route path="/group-buy" element={<GroupBuy />} />
-                <Route path="/orders" element={<Orders />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/terms" element={<Terms />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </CartProvider>
+          <AdminProvider>
+            <CartProvider>
+              <GroupBuyingProvider>
+                <Toaster />
+                <BrowserRouter>
+                  <Routes>
+                    <Route path="/admin/login" element={<AdminLogin />} />
+                    <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                    <Route path="/auth/callback" element={<AuthCallback />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/*" element={<Layout><Outlet /></Layout>}>
+                      <Route index element={<Index />} />
+                      <Route path="about" element={<About />} />
+                      <Route path="contact" element={<Contact />} />
+                      <Route path="bundles" element={<Bundles />} />
+                      <Route path="custom-buy" element={<CustomBuy />} />
+                      <Route path="group-buy" element={<GroupBuy />} />
+                      <Route path="orders" element={<Orders />} />
+                      <Route path="profile" element={<Profile />} />
+                      <Route path="terms" element={<Terms />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Route>
+                  </Routes>
+                </BrowserRouter>
+              </GroupBuyingProvider>
+            </CartProvider>
+          </AdminProvider>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>

@@ -50,10 +50,13 @@ const ScheduledDelivery = ({ onDeliveryScheduleChange }: ScheduledDeliveryProps)
           </div>
           
           {deliveryDate && (
-            <TimeSlotSelector 
-              selectedTimeSlot={timeSlot}
-              onTimeSlotChange={handleTimeSlotChange}
-            />
+            <div>
+              <label className="text-sm font-medium mb-2 block">Delivery Time</label>
+              <TimeSlotSelector 
+                selectedTimeSlot={timeSlot}
+                onTimeSlotChange={handleTimeSlotChange}
+              />
+            </div>
           )}
         </div>
       </CardContent>

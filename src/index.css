@@ -16,7 +16,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 12%;
 
-    --primary: 24 96% 48%; /* KHRATE Orange */
+    --primary: 24 96% 48%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 96%;
@@ -25,7 +25,7 @@
     --muted: 0 0% 96%;
     --muted-foreground: 0 0% 45%;
 
-    --accent: 20 100% 96%;
+    --accent: 24 96% 96%;
     --accent-foreground: 24 96% 48%;
 
     --destructive: 0 84% 60%;
@@ -48,42 +48,25 @@
   }
 
   .dark {
-    --background: 0 0% 8%;
-    --foreground: 0 0% 96%;
-
-    --card: 0 0% 12%;
-    --card-foreground: 0 0% 96%;
-
-    --popover: 0 0% 12%;
-    --popover-foreground: 0 0% 96%;
-
+    --background: 0 0% 100%;
+    --foreground: 0 0% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 12%;
     --primary: 24 96% 48%;
     --primary-foreground: 0 0% 100%;
-
-    --secondary: 0 0% 20%;
-    --secondary-foreground: 0 0% 96%;
-
-    --muted: 0 0% 20%;
-    --muted-foreground: 0 0% 65%;
-
-    --accent: 20 100% 16%;
-    --accent-foreground: 24 96% 58%;
-
-    --destructive: 0 70% 45%;
-    --destructive-foreground: 0 0% 96%;
-
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 12%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 24 96% 96%;
+    --accent-foreground: 24 96% 48%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
     --ring: 24 96% 48%;
-
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -93,11 +76,13 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-white text-foreground font-sans;
+    background-color: #ffffff;
+    color: #1e1e1e;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-heading font-semibold;
+    @apply font-heading font-semibold text-foreground;
   }
 
   h1 {
@@ -124,17 +109,91 @@
 @layer components {
   .btn-khrate {
     @apply bg-khrate-500 text-white hover:bg-khrate-600 transition-colors rounded-full px-6 py-2.5 font-medium;
+    background-color: #F25C05;
+    color: white;
   }
 
   .btn-outline {
     @apply border border-khrate-500 text-khrate-500 hover:bg-khrate-50 transition-colors rounded-full px-6 py-2.5 font-medium;
+    border-color: #F25C05;
+    color: #F25C05;
   }
 
   .nav-link {
-    @apply text-muted-foreground hover:text-foreground transition-colors;
+    @apply text-gray-700 hover:text-khrate-500 transition-colors;
+    color: #374151;
   }
 
   .nav-link.active {
     @apply text-khrate-500 font-medium;
+    color: #F25C05;
   }
+
+  .text-visible {
+    color: #1e1e1e;
+    opacity: 1;
+  }
+
+  .button-primary {
+    background-color: #F25C05;
+    color: white;
+    border: none;
+  }
+
+  .button-primary:hover {
+    background-color: #d14c04;
+  }
+
+  .card-white {
+    background-color: #ffffff;
+    color: #1e1e1e;
+  }
+
+  @media (max-width: 768px) {
+    .responsive-text {
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+      color: #1e1e1e;
+    }
+  }
+}
+
+.sticky-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.nav-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 4rem;
+  background-color: #ffffff;
+}
+
+.cart-button {
+  position: relative;
+  z-index: 10;
+  min-height: 44px;
+  min-width: 44px;
+  background-color: transparent;
+  color: #F25C05;
+}
+
+@media (max-width: 768px) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+.bg-background, .bg-card {
+  background-color: #ffffff;
+}
+
+.text-foreground {
+  color: #1e1e1e;
 }

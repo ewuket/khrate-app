@@ -1,63 +1,82 @@
 
-import { Button } from "@/components/ui/button";
+import { useFeaturedBundles } from "@/hooks/useBundles";
 import BundleCard from "@/components/bundles/BundleCard";
-import { Link } from "react-router-dom";
-import { useCart } from "@/contexts/CartContext";
-
-// Sample data for bundles
-const bundles = [
-  {
-    id: 1,
-    name: "Single Bundle",
-    description: "Perfect for 1 person, 7-day essentials",
-    price: 25000,
-    image: "/lovable-uploads/4730e151-0c90-4bde-a3cf-7eb370e2cac1.png", // Keeping existing image
-    items: ["Rice (1kg)", "Beans (500g)", "Tomatoes (6)", "Onions (4)", "Oil (500ml)", "Salt (250g)", "Eggs (12)"]
-  },
-  {
-    id: 2,
-    name: "Medium Bundle",
-    description: "Great for 2-3 people, weekly essentials",
-    price: 45000,
-    image: "/lovable-uploads/6d22b9d7-17a9-457a-947a-9bb8301a4051.png", // Keeping existing image
-    items: ["Rice (2kg)", "Beans (1kg)", "Tomatoes (10)", "Onions (8)", "Oil (1L)", "Salt (500g)", "Eggs (24)", "Bread (2)", "Milk (2L)"]
-  },
-  {
-    id: 3,
-    name: "Large Bundle",
-    description: "Family size, complete weekly groceries",
-    price: 75000,
-    image: "/lovable-uploads/30fe686e-a6f6-469f-bb69-c889c304c4e7.png", // Keeping original image
-    items: ["Rice (5kg)", "Beans (2kg)", "Tomatoes (15)", "Onions (10)", "Oil (2L)", "Salt (1kg)", "Eggs (30)", "Bread (4)", "Milk (4L)", "Flour (2kg)", "Sugar (2kg)"]
-  }
-];
+import { useAuth } from "@/contexts/AuthContext";
+import { AlertCircle } from "lucide-react";
 
 const FeaturedBundles = () => {
-  const { addToCart } = useCart();
-  
-  const handleAddToCart = (bundle: any) => {
-    addToCart(bundle, 'bundle');
-  };
-  
+  const { data: featuredBundles = [], isLoading, error } = useFeaturedBundles();
+  const { isAuthenticated, openAuthModal } = useAuth();
+
+  if (isLoading) {
+    return (
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">Featured Bundles</h2>
+            <p className="text-gray-600">Popular food bundles chosen just for you</p>
+          </div>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-khrate-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading featured bundles...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">Featured Bundles</h2>
+            <p className="text-gray-600">Popular food bundles chosen just for you</p>
+          </div>
+          <div className="text-center">
+            <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-4" />
+            <p className="text-red-600">Unable to load bundles</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (featuredBundles.length === 0) {
+    return (
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">Featured Bundles</h2>
+            <p className="text-gray-600">Popular food bundles chosen just for you</p>
+          </div>
+          <div className="text-center">
+            <p className="text-gray-600">No featured bundles available at the moment.</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10">
-          <div>
-            <h2 className="text-3xl font-bold">Featured Bundles</h2>
-            <p className="text-muted-foreground mt-2">Pre-curated grocery packages with the best savings</p>
-          </div>
-          <Button variant="link" className="text-khrate-500 hover:text-khrate-600 p-0" asChild>
-            <Link to="/bundles">View all bundles →</Link>
-          </Button>
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold mb-4">Featured Bundles</h2>
+          <p className="text-gray-600">Popular food bundles chosen just for you</p>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {bundles.map((bundle) => (
-            <BundleCard 
-              key={bundle.id} 
-              bundle={bundle} 
-              onAddToCart={handleAddToCart}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {featuredBundles.map((bundle) => (
+            <BundleCard
+              key={bundle.id}
+              id={bundle.id}
+              title={bundle.title}
+              description={bundle.description}
+              price={bundle.price}
+              originalPrice={bundle.original_price}
+              image={bundle.image_url}
+              onAuthRequired={openAuthModal}
+              isAuthenticated={isAuthenticated}
             />
           ))}
         </div>

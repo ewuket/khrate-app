@@ -1,120 +1,92 @@
 
-import React, { useState } from "react";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader,
-  DialogTitle
-} from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginForm from "./login/LoginForm";
 import SignupForm from "./signup/SignupForm";
-import PasswordResetForm from "./password-reset/PasswordResetForm";
-import ResetEmailSent from "./password-reset/ResetEmailSent";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-interface AuthModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+const AuthModal = () => {
+  const { isAuthModalOpen, closeAuthModal } = useAuth();
+  const [currentTab, setCurrentTab] = useState("login");
 
-const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState("login");
-  const [showResetPassword, setShowResetPassword] = useState(false);
-  const [resetSent, setResetSent] = useState(false);
-  const [resetEmail, setResetEmail] = useState("");
-  
-  const handleResetSent = (email: string) => {
-    setResetEmail(email);
-    setResetSent(true);
+  const handleSwitchToLogin = () => {
+    setCurrentTab("login");
   };
-  
-  const handleGuestCheckout = () => {
-    toast.success("Continuing as guest");
-    onClose();
+
+  const handleSwitchToSignup = () => {
+    setCurrentTab("signup");
   };
-  
-  const handleCloseModal = () => {
-    // Reset all states when modal is closed
-    setShowResetPassword(false);
-    setResetSent(false);
-    setResetEmail("");
-    onClose();
+
+  const handleSuccess = () => {
+    closeAuthModal();
   };
-  
+
   return (
-    <Dialog open={isOpen} onOpenChange={handleCloseModal}>
-      <DialogContent className="sm:max-w-[425px]">
-        {!showResetPassword ? (
-          <>
-            <DialogHeader>
-              <DialogTitle>Welcome to KHRATE</DialogTitle>
-              <DialogDescription>
-                Sign in to your account or create a new one to get started.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="login" className="space-y-4 py-4">
-                <LoginForm 
-                  onShowResetPassword={() => {
-                    setShowResetPassword(true);
-                    setActiveTab("login");
-                  }} 
-                />
-              </TabsContent>
-              
-              <TabsContent value="signup" className="space-y-4 py-4">
-                <SignupForm />
-              </TabsContent>
-            </Tabs>
-            
-            <div className="mt-4 pt-4 border-t">
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={handleGuestCheckout}
+    <Dialog open={isAuthModalOpen} onOpenChange={closeAuthModal}>
+      <DialogContent className="sm:max-w-md max-h-[95vh] overflow-y-auto bg-white p-0">
+        <DialogHeader className="flex flex-row items-center justify-between p-6 border-b">
+          <DialogTitle className="text-2xl font-bold text-gray-900">
+            Welcome to KHRATE
+          </DialogTitle>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={closeAuthModal}
+            className="h-8 w-8"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </DialogHeader>
+        
+        <div className="p-6">
+          <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 bg-gray-100 mb-6">
+              <TabsTrigger 
+                value="login" 
+                className="text-gray-700 data-[state=active]:bg-white data-[state=active]:text-gray-900 py-3"
               >
-                Continue as Guest
-              </Button>
-            </div>
-          </>
-        ) : (
-          <>
-            <DialogHeader>
-              <DialogTitle>Reset Password</DialogTitle>
-              <DialogDescription>
-                {!resetSent ? 
-                  "Enter your email address and we'll send you a link to reset your password." : 
-                  "Check your email for a password reset link. Follow the instructions to create a new password."
-                }
-              </DialogDescription>
-            </DialogHeader>
+                Login
+              </TabsTrigger>
+              <TabsTrigger 
+                value="signup" 
+                className="text-gray-700 data-[state=active]:bg-white data-[state=active]:text-gray-900 py-3"
+              >
+                Sign Up
+              </TabsTrigger>
+            </TabsList>
             
-            {!resetSent ? (
-              <PasswordResetForm 
-                onBackToLogin={() => setShowResetPassword(false)} 
-                onResetSent={handleResetSent}
-              />
-            ) : (
-              <ResetEmailSent 
-                email={resetEmail} 
-                onBackToLogin={() => {
-                  setShowResetPassword(false);
-                  setResetSent(false);
-                }}
-              />
-            )}
-          </>
-        )}
+            <TabsContent value="login" className="space-y-0">
+              <div className="space-y-4">
+                <div className="text-center">
+                  <h3 className="text-xl font-semibold text-gray-900">Welcome back!</h3>
+                  <p className="text-gray-600">Sign in to your account to continue</p>
+                </div>
+                
+                <LoginForm 
+                  onSwitchToSignup={handleSwitchToSignup}
+                  onClose={closeAuthModal}
+                />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="signup" className="space-y-0">
+              <div className="space-y-4">
+                <div className="text-center">
+                  <h3 className="text-xl font-semibold text-gray-900">Create Account</h3>
+                  <p className="text-gray-600">Join KHRATE and start saving on groceries!</p>
+                </div>
+                
+                <SignupForm 
+                  onSuccess={handleSuccess}
+                  onSwitchToLogin={handleSwitchToLogin}
+                />
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
       </DialogContent>
     </Dialog>
   );

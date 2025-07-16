@@ -1,24 +1,21 @@
 
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
+import React from "react";
 import { Mail, Phone } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const Contact = () => {
   const contactEmails = [
-    "bamlak.mulugeta@khrate.com",
-    "robert.katabarwa@khrate.com"
+    "robert.katabarwa@khrate.com",
+    "bamlak.mulugeta@khrate.com"
   ];
   
   const contactPhones = [
-    "0795754391",
-    "0789843707"
+    "0789843707",
+    "0795754391"
   ];
   
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-      
+    <div className="flex flex-col min-h-screen bg-gray-50">
       <main className="flex-1 container mx-auto py-16 px-4">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-3xl md:text-4xl font-bold mb-8">Contact Us</h1>
@@ -77,8 +74,6 @@ const Contact = () => {
           </div>
         </div>
       </main>
-      
-      <Footer />
     </div>
   );
 };

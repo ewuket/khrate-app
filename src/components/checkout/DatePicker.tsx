@@ -1,48 +1,38 @@
 
 import * as React from "react";
 import { format } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-// Public holidays (example list - can be expanded)
-const publicHolidays = [
-  new Date(2025, 0, 1),  // New Year's Day
-  new Date(2025, 1, 14), // Valentine's Day
-  new Date(2025, 4, 1),  // Labor Day
-  new Date(2025, 6, 1),  // Independence Day
-  new Date(2025, 11, 25) // Christmas Day
-];
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface DatePickerProps {
   date: Date | undefined;
   onDateChange: (date: Date | undefined) => void;
 }
 
-export function DatePicker({ date, onDateChange }: DatePickerProps) {
-  // Function to check if a date is a public holiday
-  const isPublicHoliday = (date: Date) => {
-    return publicHolidays.some(holiday => 
-      holiday.getDate() === date.getDate() && 
-      holiday.getMonth() === date.getMonth() &&
-      holiday.getFullYear() === date.getFullYear()
-    );
+const DatePicker: React.FC<DatePickerProps> = ({ date, onDateChange }) => {
+  const [open, setOpen] = React.useState(false);
+
+  const handleDateSelect = (selectedDate: Date | undefined) => {
+    onDateChange(selectedDate);
+    setOpen(false); // Auto-collapse after selection
   };
 
-  // Function to disable dates
-  const disableDate = (date: Date) => {
-    // Disable dates in the past
+  // Disable past dates and public holidays (basic implementation)
+  const isDateDisabled = (date: Date) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
-    // Disable public holidays
-    return date < today || isPublicHoliday(date);
+    return date < today;
   };
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -59,18 +49,14 @@ export function DatePicker({ date, onDateChange }: DatePickerProps) {
         <Calendar
           mode="single"
           selected={date}
-          onSelect={onDateChange}
-          disabled={disableDate}
+          onSelect={handleDateSelect}
+          disabled={isDateDisabled}
           initialFocus
-          className="p-3 pointer-events-auto"
+          className={cn("p-3 pointer-events-auto")}
         />
-        <div className="p-3 border-t text-xs text-muted-foreground">
-          <p>We deliver 7 days a week, including weekends!</p>
-          <p>Public holidays are not available for delivery.</p>
-        </div>
       </PopoverContent>
     </Popover>
   );
-}
+};
 
 export default DatePicker;

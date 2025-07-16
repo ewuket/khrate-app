@@ -1,90 +1,61 @@
 
+import React from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { ShoppingBasket, Plus, Minus } from "lucide-react";
-import { useState } from "react";
+import { ShoppingCart } from "lucide-react";
+import { Product } from '@/types/product';
 
 interface ProductCardProps {
-  id: number;
-  name: string;
-  price: number;
-  unit: string;
-  image: string;
-  category: string;
-  quantity: number;
-  onAddToCart: (product: {
-    id: number;
-    name: string;
-    price: number;
-    unit: string;
-    image: string;
-    category: string;
-  }) => void;
-  onRemoveFromCart: (productId: number) => void;
+  product: Product;
+  onAddToCart: (product: any) => void;
 }
 
-const ProductCard = ({
-  id,
-  name,
-  price,
-  unit,
-  image,
-  category,
-  quantity,
-  onAddToCart,
-  onRemoveFromCart
-}: ProductCardProps) => {
-  const product = { id, name, price, unit, image, category };
-  const [imageError, setImageError] = useState(false);
-  const fallbackImage = "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=2574&auto=format&fit=crop";
-  
+const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
+  const formatPrice = (price: number) => {
+    return `RWF ${price.toLocaleString()}`;
+  };
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onAddToCart(product);
+  };
+
   return (
-    <Card className="overflow-hidden transition-all duration-300 hover:shadow-md">
-      <div className="aspect-square overflow-hidden relative bg-gray-100">
+    <Card className="group hover:shadow-lg transition-all duration-300 bg-white border">
+      <div className="relative overflow-hidden">
         <img 
-          src={imageError ? fallbackImage : image} 
-          alt={name}
-          className="w-full h-full object-cover absolute inset-0 transition-opacity duration-300"
-          loading="lazy"
-          onError={() => setImageError(true)}
+          src={product.image} 
+          alt={product.name}
+          className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
         />
       </div>
-      <div className="p-4">
-        <div className="flex flex-col mb-2">
-          <h3 className="font-medium text-base line-clamp-2 h-12" title={name}>{name}</h3>
-          <span className="font-semibold text-orange-500 mt-1 text-right">{price.toLocaleString()} RWF/{unit}</span>
-        </div>
-        
-        <div className="mt-4">
-          {quantity === 0 ? (
-            <Button 
-              className="w-full bg-orange-500 hover:bg-orange-600"
-              onClick={() => onAddToCart(product)}
-            >
-              <ShoppingBasket className="mr-2 h-4 w-4" />
-              Add to Cart
-            </Button>
-          ) : (
-            <div className="flex items-center justify-between">
-              <Button 
-                variant="outline" 
-                size="icon"
-                onClick={() => onRemoveFromCart(id)}
-              >
-                <Minus className="h-4 w-4" />
-              </Button>
-              <span className="font-medium">{quantity}</span>
-              <Button 
-                variant="outline" 
-                size="icon"
-                onClick={() => onAddToCart(product)}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
+      
+      <CardContent className="p-4">
+        <div className="space-y-3">
+          <div>
+            <h3 className="font-semibold text-lg text-gray-900">{product.name}</h3>
+            <p className="text-sm text-gray-600">{product.description}</p>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="text-xl font-bold text-khrate-600">
+              {formatPrice(product.price)}
             </div>
-          )}
+            <div className="text-sm text-gray-500">
+              per {product.unit}
+            </div>
+          </div>
+          
+          <Button 
+            onClick={handleAddToCart}
+            className="w-full bg-khrate-500 hover:bg-khrate-600 text-white font-medium py-2 px-4 transition-colors"
+          >
+            <ShoppingCart className="h-4 w-4 mr-2" />
+            Add to Cart
+          </Button>
         </div>
-      </div>
+      </CardContent>
     </Card>
   );
 };
