@@ -5,70 +5,20 @@ import { useAdminOrderOperations } from "./admin/useAdminOrderOperations";
 import { useAdminGroupOperations } from "./admin/useAdminGroupOperations";
 
 export const useAdminOperations = () => {
-  const { 
-    createBundle, 
-    updateBundle, 
-    deleteBundle, 
-    toggleBundleStatus,
-    loading: bundleLoading 
-  } = useAdminBundleOperations();
-  
-  const { 
-    createCustomItem, 
-    updateCustomItem, 
-    deleteCustomItem, 
-    toggleCustomItemStatus,
-    loading: customItemLoading 
-  } = useAdminCustomItemOperations();
-  
+  const { toggleBundleActive, toggleBundleFeatured, isToggling: bundleToggling } = useAdminBundleOperations();
+  const { toggleCustomItemActive, isToggling: customItemToggling } = useAdminCustomItemOperations();
   const { updateOrderStatus, updatePaymentStatus } = useAdminOrderOperations();
-  const { 
-    createGroup, 
-    updateGroup, 
-    deleteGroup, 
-    toggleGroupStatus, 
-    toggleGroupFeatured,
-    loading: groupLoading 
-  } = useAdminGroupOperations();
-
-  // Bundle operations with proper naming
-  const toggleBundleActive = async (bundleId: number, isActive: boolean) => {
-    return await toggleBundleStatus(bundleId, !isActive);
-  };
-
-  const toggleBundleFeatured = async (bundleId: number, isFeatured: boolean) => {
-    // For bundle featured toggle, we need to use the update method
-    return await updateBundle(bundleId, { is_featured: !isFeatured });
-  };
-
-  // Custom item operations with proper naming
-  const toggleCustomItemActive = async (itemId: number, isActive: boolean) => {
-    return await toggleCustomItemStatus(itemId, !isActive);
-  };
-
-  // Group operations
-  const toggleGroupActive = async (groupId: string, isActive: boolean) => {
-    return await toggleGroupStatus(groupId, !isActive);
-  };
+  const { toggleGroupActive, toggleGroupFeatured, isToggling: groupToggling } = useAdminGroupOperations();
 
   return {
     // Bundle operations
-    createBundle,
-    updateBundle,
-    deleteBundle,
     toggleBundleActive,
     toggleBundleFeatured,
     
     // Custom item operations
-    createCustomItem,
-    updateCustomItem,
-    deleteCustomItem,
     toggleCustomItemActive,
     
     // Group operations
-    createGroup,
-    updateGroup,
-    deleteGroup,
     toggleGroupActive,
     toggleGroupFeatured,
     
@@ -77,6 +27,6 @@ export const useAdminOperations = () => {
     updatePaymentStatus,
     
     // Loading states
-    isToggling: bundleLoading || customItemLoading || groupLoading
+    isToggling: bundleToggling || customItemToggling || groupToggling
   };
 };

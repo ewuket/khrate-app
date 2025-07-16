@@ -53,11 +53,6 @@ export interface AdminBundle {
   updated_at: string | null;
   items?: any[];
   items_count?: number;
-  bundle_items?: Array<{
-    item_name: string;
-    quantity: number;
-    unit: string;
-  }>;
 }
 
 export interface AdminCustomItem {
