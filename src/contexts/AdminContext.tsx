@@ -8,6 +8,7 @@ interface AdminContextType {
   loading: boolean;
   loginAsAdmin: (email: string, password: string) => Promise<boolean>;
   logoutAdmin: () => Promise<void>;
+  checkAdminStatus: () => Promise<void>;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
@@ -17,13 +18,10 @@ interface AdminProviderProps {
 }
 
 export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
-  const { adminUser, loading, loginAsAdmin, logoutAdmin } = useAdminAuth();
+  const adminAuth = useAdminAuth();
 
   const value: AdminContextType = {
-    adminUser,
-    loading,
-    loginAsAdmin,
-    logoutAdmin,
+    ...adminAuth,
   };
 
   return (

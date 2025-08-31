@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { AdminStats, AdminOrder, AdminBundle } from '@/types/admin';
 import { toast } from 'sonner';
@@ -15,42 +15,37 @@ export const useAdminData = () => {
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [bundles, setBundles] = useState<AdminBundle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
-      console.log('📊 Fetching admin statistics using new function...');
+      console.log('📊 Fetching admin statistics...');
+      setError(null);
       
-      // Use the new admin stats function for accurate calculations
       const { data: orderStats, error: orderStatsError } = await supabase
         .rpc('get_admin_order_stats');
         
       if (orderStatsError) {
-        console.error('❌ Order stats fetch failed:', orderStatsError);
         throw new Error(`Order stats fetch failed: ${orderStatsError.message}`);
       }
 
-      // Get users count from user_profiles
       const { count: usersCount, error: usersError } = await supabase
         .from('user_profiles')
         .select('*', { count: 'exact', head: true });
         
       if (usersError) {
-        console.error('❌ Users count failed:', usersError);
         throw new Error(`Users fetch failed: ${usersError.message}`);
       }
 
-      // Get active groups count
       const { count: groupsCount, error: groupsError } = await supabase
         .from('group_sessions')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'active');
         
       if (groupsError) {
-        console.error('❌ Groups fetch failed:', groupsError);
         throw new Error(`Groups fetch failed: ${groupsError.message}`);
       }
 
-      // Use the stats from the database function
       const statsFromFunction = orderStats?.[0];
       
       const calculatedStats = {
@@ -65,13 +60,15 @@ export const useAdminData = () => {
       setStats(calculatedStats);
     } catch (error: any) {
       console.error('❌ Failed to load admin statistics:', error);
+      setError(error.message);
       toast.error(`Failed to load admin statistics: ${error.message}`);
     }
-  };
+  }, []);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       console.log('📋 Fetching admin orders...');
+      setError(null);
       
       const { data, error } = await supabase
         .from('orders')
@@ -87,7 +84,6 @@ export const useAdminData = () => {
         .limit(50);
 
       if (error) {
-        console.error('❌ Orders fetch failed:', error);
         throw new Error(`Orders fetch failed: ${error.message}`);
       }
 
@@ -105,13 +101,15 @@ export const useAdminData = () => {
       setOrders(formattedOrders);
     } catch (error: any) {
       console.error('❌ Failed to load orders:', error);
+      setError(error.message);
       toast.error(`Failed to load orders: ${error.message}`);
     }
-  };
+  }, []);
 
-  const fetchBundles = async () => {
+  const fetchBundles = useCallback(async () => {
     try {
       console.log('📦 Fetching admin bundles...');
+      setError(null);
       
       const { data, error } = await supabase
         .from('bundles')
@@ -127,7 +125,6 @@ export const useAdminData = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Bundles fetch failed:', error);
         throw new Error(`Bundles fetch failed: ${error.message}`);
       }
 
@@ -141,13 +138,15 @@ export const useAdminData = () => {
       setBundles(formattedBundles);
     } catch (error: any) {
       console.error('❌ Failed to load bundles:', error);
+      setError(error.message);
       toast.error(`Failed to load bundles: ${error.message}`);
     }
-  };
+  }, []);
 
-  const refreshAllData = async () => {
+  const refreshAllData = useCallback(async () => {
     console.log('🔄 Refreshing all admin data...');
     setLoading(true);
+    setError(null);
     
     try {
       await Promise.all([
@@ -158,21 +157,35 @@ export const useAdminData = () => {
       console.log('✅ All admin data refreshed successfully');
     } catch (error: any) {
       console.error('❌ Failed to refresh admin data:', error);
-      toast.error('Failed to refresh admin data');
+      setError('Failed to refresh admin data');
     } finally {
       setLoading(false);
     }
-  };
+  }, [fetchStats, fetchOrders, fetchBundles]);
 
   useEffect(() => {
     refreshAllData();
-  }, []);
+  }, [refreshAllData]);
+
+  // Listen for external refresh events
+  useEffect(() => {
+    const handleRefreshStats = () => {
+      console.log('🔄 External refresh event received');
+      fetchStats();
+    };
+
+    window.addEventListener('refresh-admin-stats', handleRefreshStats);
+    return () => {
+      window.removeEventListener('refresh-admin-stats', handleRefreshStats);
+    };
+  }, [fetchStats]);
 
   return {
     stats,
     orders,
     bundles,
     loading,
+    error,
     refreshAllData,
     fetchStats,
     fetchOrders,

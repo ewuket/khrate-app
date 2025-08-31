@@ -6,88 +6,126 @@ import { AdminUser } from "@/types/admin";
 
 export const useAdminAuth = () => {
   const [adminUser, setAdminUser] = useState<AdminUser | null>(() => {
-    const adminSession = localStorage.getItem('admin_session');
-    return adminSession ? JSON.parse(adminSession) : null;
+    try {
+      const adminSession = localStorage.getItem('admin_session');
+      return adminSession ? JSON.parse(adminSession) : null;
+    } catch (error) {
+      console.error('Error parsing admin session from localStorage:', error);
+      localStorage.removeItem('admin_session');
+      return null;
+    }
   });
   const [loading, setLoading] = useState(false);
 
-  // Check if current user is admin on mount
   useEffect(() => {
+    console.log('🔐 Initializing admin auth system...');
     checkAdminStatus();
   }, []);
 
   const checkAdminStatus = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user?.email) {
-        // Check if user is admin - for demo purposes, allow admin@khrate.com
-        if (user.email === 'admin@khrate.com') {
-          const adminSession: AdminUser = {
-            id: user.id,
-            email: user.email,
-            role: 'admin',
-            is_active: true,
-            created_at: user.created_at || new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            last_login: new Date().toISOString()
-          };
-          
-          setAdminUser(adminSession);
-          localStorage.setItem('admin_session', JSON.stringify(adminSession));
-        } else {
-          // Try to check in admin_users table
-          const { data: adminData } = await supabase
-            .from('admin_users')
-            .select('*')
-            .eq('email', user.email)
-            .eq('is_active', true)
-            .single();
+      setLoading(true);
+      console.log('🔍 Checking admin status...');
+      
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) {
+        console.error('❌ Error getting user:', userError);
+        return;
+      }
 
-          if (adminData) {
-            const adminSession: AdminUser = {
-              id: adminData.id,
-              email: adminData.email,
-              role: adminData.role || 'admin',
-              is_active: adminData.is_active || true,
-              created_at: adminData.created_at || new Date().toISOString(),
-              updated_at: adminData.updated_at || new Date().toISOString(),
-              last_login: new Date().toISOString()
-            };
-            
-            setAdminUser(adminSession);
-            localStorage.setItem('admin_session', JSON.stringify(adminSession));
-          }
-        }
+      if (!user?.email) {
+        console.log('📝 No authenticated user found');
+        setAdminUser(null);
+        localStorage.removeItem('admin_session');
+        return;
+      }
+
+      console.log('👤 Found authenticated user:', user.email);
+
+      // For demo purposes, allow admin@khrate.com and bamulneg@gmail.com
+      const demoEmails = ['admin@khrate.com', 'bamulneg@gmail.com'];
+      
+      if (demoEmails.includes(user.email)) {
+        console.log('✅ Demo admin access granted for:', user.email);
+        const adminSession: AdminUser = {
+          id: user.id,
+          email: user.email,
+          role: 'admin',
+          is_active: true,
+          created_at: user.created_at || new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          last_login: new Date().toISOString()
+        };
+        
+        setAdminUser(adminSession);
+        localStorage.setItem('admin_session', JSON.stringify(adminSession));
+        return;
+      }
+
+      // Check admin_users table
+      console.log('🔍 Checking admin_users table for:', user.email);
+      const { data: adminData, error: adminError } = await supabase
+        .from('admin_users')
+        .select('*')
+        .eq('email', user.email)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (adminError) {
+        console.error('❌ Error checking admin_users:', adminError);
+        return;
+      }
+
+      if (adminData) {
+        console.log('✅ Admin user found in database:', adminData);
+        const adminSession: AdminUser = {
+          id: adminData.id,
+          email: adminData.email,
+          role: adminData.role || 'admin',
+          is_active: adminData.is_active || true,
+          created_at: adminData.created_at || new Date().toISOString(),
+          updated_at: adminData.updated_at || new Date().toISOString(),
+          last_login: new Date().toISOString()
+        };
+        
+        setAdminUser(adminSession);
+        localStorage.setItem('admin_session', JSON.stringify(adminSession));
+      } else {
+        console.log('❌ User not found in admin_users table');
+        setAdminUser(null);
+        localStorage.removeItem('admin_session');
       }
     } catch (error) {
-      console.error('Error checking admin status:', error);
+      console.error('❌ Error in checkAdminStatus:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const loginAsAdmin = async (email: string, password: string): Promise<boolean> => {
     setLoading(true);
     try {
-      // For demo purposes, allow hardcoded admin credentials
+      console.log('🔑 Attempting admin login for:', email);
+
+      // Demo credentials bypass
       if (email === 'admin@khrate.com' && password === 'admin123') {
-        // First try to sign in with Supabase auth
+        console.log('🎯 Using demo credentials');
+        
         const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
-        // If auth fails, create the user first
         if (authError && authError.message.includes('Invalid login credentials')) {
-          console.log('Creating admin user...');
+          console.log('📝 Creating demo admin user...');
           const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
             email,
             password,
-            options: {
-              emailRedirectTo: `${window.location.origin}/admin/dashboard`
-            }
           });
 
           if (signUpError) {
-            console.error('Signup error:', signUpError);
+            console.error('❌ Signup error:', signUpError);
             toast.error('Failed to create admin account');
             return false;
           }
@@ -124,56 +162,28 @@ export const useAdminAuth = () => {
           toast.success('Admin login successful');
           return true;
         }
-      } else {
-        // Try normal auth flow for other credentials
-        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (authError) {
-          toast.error(authError.message);
-          return false;
-        }
-
-        // Check if user is an admin
-        const { data: adminData, error: adminError } = await supabase
-          .from('admin_users')
-          .select('*')
-          .eq('email', email)
-          .eq('is_active', true)
-          .maybeSingle();
-
-        if (adminError) {
-          console.error('Admin check error:', adminError);
-        }
-
-        if (!adminData && email !== 'admin@khrate.com') {
-          toast.error('Access denied. You are not an admin user.');
-          await supabase.auth.signOut();
-          return false;
-        }
-
-        const adminSession: AdminUser = {
-          id: adminData?.id || authData.user!.id,
-          email: email,
-          role: adminData?.role || 'admin',
-          is_active: adminData?.is_active || true,
-          created_at: adminData?.created_at || authData.user!.created_at || new Date().toISOString(),
-          updated_at: adminData?.updated_at || new Date().toISOString(),
-          last_login: new Date().toISOString()
-        };
-        
-        setAdminUser(adminSession);
-        localStorage.setItem('admin_session', JSON.stringify(adminSession));
-        toast.success('Admin login successful');
-        return true;
       }
-      
-      toast.error('Invalid credentials');
-      return false;
-    } catch (error) {
-      console.error('Admin login error:', error);
+
+      // Normal auth flow
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (authError) {
+        console.error('❌ Auth error:', authError);
+        toast.error(authError.message);
+        return false;
+      }
+
+      // Check admin status after successful auth
+      setTimeout(() => {
+        checkAdminStatus();
+      }, 500);
+
+      return true;
+    } catch (error: any) {
+      console.error('❌ Login error:', error);
       toast.error('Login failed');
       return false;
     } finally {
@@ -182,16 +192,22 @@ export const useAdminAuth = () => {
   };
 
   const logoutAdmin = async () => {
-    setAdminUser(null);
-    localStorage.removeItem('admin_session');
-    await supabase.auth.signOut();
-    toast.info('Admin logged out');
+    try {
+      console.log('🚪 Admin logout initiated');
+      setAdminUser(null);
+      localStorage.removeItem('admin_session');
+      await supabase.auth.signOut();
+      toast.info('Admin logged out');
+    } catch (error) {
+      console.error('❌ Logout error:', error);
+    }
   };
 
   return {
     adminUser,
     loading,
     loginAsAdmin,
-    logoutAdmin
+    logoutAdmin,
+    checkAdminStatus
   };
 };

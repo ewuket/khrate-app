@@ -9,11 +9,21 @@ import AdminBundleManagement from "./AdminBundleManagement";
 import AdminCustomItemsManagement from "./custom-items/AdminCustomItemsManagement";
 import AdminGroupManagement from "./AdminGroupManagement";
 import { OrderStatus } from "@/types/order";
+import { Card, CardContent } from "@/components/ui/card";
+import { AlertCircle, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const AdminDashboard = () => {
-  const { stats, orders, loading, refreshAllData, fetchStats } = useAdminData();
-  const { updateOrderStatus, updatePaymentStatus } = useAdminOperations();
+  const { stats, orders, loading, error, refreshAllData, fetchStats } = useAdminData();
+  const operations = useAdminOperations();
   const [activeTab, setActiveTab] = useState("overview");
+
+  console.log('🎯 AdminDashboard render state:', { 
+    loading, 
+    error, 
+    ordersCount: orders.length,
+    hasOperations: !!operations
+  });
 
   // Listen for stats refresh events
   useEffect(() => {
@@ -33,9 +43,8 @@ const AdminDashboard = () => {
     const newStatus = prompt(`Current status: ${currentStatus}\nEnter new status (${statusOptions.join(', ')}):`, currentStatus);
     
     if (newStatus && statusOptions.includes(newStatus as OrderStatus) && newStatus !== currentStatus) {
-      const success = await updateOrderStatus(orderId, newStatus);
+      const success = await operations?.updateOrderStatus?.(orderId, newStatus);
       if (success) {
-        // Refresh data after successful update
         setTimeout(() => {
           refreshAllData();
         }, 1000);
@@ -48,9 +57,8 @@ const AdminDashboard = () => {
     const newStatus = prompt(`Current payment status: ${currentStatus}\nEnter new status (${paymentOptions.join(', ')}):`, currentStatus);
     
     if (newStatus && paymentOptions.includes(newStatus) && newStatus !== currentStatus) {
-      const success = await updatePaymentStatus(orderId, newStatus);
+      const success = await operations?.updatePaymentStatus?.(orderId, newStatus);
       if (success) {
-        // Refresh data after successful update to reflect revenue changes
         setTimeout(() => {
           refreshAllData();
         }, 1000);
@@ -58,12 +66,44 @@ const AdminDashboard = () => {
     }
   };
 
+  // Error state
+  if (error && !loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <AlertCircle className="h-6 w-6 text-red-500" />
+                <h2 className="text-lg font-semibold text-red-800">Admin Dashboard Error</h2>
+              </div>
+              <p className="text-red-700 mb-4">{error}</p>
+              <Button 
+                onClick={refreshAllData}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Retry Loading Dashboard
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
           <p className="text-gray-600">Manage your store operations and monitor performance</p>
+          {loading && (
+            <div className="flex items-center gap-2 mt-2 text-sm text-blue-600">
+              <RefreshCw className="h-4 w-4 animate-spin" />
+              Loading dashboard data...
+            </div>
+          )}
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
