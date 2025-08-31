@@ -27,18 +27,20 @@ const AdminGroupManagement = () => {
 
   const handleCreateGroup = async (groupData: GroupFormData) => {
     try {
+      console.log('🔄 Creating group with data:', groupData);
       await createGroup(groupData);
       setShowForm(false);
       setTimeout(() => {
         fetchGroups(); // Force refresh after creation
       }, 1000);
     } catch (error) {
-      console.error('Error creating group:', error);
+      console.error('❌ Error creating group:', error);
     }
   };
 
   const handleUpdateGroup = async (groupData: Partial<GroupFormData> & { id: string }) => {
     try {
+      console.log('🔄 Updating group with data:', groupData);
       await updateGroup(groupData);
       setShowForm(false);
       setEditingGroup(null);
@@ -46,11 +48,12 @@ const AdminGroupManagement = () => {
         fetchGroups(); // Force refresh after update
       }, 1000);
     } catch (error) {
-      console.error('Error updating group:', error);
+      console.error('❌ Error updating group:', error);
     }
   };
 
   const handleEdit = (group: AdminGroupSession) => {
+    console.log('✏️ Editing group:', group);
     setEditingGroup(group);
     setShowForm(true);
   };
@@ -58,35 +61,38 @@ const AdminGroupManagement = () => {
   const handleDelete = async (groupId: string) => {
     if (confirm('Are you sure you want to delete this group?')) {
       try {
+        console.log('🗑️ Deleting group:', groupId);
         await deleteGroup(groupId);
         setTimeout(() => {
           fetchGroups(); // Force refresh after deletion
         }, 1000);
       } catch (error) {
-        console.error('Error deleting group:', error);
+        console.error('❌ Error deleting group:', error);
       }
     }
   };
 
   const handleToggleActive = async (groupId: string, currentStatus: string) => {
     try {
+      console.log('🔄 Toggling group active status:', groupId, 'from', currentStatus);
       await toggleGroupActive(groupId, currentStatus);
       setTimeout(() => {
         fetchGroups(); // Force refresh after toggle
       }, 1000);
     } catch (error) {
-      console.error('Error toggling group status:', error);
+      console.error('❌ Error toggling group status:', error);
     }
   };
 
   const handleToggleFeatured = async (groupId: string, isFeatured: boolean) => {
     try {
+      console.log('🔄 Toggling group featured status:', groupId, 'from', isFeatured);
       await toggleGroupFeatured(groupId, isFeatured);
       setTimeout(() => {
         fetchGroups(); // Force refresh after toggle
       }, 1000);
     } catch (error) {
-      console.error('Error toggling featured status:', error);
+      console.error('❌ Error toggling featured status:', error);
     }
   };
 
@@ -96,7 +102,7 @@ const AdminGroupManagement = () => {
   };
 
   const handleRefresh = () => {
-    console.log('Refreshing groups...');
+    console.log('🔄 Refreshing groups...');
     fetchGroups();
   };
 
@@ -170,7 +176,7 @@ const AdminGroupManagement = () => {
               onDelete={handleDelete}
               onToggleActive={handleToggleActive}
               onToggleFeatured={handleToggleFeatured}
-              isToggling={isToggling}
+              isToggling={typeof isToggling === 'string' ? isToggling : ''}
             />
           ))}
         </div>

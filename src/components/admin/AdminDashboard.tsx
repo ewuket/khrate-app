@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAdminData } from "@/hooks/useAdminData";
 import { useAdminOperations } from "@/hooks/useAdminOperations";
-import AdminStatsCards from "./AdminStatsCards";
+import AdminDashboardOverview from "./AdminDashboardOverview";
 import AdminOrdersList from "./AdminOrdersList";
 import AdminBundleManagement from "./AdminBundleManagement";
 import AdminCustomItemsManagement from "./custom-items/AdminCustomItemsManagement";
@@ -116,12 +116,7 @@ const AdminDashboard = () => {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            <AdminStatsCards stats={stats} loading={loading} />
-            <AdminOrdersList 
-              orders={orders} 
-              onUpdateOrderStatus={handleUpdateOrderStatus}
-              onUpdatePaymentStatus={handleUpdatePaymentStatus}
-            />
+            <AdminDashboardOverview />
           </TabsContent>
 
           <TabsContent value="bundles">

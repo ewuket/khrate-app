@@ -22,6 +22,47 @@ export const useAdminAuth = () => {
     checkAdminStatus();
   }, []);
 
+  const ensureAdminUserExists = async (userId: string, email: string) => {
+    try {
+      console.log('🔍 Ensuring admin user exists in database:', email);
+      
+      // Check if admin user already exists
+      const { data: existingAdmin, error: checkError } = await supabase
+        .from('admin_users')
+        .select('*')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (checkError && !checkError.message.includes('No rows')) {
+        console.error('❌ Error checking admin user:', checkError);
+        return false;
+      }
+
+      if (!existingAdmin) {
+        console.log('📝 Creating admin user entry:', email);
+        const { error: insertError } = await supabase
+          .from('admin_users')
+          .insert({
+            id: userId,
+            email: email,
+            role: 'admin',
+            is_active: true
+          });
+
+        if (insertError) {
+          console.error('❌ Error creating admin user:', insertError);
+          return false;
+        }
+        console.log('✅ Admin user created successfully');
+      }
+
+      return true;
+    } catch (error) {
+      console.error('❌ Error in ensureAdminUserExists:', error);
+      return false;
+    }
+  };
+
   const checkAdminStatus = async () => {
     try {
       setLoading(true);
@@ -43,11 +84,15 @@ export const useAdminAuth = () => {
 
       console.log('👤 Found authenticated user:', user.email);
 
-      // For demo purposes, allow admin@khrate.com and bamulneg@gmail.com
+      // Demo emails that should have admin access
       const demoEmails = ['admin@khrate.com', 'bamulneg@gmail.com'];
       
       if (demoEmails.includes(user.email)) {
         console.log('✅ Demo admin access granted for:', user.email);
+        
+        // Ensure this user exists in admin_users table
+        await ensureAdminUserExists(user.id, user.email);
+        
         const adminSession: AdminUser = {
           id: user.id,
           email: user.email,
@@ -63,7 +108,7 @@ export const useAdminAuth = () => {
         return;
       }
 
-      // Check admin_users table
+      // Check admin_users table for other users
       console.log('🔍 Checking admin_users table for:', user.email);
       const { data: adminData, error: adminError } = await supabase
         .from('admin_users')
@@ -108,7 +153,7 @@ export const useAdminAuth = () => {
     try {
       console.log('🔑 Attempting admin login for:', email);
 
-      // Demo credentials bypass
+      // Demo credentials handling
       if (email === 'admin@khrate.com' && password === 'admin123') {
         console.log('🎯 Using demo credentials');
         
@@ -122,6 +167,9 @@ export const useAdminAuth = () => {
           const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
             email,
             password,
+            options: {
+              emailRedirectTo: `${window.location.origin}/admin/dashboard`
+            }
           });
 
           if (signUpError) {
@@ -131,6 +179,8 @@ export const useAdminAuth = () => {
           }
 
           if (signUpData.user) {
+            await ensureAdminUserExists(signUpData.user.id, signUpData.user.email!);
+            
             const adminSession: AdminUser = {
               id: signUpData.user.id,
               email: signUpData.user.email!,
@@ -147,6 +197,8 @@ export const useAdminAuth = () => {
             return true;
           }
         } else if (authData.user) {
+          await ensureAdminUserExists(authData.user.id, authData.user.email!);
+          
           const adminSession: AdminUser = {
             id: authData.user.id,
             email: authData.user.email!,
@@ -164,7 +216,7 @@ export const useAdminAuth = () => {
         }
       }
 
-      // Normal auth flow
+      // Normal auth flow for other users
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
