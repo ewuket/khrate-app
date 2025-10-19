@@ -1,13 +1,17 @@
 
+import { useState } from "react";
 import { useBundles } from "@/hooks/useBundles";
 import BundleCard from "@/components/bundles/BundleCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { AlertCircle, Search } from "lucide-react";
+import VoiceSearch from "@/components/search/VoiceSearch";
 
 const Bundles = () => {
   const { data: bundles = [], isLoading, error } = useBundles();
   const { isAuthenticated, openAuthModal } = useAuth();
+  const [searchQuery, setSearchQuery] = useState("");
 
   if (isLoading) {
     return (
@@ -36,25 +40,45 @@ const Bundles = () => {
     );
   }
 
+  const filteredBundles = bundles.filter(bundle =>
+    bundle.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    bundle.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="container mx-auto py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-4">Food Bundles</h1>
-        <p className="text-gray-600">
+        <p className="text-gray-600 mb-4">
           Discover our curated food bundles designed to save you time and money.
         </p>
+        
+        <div className="flex gap-2 max-w-xl">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search bundles..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <VoiceSearch onResult={setSearchQuery} />
+        </div>
       </div>
 
-      {bundles.length === 0 ? (
+      {filteredBundles.length === 0 ? (
         <div className="text-center py-12">
-          <h3 className="text-lg font-semibold mb-2">No Bundles Available</h3>
+          <h3 className="text-lg font-semibold mb-2">
+            {searchQuery ? "No bundles found" : "No Bundles Available"}
+          </h3>
           <p className="text-muted-foreground">
-            Check back later for new bundle offerings.
+            {searchQuery ? "Try a different search term" : "Check back later for new bundle offerings."}
           </p>
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {bundles.map((bundle) => (
+          {filteredBundles.map((bundle) => (
             <BundleCard
               key={bundle.id}
               id={bundle.id}

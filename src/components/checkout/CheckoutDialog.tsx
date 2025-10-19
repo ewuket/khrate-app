@@ -13,6 +13,7 @@ import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { supabase } from "@/integrations/supabase/client";
 import OrderSuccessModal from "./OrderSuccessModal";
 import PaymentMethodSelector from "@/components/custom-buy/PaymentMethodSelector";
+import DeliveryEstimator from "@/components/delivery/DeliveryEstimator";
 
 interface CheckoutDialogProps {
   isOpen: boolean;
@@ -157,6 +158,8 @@ const CheckoutDialog = ({ isOpen, onClose }: CheckoutDialogProps) => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-6">
+                <DeliveryEstimator deliveryAddress={deliveryAddress} />
+                
                 <div>
                   <Label htmlFor="address" className="text-base font-semibold text-gray-700">
                     Delivery Address *

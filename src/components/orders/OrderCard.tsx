@@ -14,8 +14,38 @@ interface OrderCardProps {
 
 const OrderCard = ({ order, onViewDetails, onRateOrder }: OrderCardProps) => {
   const handleOrderAgain = (order: Order) => {
-    toast.success("Items added to your cart");
-    // In a real app, we would add the items to the cart here
+    // Add order items back to cart
+    const cartItems = Array.isArray(order.items) ? order.items : [];
+    
+    cartItems.forEach((item: any) => {
+      const cartItem = {
+        id: item.id || Math.random().toString(),
+        product_id: item.id || 0,
+        product_name: item.name || 'Item',
+        product_price: item.price || 0,
+        quantity: item.quantity || 1,
+        product_unit: item.unit || 'item',
+        product_type: (item.type || 'custom') as 'bundle' | 'custom' | 'group',
+        product_items: item.items || []
+      };
+      
+      // Store in localStorage for immediate cart update
+      const currentCart = JSON.parse(localStorage.getItem('khrate_cart') || '[]');
+      const existingIndex = currentCart.findIndex((ci: any) => 
+        ci.product_id === cartItem.product_id && ci.product_type === cartItem.product_type
+      );
+      
+      if (existingIndex >= 0) {
+        currentCart[existingIndex].quantity += cartItem.quantity;
+      } else {
+        currentCart.push(cartItem);
+      }
+      
+      localStorage.setItem('khrate_cart', JSON.stringify(currentCart));
+    });
+    
+    toast.success(`${cartItems.length} items added to your cart`);
+    window.dispatchEvent(new Event('storage')); // Trigger cart update
   };
 
   const canRate = order.status === "delivered" && onRateOrder;

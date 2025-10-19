@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileTabs from "@/components/profile/ProfileTabs";
 import { useAuth } from "@/contexts/AuthContext";
+import LoyaltyCard from "@/components/loyalty/LoyaltyCard";
+import ReferralCard from "@/components/referral/ReferralCard";
 
 const Profile = () => {
   const { user, profile, isAuthenticated, updateProfile, openAuthModal } = useAuth();
@@ -137,6 +139,19 @@ const Profile = () => {
         
         <section className="py-12">
           <div className="container mx-auto">
+            <div className="grid lg:grid-cols-3 gap-6 mb-8">
+              <LoyaltyCard />
+              <ReferralCard />
+              <div className="bg-gradient-to-br from-muted/50 to-background rounded-lg border p-6 flex items-center justify-center">
+                <div className="text-center">
+                  <p className="text-4xl font-bold text-primary mb-2">
+                    {profile?.total_orders || 0}
+                  </p>
+                  <p className="text-muted-foreground">Total Orders</p>
+                </div>
+              </div>
+            </div>
+            
             <ProfileTabs
               activeTab={activeTab}
               setActiveTab={setActiveTab}

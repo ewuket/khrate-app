@@ -22,6 +22,9 @@ import AuthCallback from "@/pages/AuthCallback";
 import AdminLogin from "@/pages/AdminLogin";
 import AdminDashboard from "@/pages/AdminDashboard";
 import NotFound from "@/pages/NotFound";
+import Welcome from "@/pages/Welcome";
+import LiveChatButton from "@/components/support/LiveChatButton";
+import OfflineIndicator from "@/components/offline/OfflineIndicator";
 import "./App.css";
 
 const queryClient = new QueryClient();
@@ -35,8 +38,10 @@ function App() {
             <CartProvider>
               <GroupBuyingProvider>
                 <Toaster />
+                <OfflineIndicator />
                 <BrowserRouter>
                   <Routes>
+                    <Route path="/welcome" element={<Welcome />} />
                     <Route path="/admin/login" element={<AdminLogin />} />
                     <Route path="/admin/dashboard" element={<AdminDashboard />} />
                     <Route path="/auth/callback" element={<AuthCallback />} />
@@ -54,6 +59,7 @@ function App() {
                       <Route path="*" element={<NotFound />} />
                     </Route>
                   </Routes>
+                  <LiveChatButton />
                 </BrowserRouter>
               </GroupBuyingProvider>
             </CartProvider>
