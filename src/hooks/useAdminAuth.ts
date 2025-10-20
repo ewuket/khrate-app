@@ -39,18 +39,13 @@ export const useAdminAuth = () => {
       }
 
       if (!existingAdmin) {
-        console.log('📝 Creating admin user entry:', email);
-        const { error: insertError } = await supabase
-          .from('admin_users')
-          .insert({
-            id: userId,
-            email: email,
-            role: 'admin',
-            is_active: true
-          });
+        console.log('📝 Creating admin user entry via RPC:', email);
+        const { error: rpcError } = await supabase.rpc('add_admin_user', {
+          admin_email: email
+        });
 
-        if (insertError) {
-          console.error('❌ Error creating admin user:', insertError);
+        if (rpcError) {
+          console.error('❌ Error creating admin user:', rpcError);
           return false;
         }
         console.log('✅ Admin user created successfully');

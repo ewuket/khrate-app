@@ -582,6 +582,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_admin_user: {
+        Args: { admin_email: string }
+        Returns: undefined
+      }
       apply_user_discount: {
         Args: { p_order_total: number; p_user_id: string }
         Returns: {
