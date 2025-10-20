@@ -7,10 +7,10 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+    PostgrestVersion: "13.0.4"
   }
   public: {
     Tables: {
@@ -369,6 +369,7 @@ export type Database = {
       group_sessions: {
         Row: {
           admin_notes: string | null
+          bundle_items: Json | null
           created_at: string
           discount_percentage: number
           featured_at: string | null
@@ -390,6 +391,7 @@ export type Database = {
         }
         Insert: {
           admin_notes?: string | null
+          bundle_items?: Json | null
           created_at?: string
           discount_percentage?: number
           featured_at?: string | null
@@ -411,6 +413,7 @@ export type Database = {
         }
         Update: {
           admin_notes?: string | null
+          bundle_items?: Json | null
           created_at?: string
           discount_percentage?: number
           featured_at?: string | null
@@ -580,7 +583,7 @@ export type Database = {
     }
     Functions: {
       apply_user_discount: {
-        Args: { p_user_id: string; p_order_total: number }
+        Args: { p_order_total: number; p_user_id: string }
         Returns: {
           discount_amount: number
           discount_percentage: number
@@ -594,36 +597,59 @@ export type Database = {
       check_first_time_discount: {
         Args: { p_user_id: string }
         Returns: {
-          qualifies: boolean
           discount_percentage: number
           orders_remaining: number
+          qualifies: boolean
         }[]
       }
       create_admin_notification: {
-        Args: { p_title: string; p_message: string; p_type?: string }
+        Args: { p_message: string; p_title: string; p_type?: string }
         Returns: string
       }
       generate_join_code: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_admin_dashboard_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          active_bundles: number
+          active_custom_items: number
+          active_groups: number
+          pending_orders: number
+          total_orders: number
+          total_revenue: number
+          total_users: number
+        }[]
+      }
       get_admin_group_stats: {
         Args: Record<PropertyKey, never>
         Returns: {
-          total_groups: number
           active_groups: number
-          featured_groups: number
-          completed_groups: number
-          total_members: number
           avg_group_size: number
+          completed_groups: number
+          featured_groups: number
+          total_groups: number
+          total_members: number
         }[]
       }
       get_admin_order_stats: {
         Args: Record<PropertyKey, never>
         Returns: {
-          total_orders: number
           pending_orders: number
+          total_orders: number
           total_revenue: number
+        }[]
+      }
+      get_admin_order_stats_by_source: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          bundle_orders: number
+          bundle_revenue: number
+          custom_orders: number
+          custom_revenue: number
+          group_orders: number
+          group_revenue: number
         }[]
       }
       get_current_user_id: {
@@ -634,55 +660,76 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      get_daily_order_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          bundle_orders: number
+          custom_orders: number
+          date_created: string
+          group_orders: number
+          total_orders: number
+          total_revenue: number
+        }[]
+      }
       get_featured_groups: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
-          name: string
-          location: string
-          region: string
-          member_count: number
-          max_participants: number
-          discount_percentage: number
-          status: string
-          join_code: string
           created_at: string
+          discount_percentage: number
+          id: string
           items: Json
+          join_code: string
+          location: string
+          max_participants: number
+          member_count: number
+          name: string
+          region: string
+          status: string
         }[]
       }
       get_group_payment_summary: {
         Args: { group_id: string }
         Returns: {
-          total_members: number
+          group_ready: boolean
           paid_members: number
           pending_members: number
           total_amount_paid: number
-          group_ready: boolean
+          total_members: number
         }[]
       }
       get_group_summary: {
         Args: { group_id: string }
         Returns: {
-          member_count: number
-          total_amount: number
           discount_amount: number
           final_amount: number
+          member_count: number
           qualifies_for_discount: boolean
+          total_amount: number
         }[]
       }
       get_groups_by_location: {
         Args: { p_location?: string; p_region?: string }
         Returns: {
-          id: string
-          name: string
-          location: string
-          region: string
-          member_count: number
-          max_participants: number
-          discount_percentage: number
-          status: string
-          join_code: string
           created_at: string
+          discount_percentage: number
+          id: string
+          join_code: string
+          location: string
+          max_participants: number
+          member_count: number
+          name: string
+          region: string
+          status: string
+        }[]
+      }
+      get_low_stock_items: {
+        Args: { threshold?: number }
+        Returns: {
+          category: string
+          id: number
+          name: string
+          price: number
+          stock_quantity: number
         }[]
       }
       is_admin_user: {
@@ -698,33 +745,33 @@ export type Database = {
         Returns: string
       }
       update_bundle_safe: {
-        Args: { bundle_id: number; bundle_data: Json }
+        Args: { bundle_data: Json; bundle_id: number }
         Returns: {
-          id: number
-          title: string
-          description: string
-          price: number
-          original_price: number
-          image_url: string
-          is_featured: boolean
-          is_active: boolean
           created_at: string
+          description: string
+          id: number
+          image_url: string
+          is_active: boolean
+          is_featured: boolean
+          original_price: number
+          price: number
+          title: string
           updated_at: string
         }[]
       }
       update_custom_item_safe: {
-        Args: { item_id: number; item_data: Json }
+        Args: { item_data: Json; item_id: number }
         Returns: {
-          id: number
-          name: string
-          description: string
-          price: number
-          unit: string
           category: string
-          stock_quantity: number
+          created_at: string
+          description: string
+          id: number
           image_url: string
           is_active: boolean
-          created_at: string
+          name: string
+          price: number
+          stock_quantity: number
+          unit: string
           updated_at: string
         }[]
       }
