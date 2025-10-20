@@ -22,38 +22,39 @@ export const useAdminAuth = () => {
     checkAdminStatus();
   }, []);
 
-  const ensureAdminUserExists = async (userId: string, email: string) => {
+  const ensureAdminRoleExists = async (userId: string, email: string) => {
     try {
-      console.log('🔍 Ensuring admin user exists in database:', email);
+      console.log('🔍 Ensuring admin role exists for user:', email);
       
-      // Check if admin user already exists
-      const { data: existingAdmin, error: checkError } = await supabase
-        .from('admin_users')
+      // Check if user already has admin role
+      const { data: existingRole, error: checkError } = await supabase
+        .from('user_roles')
         .select('*')
-        .eq('email', email)
+        .eq('user_id', userId)
+        .eq('role', 'admin')
         .maybeSingle();
 
       if (checkError && !checkError.message.includes('No rows')) {
-        console.error('❌ Error checking admin user:', checkError);
+        console.error('❌ Error checking user role:', checkError);
         return false;
       }
 
-      if (!existingAdmin) {
-        console.log('📝 Creating admin user entry via RPC:', email);
-        const { error: rpcError } = await supabase.rpc('add_admin_user', {
-          admin_email: email
+      if (!existingRole) {
+        console.log('📝 Adding admin role via RPC:', email);
+        const { error: rpcError } = await supabase.rpc('add_admin_role', {
+          target_user_id: userId
         });
 
         if (rpcError) {
-          console.error('❌ Error creating admin user:', rpcError);
+          console.error('❌ Error adding admin role:', rpcError);
           return false;
         }
-        console.log('✅ Admin user created successfully');
+        console.log('✅ Admin role added successfully');
       }
 
       return true;
     } catch (error) {
-      console.error('❌ Error in ensureAdminUserExists:', error);
+      console.error('❌ Error in ensureAdminRoleExists:', error);
       return false;
     }
   };
@@ -85,8 +86,8 @@ export const useAdminAuth = () => {
       if (demoEmails.includes(user.email)) {
         console.log('✅ Demo admin access granted for:', user.email);
         
-        // Ensure this user exists in admin_users table
-        await ensureAdminUserExists(user.id, user.email);
+        // Ensure this user has admin role
+        await ensureAdminRoleExists(user.id, user.email);
         
         const adminSession: AdminUser = {
           id: user.id,
@@ -103,36 +104,36 @@ export const useAdminAuth = () => {
         return;
       }
 
-      // Check admin_users table for other users
-      console.log('🔍 Checking admin_users table for:', user.email);
-      const { data: adminData, error: adminError } = await supabase
-        .from('admin_users')
+      // Check user_roles table for other users
+      console.log('🔍 Checking user_roles table for:', user.email);
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
         .select('*')
-        .eq('email', user.email)
-        .eq('is_active', true)
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
         .maybeSingle();
 
-      if (adminError) {
-        console.error('❌ Error checking admin_users:', adminError);
+      if (roleError && !roleError.message.includes('No rows')) {
+        console.error('❌ Error checking user_roles:', roleError);
         return;
       }
 
-      if (adminData) {
-        console.log('✅ Admin user found in database:', adminData);
+      if (roleData) {
+        console.log('✅ Admin role found for user:', roleData);
         const adminSession: AdminUser = {
-          id: adminData.id,
-          email: adminData.email,
-          role: adminData.role || 'admin',
-          is_active: adminData.is_active || true,
-          created_at: adminData.created_at || new Date().toISOString(),
-          updated_at: adminData.updated_at || new Date().toISOString(),
+          id: user.id,
+          email: user.email,
+          role: 'admin',
+          is_active: true,
+          created_at: user.created_at || new Date().toISOString(),
+          updated_at: new Date().toISOString(),
           last_login: new Date().toISOString()
         };
         
         setAdminUser(adminSession);
         localStorage.setItem('admin_session', JSON.stringify(adminSession));
       } else {
-        console.log('❌ User not found in admin_users table');
+        console.log('❌ User does not have admin role');
         setAdminUser(null);
         localStorage.removeItem('admin_session');
       }
@@ -174,7 +175,7 @@ export const useAdminAuth = () => {
           }
 
           if (signUpData.user) {
-            await ensureAdminUserExists(signUpData.user.id, signUpData.user.email!);
+            await ensureAdminRoleExists(signUpData.user.id, signUpData.user.email!);
             
             const adminSession: AdminUser = {
               id: signUpData.user.id,
@@ -192,7 +193,7 @@ export const useAdminAuth = () => {
             return true;
           }
         } else if (authData.user) {
-          await ensureAdminUserExists(authData.user.id, authData.user.email!);
+          await ensureAdminRoleExists(authData.user.id, authData.user.email!);
           
           const adminSession: AdminUser = {
             id: authData.user.id,
