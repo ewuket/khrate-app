@@ -69,7 +69,7 @@ const AdminCustomItemCard: React.FC<AdminCustomItemCardProps> = ({
           <span className="text-sm font-medium">Active:</span>
           <Switch
             checked={item.is_active}
-            onCheckedChange={(checked) => onToggleActive(item.id, checked)}
+            onCheckedChange={() => onToggleActive(item.id, item.is_active)}
             disabled={isToggling}
           />
         </div>
