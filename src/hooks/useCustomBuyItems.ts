@@ -26,18 +26,7 @@ export const useCustomBuyItems = () => {
       setError(null);
       console.log('🔄 Fetching ACTIVE custom buy items for users...');
       
-      // Test database connection first
-      const { data: testConnection, error: connectionError } = await supabase
-        .from('custom_buy_items')
-        .select('count(*)')
-        .limit(1);
-      
-      if (connectionError) {
-        console.error('❌ Database connection error:', connectionError);
-        throw new Error(`Database connection failed: ${connectionError.message}`);
-      }
-      
-      console.log('✅ Database connection successful for custom items');
+      // Skip connection test - proceed directly to fetch items
       
       // Users should only see ACTIVE items
       const { data, error } = await supabase

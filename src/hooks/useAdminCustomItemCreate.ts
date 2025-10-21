@@ -8,7 +8,15 @@ export const useAdminCustomItemCreate = () => {
 
   return useMutation({
     mutationFn: async (itemData: any) => {
-      console.log('Creating custom item with data:', itemData);
+      console.log('🔄 Creating custom item with data:', itemData);
+      
+      // Verify admin authentication first
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Authentication required. Please log in again.');
+      }
+      
+      console.log('✅ Admin session verified, user ID:', session.user.id);
       
       // Clean and validate the data before insertion
       const cleanItemData = {

@@ -51,7 +51,12 @@ export const useAdminBundles = () => {
     queryFn: async (): Promise<AdminBundle[]> => {
       console.log('🔄 Fetching ALL bundles for admin (active and inactive)...');
 
-      // Check admin authentication
+      // Check admin authentication - verify session exists first
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        throw new Error('Authentication required. Please log in again.');
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         throw new Error('Authentication required');

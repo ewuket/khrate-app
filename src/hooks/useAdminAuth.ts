@@ -64,10 +64,22 @@ export const useAdminAuth = () => {
       setLoading(true);
       console.log('🔍 Checking admin status...');
       
+      // First check if there's an active session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        console.log('📝 No active session found, clearing admin state');
+        setAdminUser(null);
+        localStorage.removeItem('admin_session');
+        return;
+      }
+
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       if (userError) {
         console.error('❌ Error getting user:', userError);
+        setAdminUser(null);
+        localStorage.removeItem('admin_session');
         return;
       }
 
