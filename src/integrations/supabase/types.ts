@@ -603,14 +603,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      add_admin_role: {
-        Args: { target_user_id: string }
-        Returns: undefined
-      }
-      add_admin_user: {
-        Args: { admin_email: string }
-        Returns: undefined
-      }
+      add_admin_role: { Args: { target_user_id: string }; Returns: undefined }
+      add_admin_user: { Args: { admin_email: string }; Returns: undefined }
       apply_user_discount: {
         Args: { p_order_total: number; p_user_id: string }
         Returns: {
@@ -635,12 +629,9 @@ export type Database = {
         Args: { p_message: string; p_title: string; p_type?: string }
         Returns: string
       }
-      generate_join_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_join_code: { Args: never; Returns: string }
       get_admin_dashboard_stats: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           active_bundles: number
           active_custom_items: number
@@ -652,7 +643,7 @@ export type Database = {
         }[]
       }
       get_admin_group_stats: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           active_groups: number
           avg_group_size: number
@@ -663,7 +654,7 @@ export type Database = {
         }[]
       }
       get_admin_order_stats: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           pending_orders: number
           total_orders: number
@@ -671,7 +662,7 @@ export type Database = {
         }[]
       }
       get_admin_order_stats_by_source: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           bundle_orders: number
           bundle_revenue: number
@@ -681,16 +672,10 @@ export type Database = {
           group_revenue: number
         }[]
       }
-      get_current_user_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_custom_items_count: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      get_current_user_id: { Args: never; Returns: string }
+      get_custom_items_count: { Args: never; Returns: number }
       get_daily_order_stats: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           bundle_orders: number
           custom_orders: number
@@ -701,7 +686,7 @@ export type Database = {
         }[]
       }
       get_featured_groups: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           created_at: string
           discount_percentage: number
@@ -768,10 +753,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_admin_user: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      is_admin_user: { Args: never; Returns: boolean }
       is_group_member: {
         Args: { group_id: string; user_id: string }
         Returns: boolean
@@ -811,18 +793,12 @@ export type Database = {
           updated_at: string
         }[]
       }
-      validate_email_format: {
-        Args: { email: string }
-        Returns: boolean
-      }
+      validate_email_format: { Args: { email: string }; Returns: boolean }
       validate_password_strength: {
         Args: { password: string }
         Returns: boolean
       }
-      validate_phone_number: {
-        Args: { phone: string }
-        Returns: boolean
-      }
+      validate_phone_number: { Args: { phone: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
