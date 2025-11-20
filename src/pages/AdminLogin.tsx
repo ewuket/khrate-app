@@ -69,10 +69,9 @@ const AdminLogin = () => {
             </Button>
           </form>
           
-          <div className="mt-6 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm">
-            <p className="font-medium text-yellow-800">Demo Credentials:</p>
-            <p className="text-yellow-700">Email: admin@khrate.com</p>
-            <p className="text-yellow-700">Password: admin123</p>
+          <div className="mt-6 p-3 bg-blue-50 border border-blue-200 rounded text-sm">
+            <p className="font-medium text-blue-800">Admin Access</p>
+            <p className="text-blue-700">Contact your system administrator for admin credentials.</p>
           </div>
         </CardContent>
       </Card>
